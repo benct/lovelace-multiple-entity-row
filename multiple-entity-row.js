@@ -64,6 +64,11 @@ class MultipleEntityRow extends Polymer.Element {
         this.secondary = config.secondary || {};
     }
 
+    renderAttribute(data) {
+        if (!data.stateObj.attributes[data.attribute]) return null;
+        return data.stateObj.attributes[data.attribute] + (data.unit ? ` ${data.unit}` : '');
+    }
+
     renderState(stateObj, unitOverride) {
         const unit = unitOverride || stateObj.attributes.unit_of_measurement;
         return stateObj.state + (unit ? ` ${unit}` : '');
@@ -74,7 +79,8 @@ class MultipleEntityRow extends Polymer.Element {
     }
 
     entityState(data) {
-        return data && data.stateObj ? this.renderState(data.stateObj, data.unit) : null;
+        if (!data || !data.stateObj) return null;
+        return data.attribute ? this.renderAttribute(data) : this.renderState(data.stateObj, data.unit);
     }
 
     stateString(stateObj) {
