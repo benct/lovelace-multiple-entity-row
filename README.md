@@ -16,9 +16,10 @@ resources:
 | Name | Type | Default | Description
 | ---- | ---- | ------- | -----------
 | type | string | **Required** | `custom:multiple-entity-row`
-| entity | string | **Required** | `sensor.my_sensor`
+| entity | string | **Required** | `domain.my_entity_id`
 | name | string | | Override entity friendly_name
 | unit | string | | Override entity unit_of_measurement
+| icon | string | | Override entity icon
 | toggle | bool | false | Display a toogle instead of state
 | hide_state | bool | false | Hide the entity state
 | primary | object | | Primary additional entity object
@@ -42,54 +43,54 @@ title: multiple-entity-row
 entities:
   - type: section
     label: Single
-  - entity: sensor.netatmo_bedroom_temperature
+  - entity: sensor.bedroom_temperature
     type: custom:multiple-entity-row
     primary:
-      entity: sensor.netatmo_bedroom_max_temp
+      entity: sensor.bedroom_max_temp
 
   - type: section
     label: Both
-  - entity: sensor.netatmo_bedroom_temperature
+  - entity: sensor.bedroom_temperature
     type: custom:multiple-entity-row
     primary:
-      entity: sensor.netatmo_bedroom_min_temp
+      entity: sensor.bedroom_min_temp
     secondary:
-      entity: sensor.netatmo_bedroom_max_temp
+      entity: sensor.bedroom_max_temp
 
   - type: section
     label: Toggle
-  - entity: switch.power_livingroom_tv
+  - entity: switch.livingroom_tv
     type: custom:multiple-entity-row
     toggle: true
     primary:
-      entity: sensor.power_livingroom_tv_power
+      entity: sensor.livingroom_tv_power
     secondary:
-      entity: sensor.power_livingroom_tv_power_2
+      entity: sensor.livingroom_tv_power_total
 
   - type: section
     label: Hide state
-  - entity: switch.power_livingroom_tv
+  - entity: switch.livingroom_tv
     type: custom:multiple-entity-row
     hide_state: true
     primary:
-      entity: sensor.power_livingroom_tv_power
+      entity: sensor.livingroom_tv_power
     secondary:
-      entity: sensor.power_livingroom_tv_power_2
+      entity: sensor.livingroom_tv_power_2
 
   - type: section
     label: Hide name
-  - entity: sensor.netatmo_bedroom_temperature
+  - entity: sensor.bedroom_temperature
     type: custom:multiple-entity-row
     primary:
-      entity: sensor.netatmo_bedroom_min_temp
+      entity: sensor.bedroom_min_temp
       name: false
     secondary:
-      entity: sensor.netatmo_bedroom_max_temp
+      entity: sensor.bedroom_max_temp
       name: false
 
   - type: section
     label: Customization
-  - entity: sensor.netatmo_bedroom_temperature
+  - entity: sensor.bedroom_temperature
     type: custom:multiple-entity-row
     name: Custom Name
     icon: mdi:fire
@@ -97,6 +98,6 @@ entities:
     secondary_info: last-changed
     primary:
       name: custom name
-      entity: sensor.netatmo_bedroom_max_temp
+      entity: sensor.bedroom_max_temp
       unit: temp
 ```
