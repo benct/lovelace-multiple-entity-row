@@ -101,3 +101,5 @@ entities:
       entity: sensor.bedroom_max_temp
       unit: temp
 ```
+
+[![BMC](https://www.buymeacoffee.com/assets/img/custom_images/white_img.png)](https://www.buymeacoff.ee/benct)
