@@ -32,6 +32,7 @@ Primary/secondary object:
 | entity | string | **Required** | A valid entity_id
 | name | string/bool | | Override entity friendly_name (use `false` to hide)
 | unit | string | | Override entity unit_of_measurement
+| attribute | string | | A valid attribute key for the specified entity
 
 ### Example
 
@@ -56,6 +57,20 @@ entities:
       entity: sensor.bedroom_min_temp
     secondary:
       entity: sensor.bedroom_max_temp
+
+  - type: section
+    label: Attributes
+  - entity: vacuum.vacuum_cleaner
+    type: custom:multiple-entity-row
+    primary:
+      entity: vacuum.vacuum_cleaner
+      attribute: battery_level
+      name: Battery
+      unit: '%'
+    secondary:
+      entity: vacuum.vacuum_cleaner
+      attribute: status
+      name: Status
 
   - type: section
     label: Toggle
