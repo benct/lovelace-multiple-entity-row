@@ -1,13 +1,17 @@
 # multiple-entity-row
 Show multiple entity states on entity rows in Home Assistant's Lovelace UI
 
+[![GH-release](https://img.shields.io/badge/version-1.0.0-red.svg?style=flat-square)](https://raw.githubusercontent.com/benct/lovelace-multiple-entity-row/master/xiaomi-vacuum-card.js)
+[![GH-last-commit](https://img.shields.io/github/last-commit/benct/lovelace-multiple-entity-row.svg?style=flat-square)](https://github.com/benct/lovelace-multiple-entity-row/commits/master)
+[![GH-code-size](https://img.shields.io/github/languages/code-size/benct/lovelace-multiple-entity-row.svg?style=flat-square)](https://github.com/benct/lovelace-multiple-entity-row)
+
 ### Setup
 
 Add [multiple-entity-row.js](https://raw.githubusercontent.com/benct/lovelace-multiple-entity-row/master/multiple-entity-row.js) to your `<config>/www/` folder. Add the following to your `ui-lovelace.yaml` file:
 
 ```yaml
 resources:
-  - url: /local/multiple-entity-row.js
+  - url: /local/multiple-entity-row.js?v=1.0.0
     type: js
 ```
 
