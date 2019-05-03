@@ -30,13 +30,13 @@ class MultipleEntityRow extends Polymer.Element {
           <hui-generic-entity-row hass="[[_hass]]" config="[[_config]]">
             <div class="flex">
               <template is="dom-if" if="{{displayPrimary}}">
-                  <div class="entity">
+                  <div class="entity" on-click="primaryMoreInfo">
                     <span>[[entityName(primary)]]</span>
                     <div>[[entityState(primary)]]</div>
                   </div>
               </template>
               <template is="dom-if" if="{{displaySecondary}}">
-                  <div class="entity">
+                  <div class="entity" on-click="secondaryMoreInfo">
                     <span>[[entityName(secondary)]]</span>
                     <div>[[entityState(secondary)]]</div>
                   </div>
@@ -54,6 +54,16 @@ class MultipleEntityRow extends Polymer.Element {
             </div>
           </hui-generic-entity-row>
         `;
+    }
+
+    primaryMoreInfo(e) {
+        e.stopPropagation();
+        this.fireEvent(this._config.primary.entity)
+    }
+
+    secondaryMoreInfo(e) {
+        e.stopPropagation();
+        this.fireEvent(this._config.secondary.entity)
     }
 
     setConfig(config) {
@@ -109,6 +119,17 @@ class MultipleEntityRow extends Polymer.Element {
                 });
             }
         }
+    }
+
+    fireEvent(entity, options = {}) {
+        const event = new Event('hass-more-info', {
+            bubbles: options.bubbles || true,
+            cancelable: options.cancelable || true,
+            composed: options.composed || true,
+        });
+        event.detail = {entityId: entity};
+        this.shadowRoot.dispatchEvent(event);
+        return event;
     }
 }
 
