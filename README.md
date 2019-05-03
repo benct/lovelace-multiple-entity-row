@@ -1,5 +1,5 @@
 # multiple-entity-row
-Show multiple entity states on entity rows in Home Assistant's Lovelace UI
+Show multiple entity states or attributes on entity rows in Home Assistant's Lovelace UI
 
 [![GH-release](https://img.shields.io/badge/version-1.0.0-red.svg?style=flat-square)](https://raw.githubusercontent.com/benct/lovelace-multiple-entity-row/master/multiple-entity-row.js)
 [![GH-last-commit](https://img.shields.io/github/last-commit/benct/lovelace-multiple-entity-row.svg?style=flat-square)](https://github.com/benct/lovelace-multiple-entity-row/commits/master)
@@ -33,21 +33,21 @@ custom_updater:
 | ---- | ---- | ------- | -----------
 | type | string | **Required** | `custom:multiple-entity-row`
 | entity | string | **Required** | `domain.my_entity_id`
-| name | string | | Override entity friendly_name
-| unit | string | | Override entity unit_of_measurement
-| icon | string | | Override entity icon
-| toggle | bool | false | Display a toogle instead of state
-| hide_state | bool | false | Hide the entity state
-| primary | object | | Primary additional entity object
-| secondary | object | | Secondary additional entity object
+| name | string | | Override entity `friendly_name`
+| unit | string | | Override entity `unit_of_measurement`
+| icon | string | | Override entity `icon`
+| toggle | bool | `false` | Display a toogle instead of state
+| hide_state | bool | `false` | Hide the entity state
+| primary | object | *see below* | Primary additional entity object
+| secondary | object | *see below* | Secondary additional entity object
 
-Primary/secondary object:
+**Primary/secondary object:**
 
 | Name | Type | Default | Description
 | ---- | ---- | ------- | -----------
 | entity | string | **Required** | A valid entity_id
-| name | string/bool | | Override entity friendly_name (use `false` to hide)
-| unit | string | | Override entity unit_of_measurement
+| name | string/bool | | Override entity `friendly_name` (set to `false` to hide)
+| unit | string | | Override entity `unit_of_measurement`
 | attribute | string | | A valid attribute key for the specified entity
 
 ### Example
