@@ -5,7 +5,7 @@ Show multiple entity states or attributes on entity rows in Home Assistant's Lov
 [![GH-last-commit](https://img.shields.io/github/last-commit/benct/lovelace-multiple-entity-row.svg?style=flat-square)](https://github.com/benct/lovelace-multiple-entity-row/commits/master)
 [![GH-code-size](https://img.shields.io/github/languages/code-size/benct/lovelace-multiple-entity-row.svg?style=flat-square)](https://github.com/benct/lovelace-multiple-entity-row)
 
-### Setup
+## Setup
 
 Add [multiple-entity-row.js](https://raw.githubusercontent.com/benct/lovelace-multiple-entity-row/master/multiple-entity-row.js) to your `<config>/www/` folder. Add the following to your `ui-lovelace.yaml` file:
 
@@ -27,7 +27,7 @@ custom_updater:
     - https://raw.githubusercontent.com/benct/lovelace-multiple-entity-row/master/tracker.json
 ```
 
-### Options
+## Options
 
 | Name | Type | Default | Description
 | ---- | ---- | ------- | -----------
@@ -41,7 +41,7 @@ custom_updater:
 | primary | object | *see below* | Primary additional entity object
 | secondary | object | *see below* | Secondary additional entity object
 
-**Primary/secondary object:**
+### Primary/secondary object
 
 | Name | Type | Default | Description
 | ---- | ---- | ------- | -----------
@@ -50,7 +50,7 @@ custom_updater:
 | unit | string | | Override entity `unit_of_measurement`
 | attribute | string | | A valid attribute key for the specified entity
 
-### Example
+## Example
 
 ![multiple-entity-row](https://raw.githubusercontent.com/benct/lovelace-multiple-entity-row/master/example.png)
 
@@ -132,5 +132,12 @@ entities:
       entity: sensor.bedroom_max_temp
       unit: temp
 ```
+
+## My cards
+
+[xiaomi-vacuum-card](https://github.com/benct/lovelace-xiaomi-vacuum-card) | 
+[github-entity-row](https://github.com/benct/lovelace-github-entity-row) | 
+[multiple-entity-row](https://github.com/benct/lovelace-multiple-entity-row) | 
+[attribute-entity-row](https://github.com/benct/lovelace-attribute-entity-row)
 
 [![BMC](https://www.buymeacoffee.com/assets/img/custom_images/white_img.png)](https://www.buymeacoff.ee/benct)
