@@ -40,9 +40,10 @@ custom_updater:
 | toggle | bool | `false` | Display a toogle instead of state
 | hide_state | bool | `false` | Hide the entity state
 | primary | object | *see below* | Primary additional entity object
-| secondary | object | *see below* | Secondary additional entity object
+| secondary | object | *see below* | Secondary additional entity object (not to be confused with `secondary_info`)
+| info | object | *see below* | Additional entity object as `secondary_info`
 
-### Primary/secondary object
+### Primary/secondary/info object
 
 | Name | Type | Default | Description
 | ---- | ---- | ------- | -----------
@@ -60,20 +61,34 @@ type: entities
 title: multiple-entity-row
 entities:
   - type: section
-    label: Single
+    label: Primary
   - entity: sensor.bedroom_temperature
     type: custom:multiple-entity-row
     primary:
       entity: sensor.bedroom_max_temp
 
   - type: section
-    label: Both
+    label: Primary + Secondary
   - entity: sensor.bedroom_temperature
     type: custom:multiple-entity-row
     primary:
       entity: sensor.bedroom_min_temp
     secondary:
       entity: sensor.bedroom_max_temp
+
+  - type: section
+    label: Info (secondary_info)
+  - entity: sensor.bedroom_temperature
+    type: custom:multiple-entity-row
+    primary:
+      entity: sensor.bedroom_min_temp
+    secondary:
+      entity: sensor.bedroom_max_temp
+    info:
+      entity: sensor.bedroom_temperature
+      attribute: battery_level
+      name: Battery
+      unit: '%'
 
   - type: section
     label: Attributes
