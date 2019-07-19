@@ -2,96 +2,96 @@ class MultipleEntityRow extends Polymer.Element {
 
     static get template() {
         return Polymer.html`
-          <style>
-            :host {
-              display: flex;
-              align-items: center;
-            }
-            .flex {
-              flex: 1;
-              margin-left: 16px;
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              min-width: 0;
-            }
-            .info {
-              flex: 1 0 60px;
-            }
-            .info, .info > * {
-              white-space: nowrap;
-              overflow: hidden;
-              text-overflow: ellipsis;
-            }
-            .flex ::slotted(*) {
-              margin-left: 8px;
-              min-width: 0;
-            }
-            .flex ::slotted([slot="secondary"]) {
-              margin-left: 0;
-            }
-            .secondary, ha-relative-time {
-              display: block;
-              color: var(--secondary-text-color);
-            }
-            state-badge {
-              flex: 0 0 40px;
-            }
-            .entity {
-              margin-right: 16px;
-              text-align: center;
-            }
-            .entity span {
-              font-size: 10px;
-              color: var(--secondary-text-color);
-            }
-            .entity:last-of-type {
-              margin-right: 0;
-            }
-            .state {
-              min-width: 45px;
-              text-align: end;
-            }
-            .toggle {
-              margin-left: 8px;
-            }
-          </style>
-          <state-badge state-obj="[[_config.stateObj]]" override-icon="[[_config.icon]]"></state-badge>
-          <div class="flex">
-            <div class="info">
-              [[entityName(_config)]]
-              <div class="secondary">
-                <template is="dom-if" if="{{displayInfo}}">
-                  [[entityName(info)]] [[entityState(info)]]
-                </template>
-                <template is="dom-if" if="{{displayLastChanged}}">
-                  <ha-relative-time datetime="[[_config.stateObj.last_changed]]" hass="[[_hass]]"></ha-relative-time>
-                </template>
-              </div>
-            </div>
-            <template is="dom-if" if="{{displayPrimary}}">
-                <div class="entity" on-click="primaryMoreInfo">
-                  <span>[[entityName(primary)]]</span>
-                  <div>[[entityState(primary)]]</div>
-                </div>
-            </template>
-            <template is="dom-if" if="{{displaySecondary}}">
-                <div class="entity" on-click="secondaryMoreInfo">
-                  <span>[[entityName(secondary)]]</span>
-                  <div>[[entityState(secondary)]]</div>
-                </div>
-            </template>
-            <template is="dom-if" if="{{displayValue}}">
-              <div class="state">
-                [[entityState(_config)]]
-              </div>
-            </template>
-            <template is="dom-if" if="{{displayToggle}}">
-              <div class="toggle">
-                <ha-entity-toggle state-obj="[[_config.stateObj]]" hass="[[_hass]]"></ha-entity-toggle>
-              </div>
-            </template>
-          </div>`;
+<style>
+  :host {
+    display: flex;
+    align-items: center;
+  }
+  .flex {
+    flex: 1;
+    margin-left: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-width: 0;
+  }
+  .info {
+    flex: 1 0 60px;
+  }
+  .info, .info > * {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .flex ::slotted(*) {
+    margin-left: 8px;
+    min-width: 0;
+  }
+  .flex ::slotted([slot="secondary"]) {
+    margin-left: 0;
+  }
+  .secondary, ha-relative-time {
+    display: block;
+    color: var(--secondary-text-color);
+  }
+  state-badge {
+    flex: 0 0 40px;
+  }
+  .entity {
+    margin-right: 16px;
+    text-align: center;
+  }
+  .entity span {
+    font-size: 10px;
+    color: var(--secondary-text-color);
+  }
+  .entity:last-of-type {
+    margin-right: 0;
+  }
+  .state {
+    min-width: 45px;
+    text-align: end;
+  }
+  .toggle {
+    margin-left: 8px;
+  }
+</style>
+<state-badge state-obj="[[_config.stateObj]]" override-icon="[[_config.icon]]"></state-badge>
+<div class="flex">
+  <div class="info">
+    [[entityName(_config)]]
+    <div class="secondary">
+      <template is="dom-if" if="{{displayInfo}}">
+        [[entityName(info)]] [[entityState(info)]]
+      </template>
+      <template is="dom-if" if="{{displayLastChanged}}">
+        <ha-relative-time datetime="[[_config.stateObj.last_changed]]" hass="[[_hass]]"></ha-relative-time>
+      </template>
+    </div>
+  </div>
+  <template is="dom-if" if="{{displayPrimary}}">
+      <div class="entity" on-click="primaryMoreInfo">
+        <span>[[entityName(primary)]]</span>
+        <div>[[entityState(primary)]]</div>
+      </div>
+  </template>
+  <template is="dom-if" if="{{displaySecondary}}">
+      <div class="entity" on-click="secondaryMoreInfo">
+        <span>[[entityName(secondary)]]</span>
+        <div>[[entityState(secondary)]]</div>
+      </div>
+  </template>
+  <template is="dom-if" if="{{displayValue}}">
+    <div class="state">
+      [[entityState(_config)]]
+    </div>
+  </template>
+  <template is="dom-if" if="{{displayToggle}}">
+    <div class="toggle">
+      <ha-entity-toggle state-obj="[[_config.stateObj]]" hass="[[_hass]]"></ha-entity-toggle>
+    </div>
+  </template>
+</div>`;
     }
 
     primaryMoreInfo(e) {
