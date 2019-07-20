@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 
 
+## 1.2.1
+
+- **Fixed:** Missing entity state values (#3)
+
 ## 1.2.0
 
 - **Added:** Support for custom entity/attribute as secondary_info
