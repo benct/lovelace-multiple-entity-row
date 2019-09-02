@@ -56,16 +56,16 @@ class MultipleEntityRow extends Polymer.Element {
     margin-left: 8px;
   }
 </style>
-<state-badge state-obj="[[_config.stateObj]]" override-icon="[[_config.icon]]"></state-badge>
+<state-badge state-obj="[[main.stateObj]]" override-icon="[[main.icon]]"></state-badge>
 <div class="flex">
   <div class="info">
-    [[entityName(_config)]]
+    [[entityName(main)]]
     <div class="secondary">
       <template is="dom-if" if="{{displayInfo}}">
         [[entityName(info)]] [[entityState(info)]]
       </template>
       <template is="dom-if" if="{{displayLastChanged}}">
-        <ha-relative-time datetime="[[_config.stateObj.last_changed]]" hass="[[_hass]]"></ha-relative-time>
+        <ha-relative-time datetime="[[main.stateObj.last_changed]]" hass="[[_hass]]"></ha-relative-time>
       </template>
     </div>
   </div>
@@ -83,12 +83,12 @@ class MultipleEntityRow extends Polymer.Element {
   </template>
   <template is="dom-if" if="{{displayValue}}">
     <div class="state">
-      [[entityState(_config)]]
+      [[entityState(main)]]
     </div>
   </template>
   <template is="dom-if" if="{{displayToggle}}">
     <div class="toggle">
-      <ha-entity-toggle state-obj="[[_config.stateObj]]" hass="[[_hass]]"></ha-entity-toggle>
+      <ha-entity-toggle state-obj="[[main.stateObj]]" hass="[[_hass]]"></ha-entity-toggle>
     </div>
   </template>
 </div>`;
@@ -170,7 +170,7 @@ class MultipleEntityRow extends Polymer.Element {
         if (hass && this._config) {
             const stateObj = this._config.entity in hass.states ? hass.states[this._config.entity] : null;
             if (stateObj) {
-                this._config.stateObj = stateObj;
+                this.main = Object.assign({}, this._config, { stateObj });
 
                 this.primary = Object.assign({}, this._config.primary, {
                     stateObj: this.displayPrimary && this._config.primary.entity in hass.states ?
