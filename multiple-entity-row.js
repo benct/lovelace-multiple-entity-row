@@ -134,8 +134,8 @@ class MultipleEntityRow extends Polymer.Element {
             if (!display) {
                 display = this._hass.localize(`state.${domain}.default.${stateObj.state}`);
             }
-        } else if ((unit || stateObj.attributes.unit_of_measurement) && !["unknown", "unavailable"].includes(stateObj.state)) {
-            display = `${stateObj.state} ${stateObj.attributes.unit_of_measurement}`;
+        } else if (unit !== false && (unit || stateObj.attributes.unit_of_measurement) && !["unknown", "unavailable"].includes(stateObj.state)) {
+            display = `${stateObj.state} ${unit || stateObj.attributes.unit_of_measurement}`;
         } else if (domain === "zwave") {
             display = ["initializing", "dead"].includes(stateObj.state)
                 ? this._hass.localize(`state.zwave.query_stage.${stateObj.state}`, 'query_stage', stateObj.attributes.query_stage)
