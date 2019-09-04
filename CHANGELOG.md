@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 1.2.3
+
+- **Fixed:** Not possible to hide entity unit value (#7)
+
 ## 1.2.2
 
 - **Fixed:** Entity state values not updating correctly (#4)
