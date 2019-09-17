@@ -185,6 +185,8 @@ class MultipleEntityRow extends Polymer.Element {
                         hass.states[this._config.info.entity] : null
                 });
             }
+            this.displayToggle = this._config.toggle === true && stateObj && (stateObj.state === "on" || stateObj.state === "off");
+            this.displayValue = !this.displayToggle && !this._config.hide_state;
         }
     }
 
