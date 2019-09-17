@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 1.2.4
+
+- **Fixed:** Incorrect toggle state when unavailable (#8)
+
 ## 1.2.3
 
 - **Fixed:** Not possible to hide entity unit value (#7)
