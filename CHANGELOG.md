@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 1.3.0
+
+- **Added:** Support for an optional tertiary object (#15)
+- **Added:** Optional name/header above the main entity state (#15)
+- **Fixed:** Attribute showing as unavailable when falsy (#13)
+
 ## 1.2.4
 
 - **Fixed:** Incorrect toggle state when unavailable (#8)
