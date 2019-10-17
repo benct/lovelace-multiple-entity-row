@@ -50,7 +50,6 @@ class MultipleEntityRow extends Polymer.Element {
   }
   .state {
     min-width: 45px;
-    text-align: end;
   }
   .toggle {
     margin-left: 8px;
@@ -88,8 +87,11 @@ class MultipleEntityRow extends Polymer.Element {
     </div>
   </template>
   <template is="dom-if" if="{{displayValue}}">
-    <div class="state">
-      [[entityState(main)]]
+    <div class="state entity">
+      <template is="dom-if" if="{{displayHeader}}">
+        <span>[[_config.name_state]]</span>
+      </template>
+      <div>[[entityState(main)]]</div>
     </div>
   </template>
   <template is="dom-if" if="{{displayToggle}}">
@@ -170,6 +172,7 @@ class MultipleEntityRow extends Polymer.Element {
         this._config = config;
         this.displayToggle = config.toggle === true;
         this.displayValue = !this.displayToggle && !config.hide_state;
+        this.displayHeader = this.displayValue && config.name_state;
         this.displayPrimary = config.primary && config.primary.entity;
         this.displaySecondary = config.secondary && config.secondary.entity;
         this.displayTertiary = config.tertiary && config.tertiary.entity;

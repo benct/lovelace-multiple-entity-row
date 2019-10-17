@@ -39,6 +39,7 @@ custom_updater:
 | icon | string | | Override entity `icon`
 | toggle | bool | `false` | Display a toogle instead of state
 | hide_state | bool | `false` | Hide the entity state
+| name_state | string | | Add name/header above the entity state
 | primary | object | *see below* | Primary additional entity object
 | secondary | object | *see below* | Secondary additional entity object (not to be confused with `secondary_info`)
 | tertiary | object | *see below* | Tertiary additional entity object (make sure there is enough room)
