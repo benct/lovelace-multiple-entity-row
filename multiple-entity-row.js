@@ -111,7 +111,7 @@ class MultipleEntityRow extends Polymer.Element {
     entityState(data) {
         if (!data || !data.stateObj) return this._hass.localize('state.default.unavailable');
         return data.attribute
-            ? data.stateObj.attributes[data.attribute]
+            ? (data.attribute in data.stateObj.attributes)
                 ? `${data.stateObj.attributes[data.attribute]} ${data.unit ? data.unit : ''}`
                 : this._hass.localize('state.default.unavailable')
             : this.computeStateValue(data.stateObj, data.unit);
