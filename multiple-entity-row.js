@@ -81,6 +81,12 @@ class MultipleEntityRow extends Polymer.Element {
         <div>[[entityState(secondary)]]</div>
       </div>
   </template>
+  <template is="dom-if" if="{{displayTertiary}}">
+    <div class="entity" on-click="tertiaryMoreInfo">
+      <span>[[entityName(tertiary)]]</span>
+      <div>[[entityState(tertiary)]]</div>
+    </div>
+  </template>
   <template is="dom-if" if="{{displayValue}}">
     <div class="state">
       [[entityState(main)]]
@@ -102,6 +108,11 @@ class MultipleEntityRow extends Polymer.Element {
     secondaryMoreInfo(e) {
         e.stopPropagation();
         this.fireEvent(this._config.secondary.entity)
+    }
+
+    tertiaryMoreInfo(e) {
+        e.stopPropagation();
+        this.fireEvent(this._config.tertiary.entity)
     }
 
     entityName(data) {
@@ -154,12 +165,14 @@ class MultipleEntityRow extends Polymer.Element {
         if (!config.entity) throw new Error('Please define an entity.');
         if (config.primary && !config.primary.entity) throw new Error('Please define a primary entity.');
         if (config.secondary && !config.secondary.entity) throw new Error('Please define a secondary entity.');
+        if (config.tertiary && !config.tertiary.entity) throw new Error('Please define a tertiary entity.');
 
         this._config = config;
         this.displayToggle = config.toggle === true;
         this.displayValue = !this.displayToggle && !config.hide_state;
         this.displayPrimary = config.primary && config.primary.entity;
         this.displaySecondary = config.secondary && config.secondary.entity;
+        this.displayTertiary = config.tertiary && config.tertiary.entity;
         this.displayInfo = config.info && config.info.entity;
         this.displayLastChanged = !this.displayInfo && config.secondary_info === 'last-changed';
     }
@@ -170,7 +183,7 @@ class MultipleEntityRow extends Polymer.Element {
         if (hass && this._config) {
             const stateObj = this._config.entity in hass.states ? hass.states[this._config.entity] : null;
             if (stateObj) {
-                this.main = Object.assign({}, this._config, { stateObj });
+                this.main = Object.assign({}, this._config, {stateObj});
 
                 this.primary = Object.assign({}, this._config.primary, {
                     stateObj: this.displayPrimary && this._config.primary.entity in hass.states ?
@@ -179,6 +192,10 @@ class MultipleEntityRow extends Polymer.Element {
                 this.secondary = Object.assign({}, this._config.secondary, {
                     stateObj: this.displaySecondary && this._config.secondary.entity in hass.states ?
                         hass.states[this._config.secondary.entity] : null
+                });
+                this.tertiary = Object.assign({}, this._config.tertiary, {
+                    stateObj: this.displayTertiary && this._config.tertiary.entity in hass.states ?
+                        hass.states[this._config.tertiary.entity] : null
                 });
                 this.info = Object.assign({}, this._config.info, {
                     stateObj: this.displayInfo && this._config.info.entity in hass.states ?

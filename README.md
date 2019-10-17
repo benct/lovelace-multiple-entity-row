@@ -41,16 +41,17 @@ custom_updater:
 | hide_state | bool | `false` | Hide the entity state
 | primary | object | *see below* | Primary additional entity object
 | secondary | object | *see below* | Secondary additional entity object (not to be confused with `secondary_info`)
+| tertiary | object | *see below* | Tertiary additional entity object (make sure there is enough room)
 | info | object | *see below* | Additional entity object as `secondary_info`
 
-### Primary/secondary/info object
+### Entity objects (primary | secondary | tertiary | info)
 
 | Name | Type | Default | Description
 | ---- | ---- | ------- | -----------
 | entity | string | **Required** | A valid entity_id
 | name | string/bool | | Override entity `friendly_name` (set to `false` to hide)
 | unit | string | | Override entity `unit_of_measurement`
-| attribute | string | | A valid attribute key for the specified entity
+| attribute | string | | A valid attribute key for the specified entity
 
 ## Example
 
