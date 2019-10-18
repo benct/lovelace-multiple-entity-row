@@ -69,21 +69,36 @@ class MultipleEntityRow extends Polymer.Element {
     </div>
   </div>
   <template is="dom-if" if="{{primary}}">
-      <div class="entity" on-click="primaryMoreInfo">
-        <span>[[entityName(primary)]]</span>
-        <div>[[entityState(primary)]]</div>
+    <div class="entity" on-click="primaryMoreInfo">
+      <span>[[entityName(primary)]]</span>
+      <div>
+        <template is="dom-if" if="{{primary.showToggle}}">
+          <ha-entity-toggle state-obj="[[primary.stateObj]]" hass="[[_hass]]"></ha-entity-toggle>
+        </template>
+        <template is="dom-if" if="{{!primary.showToggle}}">[[entityState(primary)]]</template>
       </div>
+    </div>
   </template>
   <template is="dom-if" if="{{secondary}}">
-      <div class="entity" on-click="secondaryMoreInfo">
-        <span>[[entityName(secondary)]]</span>
-        <div>[[entityState(secondary)]]</div>
+    <div class="entity" on-click="secondaryMoreInfo">
+      <span>[[entityName(secondary)]]</span>
+      <div>
+        <template is="dom-if" if="{{secondary.showToggle}}">
+          <ha-entity-toggle state-obj="[[secondary.stateObj]]" hass="[[_hass]]"></ha-entity-toggle>
+        </template>
+        <template is="dom-if" if="{{!secondary.showToggle}}">[[entityState(secondary)]]</template>
       </div>
+    </div>
   </template>
   <template is="dom-if" if="{{tertiary}}">
     <div class="entity" on-click="tertiaryMoreInfo">
       <span>[[entityName(tertiary)]]</span>
-      <div>[[entityState(tertiary)]]</div>
+      <div>
+        <template is="dom-if" if="{{tertiary.showToggle}}">
+          <ha-entity-toggle state-obj="[[tertiary.stateObj]]" hass="[[_hass]]"></ha-entity-toggle>
+        </template>
+        <template is="dom-if" if="{{!tertiary.showToggle}}">[[entityState(tertiary)]]</template>
+      </div>
     </div>
   </template>
   <template is="dom-if" if="{{!main.hide_state}}">

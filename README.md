@@ -37,15 +37,15 @@ custom_updater:
 | name | string | | Override entity `friendly_name`
 | unit | string | | Override entity `unit_of_measurement`
 | icon | string | | Override entity `icon`
-| toggle | bool | `false` | Display a toogle instead of state
+| toggle | bool | `false` | Display a toggle (if supported) instead of state
 | hide_state | bool | `false` | Hide the entity state
-| name_state | string | | Add name/header above the entity state
+| name_state | string | | Add name/header above the main entity state
 | primary | object | *see below* | Primary additional entity object
 | secondary | object | *see below* | Secondary additional entity object (not to be confused with `secondary_info`)
 | tertiary | object | *see below* | Tertiary additional entity object (make sure there is enough room)
 | info | object | *see below* | Additional entity object as `secondary_info`
 
-### Entity objects (primary | secondary | tertiary | info)
+### Entity objects (primary | secondary | tertiary | info*)
 
 | Name | Type | Default | Description
 | ---- | ---- | ------- | -----------
@@ -53,6 +53,9 @@ custom_updater:
 | name | string/bool | | Override entity `friendly_name` (set to `false` to hide)
 | unit | string | | Override entity `unit_of_measurement`
 | attribute | string | | A valid attribute key for the specified entity
+| toggle | bool | `false` | Display a toggle if supported by domain
+
+\* The `info` object does not support `toggle`
 
 ## Example
 
