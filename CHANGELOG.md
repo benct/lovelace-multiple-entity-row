@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 1.4.0
+
+- **Added:** Toggle-support for additional entities (#15)
+- **Changed:** Refactor and improve code
+
 ## 1.3.0
 
 - **Added:** Support for an optional tertiary object (#15)
