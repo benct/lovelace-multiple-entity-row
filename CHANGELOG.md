@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 1.4.1
+
+- **Added:** Default row click-handler, after it was [removed](https://github.com/home-assistant/home-assistant-polymer/pull/4023) in HA v0.101
+
 ## 1.4.0
 
 - **Added:** Toggle-support for additional entities (#15)
