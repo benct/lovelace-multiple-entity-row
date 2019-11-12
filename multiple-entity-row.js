@@ -17,6 +17,7 @@ class MultipleEntityRow extends Polymer.Element {
   }
   .info {
     flex: 1 0 60px;
+    cursor: pointer;
   }
   .info, .info > * {
     white-space: nowrap;
@@ -36,10 +37,12 @@ class MultipleEntityRow extends Polymer.Element {
   }
   state-badge {
     flex: 0 0 40px;
+    cursor: pointer;
   }
   .entity {
     margin-right: 16px;
     text-align: center;
+    cursor: pointer;
   }
   .entity span {
     font-size: 10px;
@@ -55,8 +58,8 @@ class MultipleEntityRow extends Polymer.Element {
     margin-left: 8px;
   }
 </style>
-<state-badge state-obj="[[main.stateObj]]" override-icon="[[main.icon]]"></state-badge>
-<div class="flex">
+<state-badge state-obj="[[main.stateObj]]" override-icon="[[main.icon]]" on-click="defaultMoreInfo"></state-badge>
+<div class="flex" on-click="defaultMoreInfo">
   <div class="info">
     [[entityName(main)]]
     <div class="secondary">
@@ -119,19 +122,24 @@ class MultipleEntityRow extends Polymer.Element {
 </div>`;
     }
 
+    defaultMoreInfo(e) {
+        e.stopPropagation();
+        this.fireEvent(this.main.entity);
+    }
+
     primaryMoreInfo(e) {
         e.stopPropagation();
-        this.fireEvent(this._config.primary.entity)
+        this.fireEvent(this.primary.entity);
     }
 
     secondaryMoreInfo(e) {
         e.stopPropagation();
-        this.fireEvent(this._config.secondary.entity)
+        this.fireEvent(this.secondary.entity);
     }
 
     tertiaryMoreInfo(e) {
         e.stopPropagation();
-        this.fireEvent(this._config.tertiary.entity)
+        this.fireEvent(this.tertiary.entity);
     }
 
     entityName(data) {
