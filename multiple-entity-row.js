@@ -78,7 +78,14 @@ class MultipleEntityRow extends Polymer.Element {
         <template is="dom-if" if="{{primary.showToggle}}">
           <ha-entity-toggle state-obj="[[primary.stateObj]]" hass="[[_hass]]"></ha-entity-toggle>
         </template>
-        <template is="dom-if" if="{{!primary.showToggle}}">[[entityState(primary)]]</template>
+        <template is="dom-if" if="{{!primary.showToggle}}">
+          <template is="dom-if" if="{{primary.showIcon}}">
+		      	<ha-icon id="icon" icon="[[entityState(primary)]]"></ha-icon>
+          </template>
+          <template is="dom-if" if="{{!primary.showIcon}}">
+            [[entityState(primary)]]
+          </template>
+        </template>
       </div>
     </div>
   </template>
@@ -89,7 +96,14 @@ class MultipleEntityRow extends Polymer.Element {
         <template is="dom-if" if="{{secondary.showToggle}}">
           <ha-entity-toggle state-obj="[[secondary.stateObj]]" hass="[[_hass]]"></ha-entity-toggle>
         </template>
-        <template is="dom-if" if="{{!secondary.showToggle}}">[[entityState(secondary)]]</template>
+        <template is="dom-if" if="{{!secondary.showToggle}}">
+          <template is="dom-if" if="{{secondary.showIcon}}">
+            <ha-icon id="icon" icon="[[entityState(secondary)]]"></ha-icon>
+          </template>
+          <template is="dom-if" if="{{!secondary.showIcon}}">
+            [[entityState(secondary)]]
+          </template>
+        </template>
       </div>
     </div>
   </template>
@@ -100,7 +114,14 @@ class MultipleEntityRow extends Polymer.Element {
         <template is="dom-if" if="{{tertiary.showToggle}}">
           <ha-entity-toggle state-obj="[[tertiary.stateObj]]" hass="[[_hass]]"></ha-entity-toggle>
         </template>
-        <template is="dom-if" if="{{!tertiary.showToggle}}">[[entityState(tertiary)]]</template>
+        <template is="dom-if" if="{{!tertiary.showToggle}}">
+          <template is="dom-if" if="{{tertiary.showIcon}}">
+            <ha-icon id="icon" icon="[[entityState(tertiary)]]"></ha-icon>
+          </template>
+          <template is="dom-if" if="{{!tertiary.showIcon}}">
+            [[entityState(tertiary)]]
+          </template>
+        </template>
       </div>
     </div>
   </template>
@@ -148,6 +169,7 @@ class MultipleEntityRow extends Polymer.Element {
 
     entityState(data) {
         if (!data || !data.stateObj) return this._hass.localize('state.default.unavailable');
+        if (data.showIcon && (data.icon !== undefined && data.icon !== "")) return data.icon;
         return data.attribute
             ? (data.attribute in data.stateObj.attributes)
                 ? `${data.stateObj.attributes[data.attribute]} ${data.unit ? data.unit : ''}`
@@ -221,6 +243,7 @@ class MultipleEntityRow extends Polymer.Element {
         return stateObj ? Object.assign({}, config, {
             stateObj: stateObj,
             showToggle: this.validateToggle(config, stateObj),
+            showIcon: config.showIcon !== undefined ? config.showIcon : false
         }) : null;
     }
 
