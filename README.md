@@ -54,8 +54,9 @@ custom_updater:
 | unit | string | | Override entity `unit_of_measurement`
 | attribute | string | | A valid attribute key for the specified entity
 | toggle | bool | `false` | Display a toggle if supported by domain
+| icon | string/bool | `false` | Display default or custom icon instead of state or attribute value
 
-\* The `info` object does not support `toggle`
+\* The `info` object does not support `toggle` or `icon`
 
 ## Example
 
