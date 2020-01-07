@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 2.0.0
+
+- **Changed:** Major refactoring and cleanup of code
+- **Changed:** Use LitElement instead of Polymer.Element
+- **Added:** Support for HA Cast [https://cast.home-assistant.io](https://cast.home-assistant.io) (#20)
+- **Added:** Support for displaying icons for additional entities (#19)
+- **Fixed:** Incorrect toggle state on climate entities (#18)
+
 ## 1.4.1
 
 - **Added:** Default row click-handler, after it was [removed](https://github.com/home-assistant/home-assistant-polymer/pull/4023) in HA v0.101 (#16)
