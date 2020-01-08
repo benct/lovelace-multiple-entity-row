@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 2.1.0
+
+- **Added:** Support for calling services on entity click (#6)
+- **Fixed:** Issue where LitElement has already been declared (#21)
+
 ## 2.0.0
 
 - **Changed:** Major refactoring and cleanup of code
