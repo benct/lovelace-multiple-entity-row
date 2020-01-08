@@ -44,8 +44,10 @@ resources:
 | attribute | string | | A valid attribute key for the specified entity
 | toggle | bool | `false` | Display a toggle if supported by domain
 | icon | string/bool | `false` | Display default or custom icon instead of state or attribute value
+| service | string | | A valid service, including domain (e.g. `light.turn_on`)
+| service_data | object | | Optional data to send together with `service`
 
-\* The `info` object does not support `toggle` or `icon`
+\* The `info` object does not support `toggle`, `icon` or `service`
 
 ## Example
 

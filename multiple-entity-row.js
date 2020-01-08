@@ -72,7 +72,7 @@
 
         renderEntity(data) {
             return data ? html`
-        <div class="entity" @click="${() => this.fireEvent(data.entity)}">
+        <div class="entity" @click="${data.click}">
             <span>${this.entityName(data)}</span>
             <div>${data.showToggle
                 ? html`<ha-entity-toggle .stateObj="${data.stateObj}" .hass="${this._hass}"></ha-entity-toggle>`
@@ -86,10 +86,10 @@
     <state-badge
         .stateObj="${this.state.main.stateObj}"
         .overrideIcon="${this.state.main.icon}"
-        @click="${this.defaultMoreInfo}">
+        @click="${this.state.main.click}">
     </state-badge>
     <div class="flex">
-        <div class="info" @click="${this.defaultMoreInfo}">
+        <div class="info" @click="${this.state.main.click}">
             ${this.entityName(this.state.main)}
             <div class="secondary">
                 ${this.state.info && `${this.entityName(this.state.info)} ${this.entityState(this.state.info)}`}
@@ -106,7 +106,7 @@
             ${this.state.main.name_state && html`<span>${this.state.main.name_state}</span>`}
             ${this.state.main.showToggle
                 ? html`<div class="toggle"><ha-entity-toggle .stateObj="${this.state.main.stateObj}" .hass="${this._hass}"></ha-entity-toggle></div>`
-                : html`<div @click="${this.defaultMoreInfo}">${this.entityState(this.state.main)}</div>`}
+                : html`<div @click="${this.state.main.click}">${this.entityState(this.state.main)}</div>`}
         </div>` : null}
     </div>`;
         }
@@ -190,13 +190,9 @@
             return stateObj ? Object.assign({}, config, {
                 stateObj: stateObj,
                 showToggle: config.toggle === true && stateObj.state && !["unknown", "unavailable"].includes(stateObj.state),
-                showIcon: config.icon === true ? stateObj.attributes.icon : config.icon
+                showIcon: config.icon === true ? stateObj.attributes.icon : config.icon,
+                click: () => (config.service ? this.callService(config.service, config.service_data) : this.fireEvent(config.entity))
             }) : null;
-        }
-
-        defaultMoreInfo(e) {
-            e.stopPropagation();
-            this.fireEvent(this.state.main.entity);
         }
 
         fireEvent(entity, options = {}) {
@@ -207,6 +203,11 @@
             });
             event.detail = {entityId: entity};
             this.dispatchEvent(event);
+        }
+
+        callService(service, serviceData) {
+            const serviceDetails = service.split(".");
+            this._hass.callService(serviceDetails[0], serviceDetails[1], serviceData);
         }
     }
 
