@@ -147,8 +147,8 @@ entities:
 ## My cards
 
 [xiaomi-vacuum-card](https://github.com/benct/lovelace-xiaomi-vacuum-card) | 
-[github-entity-row](https://github.com/benct/lovelace-github-entity-row) | 
 [multiple-entity-row](https://github.com/benct/lovelace-multiple-entity-row) | 
-[attribute-entity-row](https://github.com/benct/lovelace-attribute-entity-row)
+[github-entity-row](https://github.com/benct/lovelace-github-entity-row) | 
+[~~attribute-entity-row~~](https://github.com/benct/lovelace-attribute-entity-row)
 
 [![BMC](https://www.buymeacoffee.com/assets/img/custom_images/white_img.png)](https://www.buymeacoff.ee/benct)
