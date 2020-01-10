@@ -8,129 +8,192 @@
             return {
                 _hass: {},
                 _config: {},
-                state: {}
+                state: {},
             }
         }
 
         static get styles() {
             return css`
-      :host {
-        display: flex;
-        align-items: center;
-      }
-      .flex {
-        flex: 1;
-        margin-left: 16px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        min-width: 0;
-      }
-      .info {
-        flex: 1 0 60px;
-        cursor: pointer;
-      }
-      .info, .info > * {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .flex ::slotted(*) {
-        margin-left: 8px;
-        min-width: 0;
-      }
-      .flex ::slotted([slot="secondary"]) {
-        margin-left: 0;
-      }
-      .secondary, ha-relative-time {
-        display: block;
-        color: var(--secondary-text-color);
-      }
-      state-badge {
-        flex: 0 0 40px;
-        cursor: pointer;
-      }
-      .entity {
-        margin-right: 16px;
-        text-align: center;
-        cursor: pointer;
-      }
-      .entity span {
-        font-size: 10px;
-        color: var(--secondary-text-color);
-      }
-      .entity:last-of-type {
-        margin-right: 0;
-      }
-      .state {
-        min-width: 45px;
-      }
-      .toggle {
-        margin-left: 8px;
-      }`;
-        }
-
-        renderEntity(data) {
-            return data ? html`
-        <div class="entity" @click="${data.click}">
-            <span>${this.entityName(data)}</span>
-            <div>${data.showToggle
-                ? html`<ha-entity-toggle .stateObj="${data.stateObj}" .hass="${this._hass}"></ha-entity-toggle>`
-                : data.showIcon ? html`<ha-icon icon="${data.showIcon}"></ha-icon>` : this.entityState(data)}
-            </div>
-        </div>` : null;
+          :host {
+            display: flex;
+            align-items: center;
+          }
+          .flex {
+            flex: 1;
+            margin-left: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            min-width: 0;
+          }
+          .info {
+            flex: 1 0 60px;
+            cursor: pointer;
+          }
+          .info, .info > * {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+          .flex ::slotted(*) {
+            margin-left: 8px;
+            min-width: 0;
+          }
+          .flex ::slotted([slot="secondary"]) {
+            margin-left: 0;
+          }
+          .secondary, ha-relative-time {
+            display: block;
+            color: var(--secondary-text-color);
+          }
+          state-badge {
+            flex: 0 0 40px;
+            cursor: pointer;
+          }
+          .entity {
+            margin-right: 16px;
+            text-align: center;
+            cursor: pointer;
+          }
+          .entity span {
+            font-size: 10px;
+            color: var(--secondary-text-color);
+          }
+          .entity:last-of-type {
+            margin-right: 0;
+          }
+          .state {
+            min-width: 45px;
+          }
+          .toggle {
+            margin-left: 8px;
+          }`;
         }
 
         render() {
             return html`
-    <state-badge
-        .stateObj="${this.state.main.stateObj}"
-        .overrideIcon="${this.state.main.icon}"
-        @click="${this.state.main.click}">
-    </state-badge>
-    <div class="flex">
-        <div class="info" @click="${this.state.main.click}">
-            ${this.entityName(this.state.main)}
-            <div class="secondary">
-                ${this.state.info && `${this.entityName(this.state.info)} ${this.entityState(this.state.info)}`}
-                ${this.state.showLastChanged
-                ? html`<ha-relative-time datetime="${this.state.main.stateObj.last_changed}" .hass="${this._hass}"></ha-relative-time>`
+            <state-badge
+                .stateObj="${this.state.stateObj}"
+                .overrideIcon="${this.icon}"
+                @click="${this.onClick}">
+            </state-badge>
+            <div class="flex">
+                <div class="info" @click="${this.onClick}">
+                    ${this.state.name}
+                    <div class="secondary">
+                        ${this.state.info && `${this.state.info.name} ${this.state.info.value}`}
+                        ${this.lastChanged
+                ? html`<ha-relative-time datetime="${this.state.stateObj.last_changed}" .hass="${this._hass}"></ha-relative-time>`
                 : null}
-            </div>
-        </div>
-        ${this.renderEntity(this.state.primary)}
-        ${this.renderEntity(this.state.secondary)}
-        ${this.renderEntity(this.state.tertiary)}
-        ${!this.state.main.hide_state ? html`
-        <div class="state entity">
-            ${this.state.main.name_state && html`<span>${this.state.main.name_state}</span>`}
-            ${this.state.main.showToggle
-                ? html`<div class="toggle"><ha-entity-toggle .stateObj="${this.state.main.stateObj}" .hass="${this._hass}"></ha-entity-toggle></div>`
-                : html`<div @click="${this.state.main.click}">${this.entityState(this.state.main)}</div>`}
-        </div>` : null}
-    </div>`;
+                    </div>
+                </div>
+                ${this.renderEntity(this.state.primary)}
+                ${this.renderEntity(this.state.secondary)}
+                ${this.renderEntity(this.state.tertiary)}
+                ${this.state.value ? html`
+                <div class="state entity" @click="${this.onClick}">
+                    ${this.stateHeader && html`<span>${this.stateHeader}</span>`}
+                    ${this.state.toggle
+                ? html`<div class="toggle"><ha-entity-toggle .stateObj="${this.state.stateObj}" .hass="${this._hass}"></ha-entity-toggle></div>`
+                : html`<div>${this.state.value}</div>`}
+                </div>` : null}
+            </div>`;
         }
 
-        entityName(data) {
-            return data && data.stateObj && data.name !== false ? this.computeStateName(data.stateObj, data.name) : null;
+        renderEntity(entity) {
+            return entity ? html`
+            <div class="entity" @click="${entity.onClick}">
+            ${entity.toggle
+                ? html`<span>${entity.name}</span><div><ha-entity-toggle .stateObj="${entity.stateObj}" .hass="${this._hass}"></ha-entity-toggle></div>`
+                : entity.icon
+                    ? html`<ha-icon icon="${entity.icon}"></ha-icon>`
+                    : html`<span>${entity.name}</span><div>${entity.value}</div>`}
+            </div>` : null;
         }
 
-        entityState(data) {
-            if (!data || !data.stateObj) return this._hass.localize('state.default.unavailable');
-            return data.attribute
-                ? (data.attribute in data.stateObj.attributes)
-                    ? `${data.stateObj.attributes[data.attribute]} ${data.unit ? data.unit : ''}`
-                    : this._hass.localize('state.default.unavailable')
-                : this.computeStateValue(data.stateObj, data.unit);
+        setConfig(config) {
+            if (!config.entity) throw new Error('Please define a main entity.');
+            this.checkEntity(config, 'primary');
+            this.checkEntity(config, 'secondary');
+            this.checkEntity(config, 'tertiary');
+            this.checkEntity(config, 'info');
+
+            this.icon = config.icon;
+            this.lastChanged = config.secondary_info === 'last-changed' && !config.info;
+            this.stateHeader = config.name_state !== undefined ? config.name_state : null,
+                this.onClick = () => this.fireEvent(config.entity);
+
+            this._config = config;
         }
 
-        computeStateName(stateObj, name) {
-            return name || (stateObj.attributes.friendly_name === undefined
+        set hass(hass) {
+            this._hass = hass;
+
+            if (hass && this._config) {
+                const mainStateObj = hass.states[this._config.entity];
+
+                if (!mainStateObj) throw new Error(`Entity not available: ${this._config.entity}`);
+
+                this.state = {
+                    ...this.state,
+
+                    stateObj: mainStateObj,
+                    name: this.entityName(this._config.name, mainStateObj),
+                    value: this._config.hide_state !== true ? this.entityStateValue(mainStateObj, this._config.unit) : null,
+                    toggle: this.checkToggle(this._config, mainStateObj),
+
+                    primary: this.initEntity(this._config.primary, mainStateObj),
+                    secondary: this.initEntity(this._config.secondary, mainStateObj),
+                    tertiary: this.initEntity(this._config.tertiary, mainStateObj),
+                    info: this.initEntity(this._config.info, mainStateObj),
+                }
+            }
+        }
+
+        checkEntity(config, key) {
+            if (config[key] && !(config[key].entity || config[key].attribute || config[key].service)) {
+                throw new Error(`Object '${key}' requires at least one 'entity', 'attribute' or 'service'.`);
+            }
+        }
+
+        checkToggle(config, stateObj) {
+            return config.toggle === true && stateObj.state && !["unknown", "unavailable"].includes(stateObj.state)
+        }
+
+        initEntity(config, mainStateObj) {
+            if (!config) return null;
+
+            const stateObj = config.entity ? (this._hass && this._hass.states[config.entity]) : mainStateObj;
+
+            if (!stateObj) return {value: this._hass.localize('state.default.unavailable')};
+
+            return {
+                stateObj: stateObj,
+                name: this.entityName(config.name, stateObj),
+                value: config.attribute !== undefined
+                    ? this.entityAttribute(stateObj, config.attribute, config.unit)
+                    : this.entityStateValue(stateObj, config.unit),
+                toggle: this.checkToggle(config, stateObj),
+                icon: config.icon === true ? stateObj.attributes.icon : config.icon,
+                onClick: () => (config.service ? this.callService(config.service, config.service_data) : this.fireEvent(stateObj.entity_id))
+            };
+        }
+
+        entityName(name, stateObj) {
+            if (name === false) return null;
+            if (name !== undefined) return name;
+            return stateObj.attributes.friendly_name === undefined
                 ? stateObj.entity_id.substr(stateObj.entity_id.indexOf('.') + 1).replace(/_/g, ' ')
-                : stateObj.attributes.friendly_name || '');
+                : stateObj.attributes.friendly_name || '';
         }
 
-        computeStateValue(stateObj, unit) {
+        entityAttribute(stateObj, attribute, unit) {
+            return (attribute in stateObj.attributes)
+                ? `${stateObj.attributes[attribute]}${unit ? ` ${unit}` : ''}`
+                : this._hass.localize('state.default.unavailable');
+        }
+
+        entityStateValue(stateObj, unit) {
             let display;
             const domain = stateObj.entity_id.substr(0, stateObj.entity_id.indexOf("."));
 
@@ -155,44 +218,6 @@
                 this._hass.localize(`state.default.${stateObj.state}`) ||
                 this._hass.localize(`component.${domain}.state.${stateObj.state}`) ||
                 stateObj.state;
-        }
-
-        setConfig(config) {
-            if (!config.entity) throw new Error('Please define an entity.');
-            if (config.primary && !config.primary.entity) throw new Error('Please define a primary entity.');
-            if (config.secondary && !config.secondary.entity) throw new Error('Please define a secondary entity.');
-            if (config.tertiary && !config.tertiary.entity) throw new Error('Please define a tertiary entity.');
-            if (config.info && !config.info.entity) throw new Error('Please define an info entity.');
-
-            this.state = {
-                showLastChanged: config.secondary_info === 'last-changed' && !config.info
-            };
-            this._config = config;
-        }
-
-        set hass(hass) {
-            this._hass = hass;
-
-            if (hass && this._config) {
-                this.state = {
-                    ...this.state,
-                    main: this.initEntity(this._config),
-                    primary: this.initEntity(this._config.primary),
-                    secondary: this.initEntity(this._config.secondary),
-                    tertiary: this.initEntity(this._config.tertiary),
-                    info: this.initEntity(this._config.info)
-                }
-            }
-        }
-
-        initEntity(config) {
-            const stateObj = config && this._hass && this._hass.states[config.entity];
-            return stateObj ? Object.assign({}, config, {
-                stateObj: stateObj,
-                showToggle: config.toggle === true && stateObj.state && !["unknown", "unavailable"].includes(stateObj.state),
-                showIcon: config.icon === true ? stateObj.attributes.icon : config.icon,
-                click: () => (config.service ? this.callService(config.service, config.service_data) : this.fireEvent(config.entity))
-            }) : null;
         }
 
         fireEvent(entity, options = {}) {
