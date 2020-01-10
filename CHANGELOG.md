@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 2.2.0
+
+- **Changed:** More refactoring and cleanup of code
+- **Changed:** Make `entity` optional on additional entity objects (#23)
+
 ## 2.1.0
 
 - **Added:** Support for calling services on entity click (#6)
