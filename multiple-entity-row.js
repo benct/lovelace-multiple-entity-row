@@ -81,7 +81,7 @@
                 <div class="info" @click="${this.onClick}">
                     ${this.state.name}
                     <div class="secondary">
-                        ${this.state.info && `${this.state.info.name} ${this.state.info.value}`}
+                        ${this.state.info && `${this.state.info.name ? `${this.state.info.name} ` : ''}${this.state.info.value}`}
                         ${this.lastChanged
                 ? html`<ha-relative-time datetime="${this.state.stateObj.last_changed}" .hass="${this._hass}"></ha-relative-time>`
                 : null}
