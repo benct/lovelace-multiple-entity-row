@@ -8,12 +8,18 @@ Show multiple entity states or attributes on entity rows in Home Assistant's Lov
 
 ## Setup
 
-Install using [HACS](https://hacs.xyz/), or add [multiple-entity-row.js](https://raw.githubusercontent.com/benct/lovelace-multiple-entity-row/master/multiple-entity-row.js)
+Manually add [multiple-entity-row.js](https://raw.githubusercontent.com/benct/lovelace-multiple-entity-row/master/multiple-entity-row.js)
 to your `<config>/www/` folder and add the following to your `ui-lovelace.yaml` file:
-
 ```yaml
 resources:
   - url: /local/multiple-entity-row.js?v=2.2.1
+    type: module
+```
+
+OR install using [HACS](https://hacs.xyz/) and add this instead:
+```yaml
+resources:
+  - url: /community_plugin/lovelace-multiple-entity-row/multiple-entity-row.js
     type: module
 ```
 
