@@ -90,6 +90,8 @@
                 ${this.renderEntity(this.state.primary)}
                 ${this.renderEntity(this.state.secondary)}
                 ${this.renderEntity(this.state.tertiary)}
+                ${this.renderEntity(this.state.quaternary)}
+                ${this.renderEntity(this.state.quinary)}
                 ${this.state.value ? html`
                 <div class="state entity" @click="${this.onClick}">
                     ${this.stateHeader && html`<span>${this.stateHeader}</span>`}
@@ -116,6 +118,8 @@
             this.checkEntity(config, 'primary');
             this.checkEntity(config, 'secondary');
             this.checkEntity(config, 'tertiary');
+            this.checkEntity(config, 'quaternary');
+            this.checkEntity(config, 'quinary');
             this.checkEntity(config, 'info');
 
             this.icon = config.icon;
@@ -145,6 +149,8 @@
                     primary: this.initEntity(this._config.primary, mainStateObj),
                     secondary: this.initEntity(this._config.secondary, mainStateObj),
                     tertiary: this.initEntity(this._config.tertiary, mainStateObj),
+                    quaternary: this.initEntity(this._config.quaternary, mainStateObj),
+                    quinary: this.initEntity(this._config.quinary, mainStateObj),
                     info: this.initEntity(this._config.info, mainStateObj),
                 }
             }
