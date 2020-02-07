@@ -34,7 +34,8 @@ resources:
 | icon | string | | Override entity `icon`
 | toggle | bool | `false` | Display a toggle (if supported) instead of state
 | hide_state | bool | `false` | Hide the entity state
-| name_state | string | | Add name/header above the main entity state
+| name_state | string | | Show name/header above the main entity state
+| state_color | bool | false | Enable colored icon when entity is active
 | | | |
 | primary | object | *see below* | Primary additional entity object
 | secondary | object | *see below* | Secondary additional entity object (not to be confused with `secondary_info`)
