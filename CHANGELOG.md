@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 2.3.0
+
+- **Added:** Support `state_color` config introduced in HA v0.105 (#36)
+- **Fixed:** Minor incorrect code syntax
+
 ## 2.2.1
 
 - **Fixed:** Info name showing as `null` when disabled (#27)
