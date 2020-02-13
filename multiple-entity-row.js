@@ -67,6 +67,9 @@
           }
           .toggle {
             margin-left: 8px;
+          }
+          .icon-small {
+            width: auto;
           }`;
         }
 
@@ -104,7 +107,7 @@
             ${entity.toggle
                 ? html`<span>${entity.name}</span><div><ha-entity-toggle .stateObj="${entity.stateObj}" .hass="${this._hass}"></ha-entity-toggle></div>`
                 : entity.icon
-                    ? html`<ha-icon icon="${entity.icon}"></ha-icon>`
+                    ? html`<state-badge class="icon-small" .stateObj="${entity.stateObj}" .overrideIcon="${entity.icon}" .stateColor="${this._config.state_color}"></state-badge>`
                     : html`<span>${entity.name}</span><div>${entity.value}</div>`}
             </div>` : null;
         }
