@@ -88,9 +88,7 @@
                 : null}
                     </div>
                 </div>
-                ${this.renderEntity(this.state.primary)}
-                ${this.renderEntity(this.state.secondary)}
-                ${this.renderEntity(this.state.tertiary)}
+                ${this.state.entities.map(entity => this.renderEntity(entity))}
                 ${this.state.value ? html`
                 <div class="state entity" @click="${this.onClick}">
                     ${this.stateHeader && html`<span>${this.stateHeader}</span>`}
@@ -114,10 +112,10 @@
 
         setConfig(config) {
             if (!config.entity) throw new Error('Please define a main entity.');
-            this.checkEntity(config, 'primary');
-            this.checkEntity(config, 'secondary');
-            this.checkEntity(config, 'tertiary');
-            this.checkEntity(config, 'info');
+            if (config.entities) {
+                config.entities.map(entity => this.checkEntity(entity));
+            }
+            this.checkEntity(config.info);
 
             this.lastChanged = config.secondary_info === 'last-changed' && !config.info;
             this.stateHeader = config.name_state !== undefined ? config.name_state : null;
@@ -142,17 +140,19 @@
                     value: this._config.hide_state !== true ? this.entityStateValue(mainStateObj, this._config.unit) : null,
                     toggle: this.checkToggle(this._config, mainStateObj),
 
-                    primary: this.initEntity(this._config.primary, mainStateObj),
-                    secondary: this.initEntity(this._config.secondary, mainStateObj),
-                    tertiary: this.initEntity(this._config.tertiary, mainStateObj),
+                    entities: this._config.entities ? this._config.entities.map(entity => this.initEntity(entity, mainStateObj)) : [],
                     info: this.initEntity(this._config.info, mainStateObj),
                 }
             }
         }
 
-        checkEntity(config, key) {
-            if (config[key] && !(config[key].entity || config[key].attribute || config[key].service)) {
-                throw new Error(`Object '${key}' requires at least one 'entity', 'attribute' or 'service'.`);
+        checkEntity(config) {
+            if (config && typeof config === 'object' && !(config.entity || config.attribute || config.service)) {
+                throw new Error(`Entity object requires at least one 'entity', 'attribute' or 'service'.`);
+            } else if (config && typeof config === 'string' && config === '') {
+                throw new Error('Entity ID string must not be blank.');
+            } else if (config && typeof config !== 'string' && typeof config !== 'object') {
+                throw new Error('Entity config must be a valid entity ID string or entity object.');
             }
         }
 
@@ -163,7 +163,8 @@
         initEntity(config, mainStateObj) {
             if (!config) return null;
 
-            const stateObj = config.entity ? (this._hass && this._hass.states[config.entity]) : mainStateObj;
+            const entity = typeof config === 'string' ? config : config.entity;
+            const stateObj = entity ? (this._hass && this._hass.states[entity]) : mainStateObj;
 
             if (!stateObj) return {value: this._hass.localize('state.default.unavailable')};
 

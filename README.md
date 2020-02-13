@@ -35,14 +35,12 @@ resources:
 | toggle | bool | `false` | Display a toggle (if supported) instead of state
 | hide_state | bool | `false` | Hide the entity state
 | name_state | string | | Show name/header above the main entity state
-| state_color | bool | false | Enable colored icon when entity is active
+| state_color | bool | `false` | Enable colored icon when entity is active
 | | | |
-| primary | object | *see below* | Primary additional entity object
-| secondary | object | *see below* | Secondary additional entity object (not to be confused with `secondary_info`)
-| tertiary | object | *see below* | Tertiary additional entity object (make sure there is enough room)
-| info | object | *see below* | Additional entity object as `secondary_info`
+| entities | list | *see below* | Additional entity IDs or entity object(s)
+| info | object | *see below* | Custom `secondary_info` entity object
 
-### Entity objects (primary | secondary | tertiary | info*)
+### Entity objects
 
 Either `entity`, `attribute` or `service` needs to be specified. `entity` is only required if you want to display data from another entity
 than the main entity specified above. `attribute` is necessary if you want to display an entity attribute value instead of the state
@@ -59,7 +57,7 @@ value. `service` lets you call a specified service on click instead of showing t
 | service | string | | A valid service, including domain (e.g. `light.turn_on`)
 | service_data | object | | Optional data to send together with `service`
 
-\* The `info` object does not support `toggle`, `icon` or `service`
+\* The `info` entity object does not support `toggle`, `icon` or `service`
 
 ## Example
 
@@ -70,31 +68,28 @@ type: entities
 entities:
   - entity: sensor.bedroom_temperature
     type: custom:multiple-entity-row
-    name: Primary
+    name: One entity
     secondary_info: last-changed
-    primary:
-      entity: sensor.bedroom_max_temp
+    entities:
+      - sensor.bedroom_max_temp
 
   - entity: sensor.bedroom_temperature
     type: custom:multiple-entity-row
-    name: Primary + Secondary
+    name: Two entities
     secondary_info: last-changed
-    primary:
-      entity: sensor.bedroom_min_temp
-    secondary:
-      entity: sensor.bedroom_max_temp
+    entities:
+      - sensor.bedroom_min_temp
+      - sensor.bedroom_max_temp
 
   - entity: sensor.bedroom_temperature
     type: custom:multiple-entity-row
-    name: Pri + Sec + Tertiary
+    name: Three entities
     secondary_info: last-changed
-    primary:
-      entity: sensor.bedroom_humidity
-      name: humidity
-    secondary:
-      entity: sensor.bedroom_min_temp
-    tertiary:
-      entity: sensor.bedroom_max_temp
+    entities:
+      - entity: sensor.bedroom_humidity
+        name: humidity
+      - sensor.bedroom_min_temp
+      - sensor.bedroom_max_temp
 
   - entity: sensor.bedroom_temperature
     type: custom:multiple-entity-row
@@ -108,73 +103,66 @@ entities:
   - entity: vacuum.xiaomi_vacuum_cleaner
     type: custom:multiple-entity-row
     name: Attributes
-    primary:
-      attribute: battery_level
-      name: Battery
-      unit: '%'
-    secondary:
-      attribute: status
-      name: Status
+    entities:
+      - attribute: battery_level
+        name: Battery
+        unit: '%'
+      - attribute: status
+        name: Status
 
   - entity:  sensor.lovelace_multiple_entity_row
     type: custom:multiple-entity-row
     name: Attributes (hide_state)
     hide_state: true
-    primary:
-      attribute: stargazers
-      name: Stars
-    secondary:
-      attribute: open_issues
-      name: Issues
-    tertiary:
-      attribute: open_pull_requests
-      name: PRs
+    entities:
+      - attribute: stargazers
+        name: Stars
+      - attribute: open_issues
+        name: Issues
+      - attribute: open_pull_requests
+        name: PRs
 
   - type: section
   - entity: sensor.bedroom_temperature
     type: custom:multiple-entity-row
     name: Hide names
-    primary:
-      entity: sensor.bedroom_min_temp
-      name: false
-    secondary:
-      entity: sensor.bedroom_max_temp
-      name: false
+    entities:
+      - entity: sensor.bedroom_min_temp
+        name: false
+      - entity: sensor.bedroom_max_temp
+        name: false
 
   - entity: sensor.bedroom_temperature
     type: custom:multiple-entity-row
     name: Main state name
     name_state: current
-    primary:
-      entity: sensor.bedroom_min_temp
-    secondary:
-      entity: sensor.bedroom_max_temp
+    entities:
+      - sensor.bedroom_min_temp
+      - sensor.bedroom_max_temp
 
   - type: section
   - entity: switch.livingroom_tv
     type: custom:multiple-entity-row
     name: Toggle
     toggle: true
-    primary:
-      entity: sensor.livingroom_tv_power
-      name: Power
-    secondary:
-      entity: sensor.livingroom_tv_power_total
-      name: Total
+    entities:
+      - entity: sensor.livingroom_tv_power
+        name: Power
+      - entity: sensor.livingroom_tv_power_total
+        name: Total
 
   - entity: switch.livingroom_tv
     type: custom:multiple-entity-row
     name: Multiple toggles
     name_state: main
     toggle: true
-    primary:
-      entity: switch.livingroom_light
-      name: toggle1
-      toggle: true
-    secondary:
-      entity: switch.livingroom_light_2
-      name: toggle2
-      toggle: true
+    entities:
+      - entity: switch.livingroom_light
+        name: toggle1
+        toggle: true
+      - entity: switch.livingroom_light_2
+        name: toggle2
+        toggle: true
 
   - type: section
   - entity: sensor.bedroom_temperature
@@ -183,29 +171,27 @@ entities:
     icon: mdi:fire
     unit: °F
     secondary_info: last-changed
-    primary:
-      name: custom name
-      entity: sensor.bedroom_max_temp
-      unit: temp
+    entities:
+      - entity: sensor.bedroom_max_temp
+        name: custom name
+        unit: temp
 
   - type: section
   - entity: sensor.living_room_temperature
     type: custom:multiple-entity-row
     name: Icons (service calls)
     secondary_info: last-changed
-    primary:
-      entity: light.living_room
-      icon: mdi:palette
-    secondary:
-      icon: mdi:lightbulb-off-outline
-      service: light.turn_off
-      service_data:
-        entity_id: light.living_room
-    tertiary:
-      icon: mdi:lightbulb-outline
-      service: light.turn_on
-      service_data:
-        entity_id: light.living_room
+    entities:
+      - entity: light.living_room
+        icon: mdi:palette
+      - icon: mdi:lightbulb-off-outline
+        service: light.turn_off
+        service_data:
+          entity_id: light.living_room
+      - icon: mdi:lightbulb-outline
+        service: light.turn_on
+        service_data:
+          entity_id: light.living_room
 ```
 
 ## My cards
