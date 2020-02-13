@@ -25,6 +25,8 @@ resources:
 
 ## Options
 
+This card produces an `entity-row` and must therefore be configured as an entity in an [entities](https://www.home-assistant.io/lovelace/entities/) card.
+
 | Name | Type | Default | Description
 | ---- | ---- | ------- | -----------
 | type | string | **Required** | `custom:multiple-entity-row`
@@ -39,12 +41,17 @@ resources:
 | | | |
 | entities | list | *see below* | Additional entity IDs or entity object(s)
 | secondary_info | string/object | *see below* | Custom `secondary_info` entity object
+| tap_action | object | *see below* | Custom tap action on main entity state
 
 ### Entity Objects
 
-Either `entity`, `attribute` or `service` needs to be specified. `entity` is only required if you want to display data from another entity
-than the main entity specified above. `attribute` is necessary if you want to display an entity attribute value instead of the state
-value. `service` lets you call a specified service on click instead of showing the more-info dialog (works well together with `icon`).
+Similarly as with the default HA `entities` card, each entity can be specified by a simple entity ID string,
+or by an object which allows more customization and configuration.
+
+If you define entities as objects, either `entity`, `attribute` or `icon` needs to be specified. `entity` is only required if you want
+to display data from another entity than the main entity specified above. `attribute` is necessary if you want to display an entity
+attribute value instead of the state value. `icon` lets you display an icon instead of a state or attribute value
+(works well together with a custom `tap_action`).
 
 | Name | Type | Default | Description
 | ---- | ---- | ------- | -----------
@@ -54,8 +61,7 @@ value. `service` lets you call a specified service on click instead of showing t
 | unit | string | `unit_of_measurement` | Override entity `unit_of_measurement`
 | toggle | bool | `false` | Display a toggle if supported by domain
 | icon | string/bool | `false` | Display default or custom icon instead of state or attribute value
-| service | string | | A valid service, including domain (e.g. `light.turn_on`)
-| service_data | object | | Optional data to send together with `service`
+| tap_action | object | *see below* | Custom entity tap action
 
 ### Secondary Info
 
@@ -68,6 +74,15 @@ The `secondary_info` field can either be the string `last-changed` or an object 
 | name | string/bool | `friendly_name` | Override entity `friendly_name`, or `false` to hide
 | unit | string | `unit_of_measurement` | Override entity `unit_of_measurement`
 
+### Tap Action
+
+If `toggle` is set to `true` the default action is toggle, otherwise it is `more-info`.
+
+| Name | Type | Default | Description
+| ---- | ---- | ------- | -----------
+| action | string | **Required** | Action to perform (`more-info`, `toggle`, `call-service`)
+| service | string | | Service to call (e.g. `light.turn_on`) when `action` is `call-service`
+| service_data | object | | Optional data to include when `action` is `call-service`
 
 ## Examples
 

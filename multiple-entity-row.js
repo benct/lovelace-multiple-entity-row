@@ -76,10 +76,10 @@
                 .stateObj="${this.state.stateObj}"
                 .overrideIcon="${this._config.icon}"
                 .stateColor="${this._config.state_color}"
-                @click="${this.onClick}">
+                @click="${this.onRowClick}">
             </state-badge>
             <div class="flex">
-                <div class="info" @click="${this.onClick}">
+                <div class="info" @click="${this.onRowClick}">
                     ${this.state.name}
                     <div class="secondary">
                         ${this.lastChanged
@@ -89,7 +89,7 @@
                 </div>
                 ${this.state.entities.map(entity => this.renderEntity(entity))}
                 ${this.state.value ? html`
-                <div class="state entity" @click="${this.onClick}">
+                <div class="state entity" @click="${this.onStateClick}">
                     ${this.stateHeader && html`<span>${this.stateHeader}</span>`}
                     ${this.state.toggle
                 ? html`<div class="toggle"><ha-entity-toggle .stateObj="${this.state.stateObj}" .hass="${this._hass}"></ha-entity-toggle></div>`
@@ -118,7 +118,8 @@
 
             this.lastChanged = config.secondary_info === 'last-changed';
             this.stateHeader = config.name_state !== undefined ? config.name_state : null;
-            this.onClick = () => this.fireEvent(config.entity);
+            this.onRowClick = () => this.fireEvent('hass-more-info', config.entity);
+            this.onStateClick = this.getAction(config.tap_action, config.entity);
 
             this._config = config;
         }
@@ -175,7 +176,7 @@
                     : this.entityStateValue(stateObj, config.unit),
                 toggle: this.checkToggle(config, stateObj),
                 icon: config.icon === true ? stateObj.attributes.icon : config.icon,
-                onClick: () => (config.service ? this.callService(config.service, config.service_data) : this.fireEvent(stateObj.entity_id))
+                onClick: this.getAction(config.tap_action, stateObj.entity_id),
             };
         }
 
@@ -220,19 +221,27 @@
                 stateObj.state;
         }
 
-        fireEvent(entity, options = {}) {
-            const event = new Event('hass-more-info', {
+        getAction(config, entityId) {
+            if (config && config.action) {
+                if (config.action === 'call-service') {
+                    const serviceDetails = config.service.split(".");
+                    return () => this._hass.callService(serviceDetails[0], serviceDetails[1], config.service_data);
+                }
+                if (config.action === 'toggle') {
+                    return () => this._hass.callService('homeassistant', 'toggle', {entity_id: entityId});
+                }
+            }
+            return () => this.fireEvent('hass-more-info', entityId);
+        }
+
+        fireEvent(type, entity, options = {}) {
+            const event = new Event(type, {
                 bubbles: options.bubbles || true,
                 cancelable: options.cancelable || true,
                 composed: options.composed || true,
             });
             event.detail = {entityId: entity};
             this.dispatchEvent(event);
-        }
-
-        callService(service, serviceData) {
-            const serviceDetails = service.split(".");
-            this._hass.callService(serviceDetails[0], serviceDetails[1], serviceData);
         }
     }
 
