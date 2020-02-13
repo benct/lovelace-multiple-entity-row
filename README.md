@@ -38,9 +38,9 @@ resources:
 | state_color | bool | `false` | Enable colored icon when entity is active
 | | | |
 | entities | list | *see below* | Additional entity IDs or entity object(s)
-| info | object | *see below* | Custom `secondary_info` entity object
+| secondary_info | string/object | *see below* | Custom `secondary_info` entity object
 
-### Entity objects
+### Entity Objects
 
 Either `entity`, `attribute` or `service` needs to be specified. `entity` is only required if you want to display data from another entity
 than the main entity specified above. `attribute` is necessary if you want to display an entity attribute value instead of the state
@@ -50,16 +50,26 @@ value. `service` lets you call a specified service on click instead of showing t
 | ---- | ---- | ------- | -----------
 | entity | string | | A valid entity_id (or skip to use main entity)
 | attribute | string | | A valid attribute key for the entity
-| name | string/bool | `friendly_name` | Override entity `friendly_name` (set as `false` to hide)
+| name | string/bool | `friendly_name` | Override entity `friendly_name`, or `false` to hide
 | unit | string | `unit_of_measurement` | Override entity `unit_of_measurement`
 | toggle | bool | `false` | Display a toggle if supported by domain
 | icon | string/bool | `false` | Display default or custom icon instead of state or attribute value
 | service | string | | A valid service, including domain (e.g. `light.turn_on`)
 | service_data | object | | Optional data to send together with `service`
 
-\* The `info` entity object does not support `toggle`, `icon` or `service`
+### Secondary Info
 
-## Example
+The `secondary_info` field can either be the string `last-changed` or an object containing the following configuration:
+
+| Name | Type | Default | Description
+| ---- | ---- | ------- | -----------
+| entity | string | | A valid entity_id (or skip to use main entity)
+| attribute | string | | A valid attribute key for the entity
+| name | string/bool | `friendly_name` | Override entity `friendly_name`, or `false` to hide
+| unit | string | `unit_of_measurement` | Override entity `unit_of_measurement`
+
+
+## Examples
 
 ![multiple-entity-row](https://raw.githubusercontent.com/benct/lovelace-multiple-entity-row/master/example.png)
 
@@ -93,8 +103,8 @@ entities:
 
   - entity: sensor.bedroom_temperature
     type: custom:multiple-entity-row
-    name: Info (secondary_info)
-    info:
+    name: Custom secondary_info
+    secondary_info:
       attribute: battery_level
       name: Battery
       unit: '%'

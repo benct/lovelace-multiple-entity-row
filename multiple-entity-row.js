@@ -82,10 +82,9 @@
                 <div class="info" @click="${this.onClick}">
                     ${this.state.name}
                     <div class="secondary">
-                        ${this.state.info && `${this.state.info.name ? `${this.state.info.name} ` : ''}${this.state.info.value}`}
                         ${this.lastChanged
                 ? html`<ha-relative-time datetime="${this.state.stateObj.last_changed}" .hass="${this._hass}"></ha-relative-time>`
-                : null}
+                : (this.state.info && `${this.state.info.name ? `${this.state.info.name} ` : ''}${this.state.info.value}`)}
                     </div>
                 </div>
                 ${this.state.entities.map(entity => this.renderEntity(entity))}
@@ -115,9 +114,9 @@
             if (config.entities) {
                 config.entities.map(entity => this.checkEntity(entity));
             }
-            this.checkEntity(config.info);
+            this.checkEntity(config.secondary_info);
 
-            this.lastChanged = config.secondary_info === 'last-changed' && !config.info;
+            this.lastChanged = config.secondary_info === 'last-changed';
             this.stateHeader = config.name_state !== undefined ? config.name_state : null;
             this.onClick = () => this.fireEvent(config.entity);
 
@@ -141,14 +140,14 @@
                     toggle: this.checkToggle(this._config, mainStateObj),
 
                     entities: this._config.entities ? this._config.entities.map(entity => this.initEntity(entity, mainStateObj)) : [],
-                    info: this.initEntity(this._config.info, mainStateObj),
+                    info: this.lastChanged ? null : this.initEntity(this._config.secondary_info, mainStateObj),
                 }
             }
         }
 
         checkEntity(config) {
-            if (config && typeof config === 'object' && !(config.entity || config.attribute || config.service)) {
-                throw new Error(`Entity object requires at least one 'entity', 'attribute' or 'service'.`);
+            if (config && typeof config === 'object' && !(config.entity || config.attribute || config.icon)) {
+                throw new Error(`Entity object requires at least one 'entity', 'attribute' or 'icon'.`);
             } else if (config && typeof config === 'string' && config === '') {
                 throw new Error('Entity ID string must not be blank.');
             } else if (config && typeof config !== 'string' && typeof config !== 'object') {
