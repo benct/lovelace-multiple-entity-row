@@ -1,6 +1,20 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 3.0.0
+
+Several main configuration options have been changed to better match the default Lovelace cards, as listed below.
+See [README](README.md) for more info and examples on all possible breaking configuration changes.
+
+- **Changed:** Convert additional entity config to `entities` list instead of named objects (#28)
+- **Changed:** Merge `info` into `secondary_info` for simpler configuration
+- **Changed:** Rename `hide_state` to `show_state` with default `true`
+- **Changed:** Rename `name_state` to `state_header`
+- **Changed:** Move service call configuration to `tap_action` (#31)
+- **Added:** Support custom `tap_action` for main entity (#31)
+- **Added:** Support for `more_info`, `toggle` and `call_service` actions under `tap_action` (#32)
+- **Added:** Additional entity icons change color based on entity state (#25)
+
 ## 2.3.0
 
 - **Added:** Support `state_color` config introduced in HA v0.105 (#36)
