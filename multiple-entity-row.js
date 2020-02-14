@@ -120,7 +120,7 @@
             this.checkEntity(config.secondary_info);
 
             this.lastChanged = config.secondary_info === 'last-changed';
-            this.stateHeader = config.name_state !== undefined ? config.name_state : null;
+            this.stateHeader = config.state_header !== undefined ? config.state_header : null;
             this.onRowClick = () => this.fireEvent('hass-more-info', config.entity);
             this.onStateClick = this.getAction(config.tap_action, config.entity);
 
@@ -140,7 +140,7 @@
 
                     stateObj: mainStateObj,
                     name: this.entityName(this._config.name, mainStateObj),
-                    value: this._config.hide_state !== true ? this.entityStateValue(mainStateObj, this._config.unit) : null,
+                    value: this._config.show_state !== false ? this.entityStateValue(mainStateObj, this._config.unit) : null,
                     toggle: this.checkToggle(this._config, mainStateObj),
 
                     entities: this._config.entities ? this._config.entities.map(entity => this.initEntity(entity, mainStateObj)) : [],

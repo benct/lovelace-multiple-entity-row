@@ -35,8 +35,8 @@ This card produces an `entity-row` and must therefore be configured as an entity
 | unit | string | | Override entity `unit_of_measurement`
 | icon | string | | Override entity `icon`
 | toggle | bool | `false` | Display a toggle (if supported) instead of state
-| hide_state | bool | `false` | Hide the entity state
-| name_state | string | | Show name/header above the main entity state
+| show_state | bool | `true` | Set to `false` to hide the entity state
+| state_header | string | | Show header text above the main entity state
 | state_color | bool | `false` | Enable colored icon when entity is active
 | | | |
 | entities | list | *see below* | Additional entity IDs or entity object(s)
@@ -80,7 +80,7 @@ If `toggle` is set to `true` the default action is toggle, otherwise it is `more
 
 | Name | Type | Default | Description
 | ---- | ---- | ------- | -----------
-| action | string | **Required** | Action to perform (`more-info`, `toggle`, `call-service`)
+| action | string | **Required** | Action to perform (`more-info`, `toggle` or `call-service`)
 | service | string | | Service to call (e.g. `light.turn_on`) when `action` is `call-service`
 | service_data | object | | Optional data to include when `action` is `call-service`
 
@@ -137,8 +137,8 @@ entities:
 
   - entity:  sensor.lovelace_multiple_entity_row
     type: custom:multiple-entity-row
-    name: Attributes (hide_state)
-    hide_state: true
+    name: Attributes (show_state=false)
+    show_state: false
     entities:
       - attribute: stargazers
         name: Stars
@@ -150,7 +150,7 @@ entities:
   - type: section
   - entity: sensor.bedroom_temperature
     type: custom:multiple-entity-row
-    name: Hide names
+    name: Hide headers (name)
     entities:
       - entity: sensor.bedroom_min_temp
         name: false
@@ -159,8 +159,8 @@ entities:
 
   - entity: sensor.bedroom_temperature
     type: custom:multiple-entity-row
-    name: Main state name
-    name_state: current
+    name: Main state header
+    state_header: current
     entities:
       - sensor.bedroom_min_temp
       - sensor.bedroom_max_temp
@@ -179,7 +179,7 @@ entities:
   - entity: switch.livingroom_tv
     type: custom:multiple-entity-row
     name: Multiple toggles
-    name_state: main
+    state_header: main
     toggle: true
     entities:
       - entity: switch.livingroom_light
@@ -188,6 +188,40 @@ entities:
       - entity: switch.livingroom_light_2
         name: toggle2
         toggle: true
+
+  - type: section
+  - entity: light.living_room
+    type: custom:multiple-entity-row
+    name: Toggle with tap_action
+    state_header: Livingroom
+    toggle: false
+    tap_action:
+      action: toggle
+    entities:
+      - entity: light.nightstand
+        name: Bedroom
+        tap_action:
+          action: toggle
+
+  - entity: light.living_room
+    type: custom:multiple-entity-row
+    name: Icons with tap_action
+    secondary_info: last-changed
+    entities:
+      - entity: light.living_room
+        icon: mdi:palette
+      - icon: mdi:lightbulb-off-outline
+        tap_action:
+          action: call-service
+          service: light.turn_off
+          service_data:
+            entity_id: light.living_room
+      - icon: mdi:lightbulb-outline
+        tap_action:
+          action: call-service
+          service: light.turn_on
+          service_data:
+            entity_id: light.living_room
 
   - type: section
   - entity: sensor.bedroom_temperature
@@ -200,23 +234,6 @@ entities:
       - entity: sensor.bedroom_max_temp
         name: custom name
         unit: temp
-
-  - type: section
-  - entity: sensor.living_room_temperature
-    type: custom:multiple-entity-row
-    name: Icons (service calls)
-    secondary_info: last-changed
-    entities:
-      - entity: light.living_room
-        icon: mdi:palette
-      - icon: mdi:lightbulb-off-outline
-        service: light.turn_off
-        service_data:
-          entity_id: light.living_room
-      - icon: mdi:lightbulb-outline
-        service: light.turn_on
-        service_data:
-          entity_id: light.living_room
 ```
 
 ## My cards
