@@ -160,7 +160,7 @@
         }
 
         checkToggle(config, stateObj) {
-            return config.toggle === true && stateObj.state && !["unknown", "unavailable"].includes(stateObj.state)
+            return config.toggle === true && stateObj.state && !['unknown', 'unavailable'].includes(stateObj.state)
         }
 
         initEntity(config, mainStateObj) {
@@ -201,17 +201,17 @@
             let display;
             const domain = stateObj.entity_id.substr(0, stateObj.entity_id.indexOf("."));
 
-            if (domain === "binary_sensor") {
+            if (domain === 'binary_sensor') {
                 if (stateObj.attributes.device_class) {
                     display = this._hass.localize(`state.${domain}.${stateObj.attributes.device_class}.${stateObj.state}`);
                 }
                 if (!display) {
                     display = this._hass.localize(`state.${domain}.default.${stateObj.state}`);
                 }
-            } else if (unit !== false && (unit || stateObj.attributes.unit_of_measurement) && !["unknown", "unavailable"].includes(stateObj.state)) {
+            } else if (unit !== false && (unit || stateObj.attributes.unit_of_measurement) && !['unknown', 'unavailable'].includes(stateObj.state)) {
                 display = `${stateObj.state} ${unit || stateObj.attributes.unit_of_measurement}`;
-            } else if (domain === "zwave") {
-                display = ["initializing", "dead"].includes(stateObj.state)
+            } else if (domain === 'zwave') {
+                display = ['initializing', 'dead'].includes(stateObj.state)
                     ? this._hass.localize(`state.zwave.query_stage.${stateObj.state}`, 'query_stage', stateObj.attributes.query_stage)
                     : this._hass.localize(`state.zwave.default.${stateObj.state}`);
             } else {
@@ -249,4 +249,4 @@
     }
 
     customElements.define('multiple-entity-row', MultipleEntityRow);
-})(window.LitElement || Object.getPrototypeOf(customElements.get("hui-view")));
+})(window.LitElement || Object.getPrototypeOf(customElements.get('hui-view')));
