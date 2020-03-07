@@ -61,6 +61,7 @@ attribute value instead of the state value. `icon` lets you display an icon inst
 | unit | string | `unit_of_measurement` | Override entity `unit_of_measurement`
 | toggle | bool | `false` | Display a toggle if supported by domain
 | icon | string/bool | `false` | Display default or custom icon instead of state or attribute value
+| state_color | bool | `false` | Enable colored icon when entity is active
 | tap_action | object | *see below* | Custom entity tap action
 
 ### Secondary Info
@@ -170,6 +171,7 @@ entities:
     type: custom:multiple-entity-row
     name: Toggle
     toggle: true
+    state_color: true
     entities:
       - entity: sensor.livingroom_tv_power
         name: Power
@@ -181,6 +183,7 @@ entities:
     name: Multiple toggles
     state_header: main
     toggle: true
+    state_color: true
     entities:
       - entity: switch.livingroom_light
         name: toggle1
@@ -211,12 +214,14 @@ entities:
       - entity: light.living_room
         icon: mdi:palette
       - icon: mdi:lightbulb-off-outline
+        state_color: true
         tap_action:
           action: call-service
           service: light.turn_off
           service_data:
             entity_id: light.living_room
       - icon: mdi:lightbulb-outline
+        state_color: true
         tap_action:
           action: call-service
           service: light.turn_on

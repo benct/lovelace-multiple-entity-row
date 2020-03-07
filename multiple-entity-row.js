@@ -107,7 +107,7 @@
             ${entity.toggle
                 ? html`<span>${entity.name}</span><div><ha-entity-toggle .stateObj="${entity.stateObj}" .hass="${this._hass}"></ha-entity-toggle></div>`
                 : entity.icon
-                    ? html`<state-badge class="icon-small" .stateObj="${entity.stateObj}" .overrideIcon="${entity.icon}" .stateColor="${this._config.state_color}"></state-badge>`
+                    ? html`<state-badge class="icon-small" .stateObj="${entity.stateObj}" .overrideIcon="${entity.icon}" .stateColor="${entity.state_color}"></state-badge>`
                     : html`<span>${entity.name}</span><div>${entity.value}</div>`}
             </div>` : null;
         }
@@ -179,6 +179,7 @@
                     : this.entityStateValue(stateObj, config.unit),
                 toggle: this.checkToggle(config, stateObj),
                 icon: config.icon === true ? stateObj.attributes.icon : config.icon,
+                state_color: config.state_color || false,
                 onClick: this.getAction(config.tap_action, stateObj.entity_id),
             };
         }
