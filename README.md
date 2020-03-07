@@ -77,11 +77,11 @@ The `secondary_info` field can either be the string `last-changed` or an object 
 
 ### Tap Action
 
-If `toggle` is set to `true` the default action is toggle, otherwise it is `more-info`.
+If `toggle` is set to `true` the default action is `toggle`, otherwise it is `more-info`.
 
 | Name | Type | Default | Description
 | ---- | ---- | ------- | -----------
-| action | string | **Required** | Action to perform (`more-info`, `toggle` or `call-service`)
+| action | string | **Required** | Action to perform (`more-info`, `toggle`, `call-service`, `none`)
 | service | string | | Service to call (e.g. `light.turn_on`) when `action` is `call-service`
 | service_data | object | | Optional data to include when `action` is `call-service`
 | confirmation | bool/string | `false` | Enable/set text to present in a confirmation dialog

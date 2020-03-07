@@ -124,7 +124,9 @@
 
             this.lastChanged = config.secondary_info === 'last-changed';
             this.stateHeader = config.state_header !== undefined ? config.state_header : null;
-            this.onRowClick = () => this.fireEvent('hass-more-info', config.entity);
+            this.onRowClick = (!config.tap_action || config.tap_action.action !== 'none')
+                ? () => this.fireEvent('hass-more-info', config.entity)
+                : null;
             this.onStateClick = this.getAction(config.tap_action, config.entity);
 
             this._config = config;
@@ -230,6 +232,9 @@
 
         getAction(config, entityId) {
             if (config && config.action) {
+                if (config.action === 'none') {
+                    return null;
+                }
                 const confirmation = config.confirmation === true ? 'Are you sure?' : config.confirmation;
                 if (config.action === 'call-service') {
                     const serviceDetails = config.service.split(".");
