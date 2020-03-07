@@ -125,7 +125,7 @@
             this.lastChanged = config.secondary_info === 'last-changed';
             this.stateHeader = config.state_header !== undefined ? config.state_header : null;
             this.onRowClick = (!config.tap_action || config.tap_action.action !== 'none')
-                ? () => this.fireEvent('hass-more-info', config.entity)
+                ? this.moreInfoAction(config.tap_action, config.entity)
                 : null;
             this.onStateClick = this.getAction(config.tap_action, config.entity);
 
@@ -263,7 +263,11 @@
                     }
                 }
             }
-            return () => this.fireEvent('hass-more-info', entityId);
+            return this.moreInfoAction(config, entityId);
+        }
+
+        moreInfoAction(config, entityId) {
+            return () => this.fireEvent('hass-more-info', (config && config.entity) || entityId);
         }
 
         fireEvent(type, entity, options = {}) {

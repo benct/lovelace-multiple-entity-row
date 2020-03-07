@@ -88,6 +88,7 @@ If `toggle` is set to `true` the default action is `toggle`, otherwise it is `mo
 | service_data | object | | Optional data to include when `action` is `call-service`
 | url_path | string | | URL to open when `action` is `url`
 | confirmation | bool/string | `false` | Enable/set text to present in a confirmation dialog
+| entity | string | | A valid entity_id override when `action` is `more-info`
 
 ## Examples
 
