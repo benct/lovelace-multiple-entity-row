@@ -66,7 +66,9 @@ attribute value instead of the state value. `icon` lets you display an icon inst
 
 ### Secondary Info
 
-The `secondary_info` field can either be the string `last-changed` or an object containing the following configuration:
+The `secondary_info` field can either be *any string* if you just want to display some text,
+the string `last-changed` if you want to display the entity's last changed time,
+or an object containing the following configuration:
 
 | Name | Type | Default | Description
 | ---- | ---- | ------- | -----------

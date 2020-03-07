@@ -149,7 +149,10 @@
                     toggle: this.checkToggle(this._config, mainStateObj),
 
                     entities: this._config.entities ? this._config.entities.map(entity => this.initEntity(entity, mainStateObj)) : [],
-                    info: this.lastChanged ? null : this.initEntity(this._config.secondary_info, mainStateObj),
+                    info: this.lastChanged ? null :
+                        typeof this._config.secondary_info === 'string'
+                            ? {value: this._config.secondary_info}
+                            : this.initEntity(this._config.secondary_info, mainStateObj),
                 }
             }
         }
