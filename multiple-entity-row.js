@@ -249,6 +249,12 @@
                             this._hass.callService('homeassistant', 'toggle', {entity_id: entityId});
                     }
                 }
+                if (config.action === 'url') {
+                    return () => {
+                        if (!confirmation || confirm(confirmation))
+                            window.open(config.url_path, '_blank')?.focus();
+                    }
+                }
             }
             return () => this.fireEvent('hass-more-info', entityId);
         }
