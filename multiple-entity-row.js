@@ -104,11 +104,14 @@
         renderEntity(entity) {
             return entity ? html`
             <div class="entity" @click="${entity.onClick}">
-            ${entity.toggle
-                ? html`<span>${entity.name}</span><div><ha-entity-toggle .stateObj="${entity.stateObj}" .hass="${this._hass}"></ha-entity-toggle></div>`
+                <span>${entity.name}</span>
+                <div>
+                ${entity.toggle
+                ? html`<ha-entity-toggle .stateObj="${entity.stateObj}" .hass="${this._hass}"></ha-entity-toggle>`
                 : entity.icon
                     ? html`<state-badge class="icon-small" .stateObj="${entity.stateObj}" .overrideIcon="${entity.icon}" .stateColor="${entity.state_color}"></state-badge>`
-                    : html`<span>${entity.name}</span><div>${entity.value}</div>`}
+                    : html`${entity.value}`}
+                </div>
             </div>` : null;
         }
 
@@ -173,7 +176,7 @@
 
             return {
                 stateObj: stateObj,
-                name: this.entityName(config.name, stateObj),
+                name: entity ? this.entityName(config.name, stateObj) : (config.name || null),
                 value: config.attribute !== undefined
                     ? this.entityAttribute(stateObj, config.attribute, config.unit)
                     : this.entityStateValue(stateObj, config.unit),
