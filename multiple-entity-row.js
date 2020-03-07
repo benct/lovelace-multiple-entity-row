@@ -240,10 +240,10 @@
                 }
                 const confirmation = config.confirmation === true ? 'Are you sure?' : config.confirmation;
                 if (config.action === 'call-service') {
-                    const serviceDetails = config.service.split(".");
+                    const [domain, service] = config.service.split(".");
                     return () => {
                         if (!confirmation || confirm(confirmation))
-                            this._hass.callService(serviceDetails[0], serviceDetails[1], config.service_data);
+                            this._hass.callService(domain, service, config.service_data);
                     }
                 }
                 if (config.action === 'toggle') {
