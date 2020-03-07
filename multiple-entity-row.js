@@ -227,12 +227,19 @@
 
         getAction(config, entityId) {
             if (config && config.action) {
+                const confirmation = config.confirmation === true ? 'Are you sure?' : config.confirmation;
                 if (config.action === 'call-service') {
                     const serviceDetails = config.service.split(".");
-                    return () => this._hass.callService(serviceDetails[0], serviceDetails[1], config.service_data);
+                    return () => {
+                        if (!confirmation || confirm(confirmation))
+                            this._hass.callService(serviceDetails[0], serviceDetails[1], config.service_data);
+                    }
                 }
                 if (config.action === 'toggle') {
-                    return () => this._hass.callService('homeassistant', 'toggle', {entity_id: entityId});
+                    return () => {
+                        if (!confirmation || confirm(confirmation))
+                            this._hass.callService('homeassistant', 'toggle', {entity_id: entityId});
+                    }
                 }
             }
             return () => this.fireEvent('hass-more-info', entityId);

@@ -84,6 +84,7 @@ If `toggle` is set to `true` the default action is toggle, otherwise it is `more
 | action | string | **Required** | Action to perform (`more-info`, `toggle` or `call-service`)
 | service | string | | Service to call (e.g. `light.turn_on`) when `action` is `call-service`
 | service_data | object | | Optional data to include when `action` is `call-service`
+| confirmation | bool/string | `false` | Enable/set text to present in a confirmation dialog
 
 ## Examples
 
@@ -227,6 +228,7 @@ entities:
           service: light.turn_on
           service_data:
             entity_id: light.living_room
+          confirmation: 'Are you sure?'
 
   - type: section
   - entity: sensor.bedroom_temperature
