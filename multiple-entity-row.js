@@ -133,7 +133,7 @@
             if (hass && this._config) {
                 const mainStateObj = hass.states[this._config.entity];
 
-                if (!mainStateObj) throw new Error(`Entity not available: ${this._config.entity}`);
+                if (!mainStateObj) throw new Error(`Entity '${this._config.entity}' does not exist.`);
 
                 this.state = {
                     ...this.state,
