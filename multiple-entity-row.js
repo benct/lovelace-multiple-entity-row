@@ -242,14 +242,18 @@
                 if (config.action === 'call-service') {
                     const [domain, service] = config.service.split(".");
                     return () => {
-                        if (!confirmation || confirm(confirmation))
+                        if (!confirmation || confirm(confirmation)) {
                             this._hass.callService(domain, service, config.service_data);
+                            this.forwardHaptic('light');
+                        }
                     }
                 }
                 if (config.action === 'toggle') {
                     return () => {
-                        if (!confirmation || confirm(confirmation))
+                        if (!confirmation || confirm(confirmation)) {
                             this._hass.callService('homeassistant', 'toggle', {entity_id: entityId});
+                            this.forwardHaptic('light');
+                        }
                     }
                 }
                 if (config.action === 'url') {
@@ -269,6 +273,12 @@
                 composed: options.composed || true,
             });
             event.detail = {entityId: entity};
+            this.dispatchEvent(event);
+        }
+
+        forwardHaptic(type) {
+            const event = new Event("haptic", {bubbles: true, cancelable: false, composed: true});
+            event.detail = type;
             this.dispatchEvent(event);
         }
     }
