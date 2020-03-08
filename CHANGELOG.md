@@ -1,6 +1,18 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 3.1.0
+
+- **Changed:** Display name/header above additional entity icons (#41)
+- **Added:** Support `state_color` config on additional entity icons (#45)
+- **Added:** Haptic feedback on `call-service` and `toggle` actions (#44)
+- **Added:** Support entity override on `more-info` action (#46)
+- **Added:** Support `confirmation` dialog config on `tap_action` (#42)
+- **Added:** Support `url` action config on `tap_action` (#49)
+- **Added:** Support `none` action config on `tap_action` (#53)
+- **Added:** Support any string value as `secondary_info` (#51)
+- **Added:** Support `format` config for date/time values (#43, #47)
+
 ## 3.0.0
 
 Several main configuration options have been changed to better match the default Lovelace cards, as listed below.
