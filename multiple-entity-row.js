@@ -84,34 +84,57 @@
             <div class="flex">
                 <div class="info" @click="${this.onRowClick}">
                     ${this.state.name}
-                    <div class="secondary">
-                        ${this.lastChanged
-                ? html`<ha-relative-time datetime="${this.state.stateObj.last_changed}" .hass="${this._hass}"></ha-relative-time>`
-                : (this.state.info && `${this.state.info.name ? `${this.state.info.name} ` : ''}${this.state.info.value}`)}
-                    </div>
+                    <div class="secondary">${this.renderSecondaryInfo()}</div>
                 </div>
                 ${this.state.entities.map(entity => this.renderEntity(entity))}
                 ${this.state.value ? html`
                 <div class="state entity" @click="${this.onStateClick}">
                     ${this.stateHeader && html`<span>${this.stateHeader}</span>`}
-                    ${this.state.toggle
-                ? html`<div class="toggle"><ha-entity-toggle .stateObj="${this.state.stateObj}" .hass="${this._hass}"></ha-entity-toggle></div>`
-                : html`<div>${this.state.value}</div>`}
+                    ${this.renderMainState()}
                 </div>` : null}
             </div>`;
+        }
+
+        renderMainState() {
+            if (this.state.toggle) return html`<div class="toggle">${this.renderToggle(this.state.stateObj)}</div>`;
+            else if (this._config.format) return this.renderTimestamp(this.state.value, this._config.format);
+            else return html`<div>${this.state.value}</div>`;
+        }
+
+        renderSecondaryInfo() {
+            return this.lastChanged
+                ? html`<ha-relative-time datetime="${this.state.stateObj.last_changed}" .hass="${this._hass}"></ha-relative-time>`
+                : this.state.info && this.state.info.format
+                    ? this.renderTimestamp(this.state.info.value, this.state.info.format)
+                    : (this.state.info && `${this.state.info.name ? `${this.state.info.name} ` : ''}${this.state.info.value}`)
+        }
+
+        renderToggle(stateObj) {
+            return html`<ha-entity-toggle .stateObj="${stateObj}" .hass="${this._hass}"></ha-entity-toggle>`;
+        }
+
+        renderTimestamp(value, format) {
+            return !['unknown', 'unavailable'].includes(value.toLowerCase())
+                ? html`<hui-timestamp-display .ts=${new Date(value)} .format=${format} .hass=${this._hass}></hui-timestamp-display>`
+                : html`${value}`;
+        }
+
+        renderIcon(entity) {
+            return html`<state-badge class="icon-small" .stateObj="${entity.stateObj}" .overrideIcon="${entity.icon}" .stateColor="${entity.state_color}"></state-badge>`;
+        }
+
+        renderEntityValue(entity) {
+            if (entity.toggle) return this.renderToggle(entity.stateObj);
+            else if (entity.icon) return this.renderIcon(entity);
+            else if (entity.format) return this.renderTimestamp(entity.value, entity.format);
+            else return html`${entity.value}`;
         }
 
         renderEntity(entity) {
             return entity ? html`
             <div class="entity" @click="${entity.onClick}">
                 <span>${entity.name}</span>
-                <div>
-                ${entity.toggle
-                ? html`<ha-entity-toggle .stateObj="${entity.stateObj}" .hass="${this._hass}"></ha-entity-toggle>`
-                : entity.icon
-                    ? html`<state-badge class="icon-small" .stateObj="${entity.stateObj}" .overrideIcon="${entity.icon}" .stateColor="${entity.state_color}"></state-badge>`
-                    : html`${entity.value}`}
-                </div>
+                <div>${this.renderEntityValue(entity)}</div>
             </div>` : null;
         }
 
@@ -187,6 +210,7 @@
                     : this.entityStateValue(stateObj, config.unit),
                 toggle: this.checkToggle(config, stateObj),
                 icon: config.icon === true ? stateObj.attributes.icon : config.icon,
+                format: config.format || false,
                 state_color: config.state_color || false,
                 onClick: this.getAction(config.tap_action, stateObj.entity_id),
             };

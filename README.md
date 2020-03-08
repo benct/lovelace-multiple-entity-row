@@ -38,6 +38,7 @@ This card produces an `entity-row` and must therefore be configured as an entity
 | show_state | bool | `true` | Set to `false` to hide the entity state
 | state_header | string | | Show header text above the main entity state
 | state_color | bool | `false` | Enable colored icon when entity is active
+| format | string | | Format timestamp value (`relative`, `date`, `time`, `datetime`)
 | | | |
 | entities | list | *see below* | Additional entity IDs or entity object(s)
 | secondary_info | string/object | *see below* | Custom `secondary_info` entity object
@@ -63,6 +64,7 @@ attribute value instead of the state value. `icon` lets you display an icon inst
 | icon | string/bool | `false` | Display default or custom icon instead of state or attribute value
 | state_color | bool | `false` | Enable colored icon when entity is active
 | tap_action | object | *see below* | Custom entity tap action
+| format | string | | Format timestamp value (`relative`, `date`, `time`, `datetime`)
 
 ### Secondary Info
 
@@ -76,6 +78,7 @@ or an object containing the following configuration:
 | attribute | string | | A valid attribute key for the entity
 | name | string/bool | `friendly_name` | Override entity `friendly_name`, or `false` to hide
 | unit | string | `unit_of_measurement` | Override entity `unit_of_measurement`
+| format | string | | Format timestamp value (`relative`, `date`, `time`, `datetime`)
 
 ### Tap Action
 
