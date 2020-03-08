@@ -283,7 +283,7 @@
                 if (config.action === 'url') {
                     return () => {
                         if (!confirmation || confirm(confirmation))
-                            window.open(config.url_path, '_blank')?.focus();
+                            window.open(config.url_path, '_blank').focus();
                     }
                 }
             }
