@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 3.1.1
+
+**Fixed:**
+- Remove unsupported optional chaining operator (#54, #56, #57)
+
 ## 3.1.0
 
 **Changed:**
