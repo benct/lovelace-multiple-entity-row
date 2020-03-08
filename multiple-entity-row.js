@@ -282,8 +282,10 @@
                 }
                 if (config.action === 'url') {
                     return () => {
-                        if (!confirmation || confirm(confirmation))
-                            window.open(config.url_path, '_blank')?.focus();
+                        if (!confirmation || confirm(confirmation)) {
+                            const win = window.open(config.url_path, '_blank');
+                            if (win) win.focus();
+                        }
                     }
                 }
             }
