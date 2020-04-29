@@ -125,7 +125,7 @@
 
         renderEntityValue(entity) {
             if (entity.toggle) return this.renderToggle(entity.stateObj);
-            else if (entity.icon) return this.renderIcon(entity);
+            else if (entity.icon !== undefined) return this.renderIcon(entity);
             else if (entity.format) return this.renderTimestamp(entity.value, entity.format);
             else return html`${entity.value}`;
         }
