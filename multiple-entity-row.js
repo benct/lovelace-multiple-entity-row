@@ -236,10 +236,10 @@
 
             if (domain === 'binary_sensor') {
                 if (stateObj.attributes.device_class) {
-                    display = this._hass.localize(`state.${domain}.${stateObj.attributes.device_class}.${stateObj.state}`);
+                    display = this._hass.localize(`component.${domain}.state.${stateObj.attributes.device_class}.${stateObj.state}`);
                 }
                 if (!display) {
-                    display = this._hass.localize(`state.${domain}.default.${stateObj.state}`);
+                    display = this._hass.localize(`component.${domain}.state.${stateObj.state}`);
                 }
             } else if (unit !== false && (unit || stateObj.attributes.unit_of_measurement) && !['unknown', 'unavailable'].includes(stateObj.state)) {
                 display = `${stateObj.state} ${unit || stateObj.attributes.unit_of_measurement}`;
