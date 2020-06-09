@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 3.2.0
+
+**Fixed:**
+- State display for entities with `device_class` (#74)
+- Default HA icon when state attribute icon is undefined (#71)
+
 ## 3.1.1
 
 **Fixed:**
