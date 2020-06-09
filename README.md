@@ -61,7 +61,7 @@ attribute value instead of the state value. `icon` lets you display an icon inst
 | name | string/bool | `friendly_name` | Override entity `friendly_name`, or `false` to hide
 | unit | string | `unit_of_measurement` | Override entity `unit_of_measurement`
 | toggle | bool | `false` | Display a toggle if supported by domain
-| icon | string/bool/null | `false` | Display default or custom icon instead of state or attribute value, use `null` to use HASS default icon
+| icon | string/bool | `false` | Display default or custom icon instead of state or attribute value
 | state_color | bool | `false` | Enable colored icon when entity is active
 | tap_action | object | *see below* | Custom entity tap action
 | format | string | | Format timestamp value (`relative`, `date`, `time`, `datetime`)

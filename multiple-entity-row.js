@@ -209,7 +209,7 @@
                     ? this.entityAttribute(stateObj, config.attribute, config.unit)
                     : this.entityStateValue(stateObj, config.unit),
                 toggle: this.checkToggle(config, stateObj),
-                icon: config.icon === true ? stateObj.attributes.icon : config.icon,
+                icon: config.icon === true ? (stateObj.attributes.icon || null) : config.icon,
                 format: config.format || false,
                 state_color: config.state_color || false,
                 onClick: this.getAction(config.tap_action, stateObj.entity_id),
