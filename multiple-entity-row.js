@@ -2,8 +2,8 @@
     const html = LitElement.prototype.html;
     const css = LitElement.prototype.css;
 
-    const UNAVAILABLE = "unavailable";
-    const UNKNOWN = "unknown";
+    const UNAVAILABLE = 'unavailable';
+    const UNKNOWN = 'unknown';
 
     class MultipleEntityRow extends LitElement {
 
@@ -117,7 +117,7 @@
         }
 
         renderTimestamp(value, format) {
-            return !['unknown', 'unavailable'].includes(value.toLowerCase())
+            return ![UNKNOWN, UNAVAILABLE].includes(value.toLowerCase())
                 ? html`<hui-timestamp-display .ts=${new Date(value)} .format=${format} .hass=${this._hass}></hui-timestamp-display>`
                 : html`${value}`;
         }
@@ -242,7 +242,7 @@
                 return `${stateObj.state} ${unit || stateObj.attributes.unit_of_measurement}`;
             }
 
-            const domain = stateObj.entity_id.substr(0, stateObj.entity_id.indexOf("."));
+            const domain = stateObj.entity_id.substr(0, stateObj.entity_id.indexOf('.'));
 
             if (domain === 'zwave') {
                 return ['initializing', 'dead'].includes(stateObj.state)
@@ -251,15 +251,10 @@
             }
 
             return (
-                // Return device class translation
-                (stateObj.attributes.device_class &&
-                    this._hass.localize(
-                        `component.${domain}.state.${stateObj.attributes.device_class}.${stateObj.state}`
-                    )) ||
-                // Return default translation
-                this._hass.localize(`component.${domain}.state._.${stateObj.state}`) ||
-                // We don't know! Return the raw state.
-                stateObj.state
+                (stateObj.attributes.device_class
+                    && this._hass.localize(`component.${domain}.state.${stateObj.attributes.device_class}.${stateObj.state}`))
+                || this._hass.localize(`component.${domain}.state._.${stateObj.state}`)
+                || stateObj.state
             );
         }
 
