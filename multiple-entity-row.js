@@ -118,7 +118,9 @@
 
         renderTimestamp(value, format) {
             return ![UNKNOWN, UNAVAILABLE].includes(value.toLowerCase())
-                ? html`<hui-timestamp-display .ts=${new Date(value)} .format=${format} .hass=${this._hass}></hui-timestamp-display>`
+                ? format.toLowerCase() === "elapsed" 
+                    ? html`<div>${parseInt(value/3600).toString().padStart(2,'0')}:${parseInt((value % 3600)/60).toString().padStart(2,'0')}</div>`
+                    : html`<hui-timestamp-display .ts=${new Date(value)} .format=${format} .hass=${this._hass}></hui-timestamp-display>`
                 : html`${value}`;
         }
 
