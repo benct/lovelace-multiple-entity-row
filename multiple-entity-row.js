@@ -54,16 +54,12 @@
             cursor: pointer;
           }
           .entity {
-            margin-right: 16px;
             text-align: center;
             cursor: pointer;
           }
           .entity span {
             font-size: 10px;
             color: var(--secondary-text-color);
-          }
-          .entity:last-of-type {
-            margin-right: 0;
           }
           .state {
             min-width: 45px;
@@ -80,15 +76,13 @@
             justify-content: space-between;
             align-items: center;
             min-width: 0;
-            gap: 8px;
+            gap: 16px;
           }
           .entities-column {
             flex-direction: column;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            align-items: right;
             min-width: 0;
-            gap: 16px;
         }`;
         }
 
