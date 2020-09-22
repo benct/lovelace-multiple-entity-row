@@ -81,7 +81,7 @@
           .entities-column {
             flex-direction: column;
             display: flex;
-            align-items: right;
+            align-items: flex-end;
             min-width: 0;
         }`;
         }
