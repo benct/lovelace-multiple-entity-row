@@ -50,6 +50,7 @@ This card produces an `entity-row` and must therefore be configured as an entity
 | entities | list | *see below* | Additional entity IDs or entity object(s)
 | secondary_info | string/object | *see below* | Custom `secondary_info` entity object
 | tap_action | object | *see below* | Custom tap action on main entity state
+| column | bool | | Whether entities should be shown in a column instead of a row
 
 ### Entity Objects
 
