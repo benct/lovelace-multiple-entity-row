@@ -83,6 +83,7 @@
             display: flex;
             align-items: flex-end;
             min-width: 0;
+            justify-content: space-evenly;
         }`;
         }
 
