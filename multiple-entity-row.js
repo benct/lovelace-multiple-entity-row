@@ -73,7 +73,23 @@
           }
           .icon-small {
             width: auto;
-          }`;
+          }
+          .entities-row {
+            flex-direction: row;
+            display: inline-flex;
+            justify-content: space-between;
+            align-items: center;
+            min-width: 0;
+            gap: 8px;
+          }
+          .entities-column {
+            flex-direction: column;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            min-width: 0;
+            gap: 16px;
+        }`;
         }
 
         render() {
@@ -89,12 +105,16 @@
                     ${this.state.name}
                     <div class="secondary">${this.renderSecondaryInfo()}</div>
                 </div>
-                ${this.state.entities.map(entity => this.renderEntity(entity))}
-                ${this.state.value ? html`
-                <div class="state entity" @click="${this.onStateClick}">
-                    ${this.stateHeader && html`<span>${this.stateHeader}</span>`}
-                    ${this.renderMainState()}
-                </div>` : null}
+                <div class="${
+                    this._config.column ? "entities-column" : "entities-row"
+                }">
+                    ${this.state.entities.map(entity => this.renderEntity(entity))}
+                    ${this.state.value ? html`
+                    <div class="state entity" @click="${this.onStateClick}">
+                        ${this.stateHeader && html`<span>${this.stateHeader}</span>`}
+                        ${this.renderMainState()}
+                    </div>` : null}
+                </div>
             </div>`;
         }
 
