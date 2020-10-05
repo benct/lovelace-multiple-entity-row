@@ -1,6 +1,5 @@
 {
   "name": "Multiple Entity Row",
   "filename": "multiple-entity-row.js",
-  "render_readme": true,
-  "homeassistant": "0.116.0b0"
+  "render_readme": true
 }
