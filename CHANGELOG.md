@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 3.2.1
+
+**Fixed:**
+- Compatibility issues with HA `0.116` (#103, #104)
+
 ## 3.2.0
 
 **Fixed:**
