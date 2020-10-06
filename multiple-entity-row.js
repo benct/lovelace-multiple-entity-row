@@ -315,4 +315,4 @@
     }
 
     customElements.define('multiple-entity-row', MultipleEntityRow);
-})(window.LitElement || Object.getPrototypeOf(customElements.get('hui-view')));
+})(window.LitElement || Object.getPrototypeOf(customElements.get('hui-masonry-view') || customElements.get('hui-view')));
