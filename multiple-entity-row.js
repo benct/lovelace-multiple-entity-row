@@ -59,9 +59,6 @@
           .toggle {
             margin-left: 8px;
           }
-          .state {
-            min-width: 45px;
-          }
           .entity {
             text-align: center;
             cursor: pointer;
