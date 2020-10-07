@@ -306,9 +306,8 @@
                 }
                 if (config.action === 'url') {
                     return () => {
-                        if (!confirmation || confirm(confirmation)) {
-                            const win = window.open(config.url_path, '_blank');
-                            if (win) win.focus();
+                        if (config.url_path && (!confirmation || confirm(confirmation))) {
+                            window.open(config.url_path);
                         }
                     }
                 }
