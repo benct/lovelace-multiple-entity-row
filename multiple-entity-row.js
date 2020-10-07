@@ -1,4 +1,10 @@
 ((LitElement) => {
+    console.info(
+        '%c MULTIPLE-ENTITY-ROW %c 3.3.0 ',
+        'color: cyan; background: black; font-weight: bold;',
+        'color: darkblue; background: white; font-weight: bold;',
+    );
+
     const html = LitElement.prototype.html;
     const css = LitElement.prototype.css;
 
