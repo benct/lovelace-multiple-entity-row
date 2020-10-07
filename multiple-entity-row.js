@@ -53,6 +53,15 @@
             flex: 0 0 40px;
             cursor: pointer;
           }
+          .icon-small {
+            width: auto;
+          }
+          .toggle {
+            margin-left: 8px;
+          }
+          .state {
+            min-width: 45px;
+          }
           .entity {
             text-align: center;
             cursor: pointer;
@@ -61,28 +70,22 @@
             font-size: 10px;
             color: var(--secondary-text-color);
           }
-          .state {
-            min-width: 45px;
-          }
-          .toggle {
-            margin-left: 8px;
-          }
-          .icon-small {
-            width: auto;
-          }
           .entities-row {
             flex-direction: row;
             display: inline-flex;
             justify-content: space-between;
             align-items: center;
-            min-width: 0;
-            gap: 16px;
+          }
+          .entities-row .entity {
+            margin-right: 16px;
+          }
+          .entities-row .entity:last-of-type {
+            margin-right: 0;
           }
           .entities-column {
             flex-direction: column;
             display: flex;
             align-items: flex-end;
-            min-width: 0;
             justify-content: space-evenly;
         }`;
         }
@@ -100,9 +103,7 @@
                     ${this.state.name}
                     <div class="secondary">${this.renderSecondaryInfo()}</div>
                 </div>
-                <div class="${
-                    this._config.column ? "entities-column" : "entities-row"
-                }">
+                <div class="${this._config.column ? 'entities-column' : 'entities-row'}">
                     ${this.state.entities.map(entity => this.renderEntity(entity))}
                     ${this.state.value ? html`
                     <div class="state entity" @click="${this.onStateClick}">
