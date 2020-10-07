@@ -46,11 +46,11 @@ This card produces an `entity-row` and must therefore be configured as an entity
 | state_header | string | | Show header text above the main entity state
 | state_color | bool | `false` | Enable colored icon when entity is active
 | format | string | | Format timestamp value (`relative`, `date`, `time`, `datetime`)
+| column | bool | `false` | Show entities in a column instead of a row
 | | | |
 | entities | list | *see below* | Additional entity IDs or entity object(s)
 | secondary_info | string/object | *see below* | Custom `secondary_info` entity object
 | tap_action | object | *see below* | Custom tap action on main entity state
-| column | bool | | Whether entities should be shown in a column instead of a row
 
 ### Entity Objects
 
