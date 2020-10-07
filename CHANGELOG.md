@@ -1,6 +1,17 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 3.3.0
+
+**Added:**
+- Support `navigate`action with `navigate_path` on tap actions (#66, #82)
+- Support for showing entities in a `column` instead of the default row (#98)
+- Print version information to browser console window (#78)
+
+**Changed:**
+- Improved alignment on state element by removing min-width (#64)
+- Tap action mode `url` now behaves similarly as other HA cards (#66)
+
 ## 3.2.1
 
 **Fixed:**

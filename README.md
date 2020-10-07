@@ -1,7 +1,7 @@
 # multiple-entity-row
 Show multiple entity states, attributes and icons on entity rows in Home Assistant's Lovelace UI
 
-[![GH-release](https://img.shields.io/badge/version-3.2.1-red.svg?style=flat-square)](https://raw.githubusercontent.com/benct/lovelace-multiple-entity-row/master/multiple-entity-row.js)
+[![GH-release](https://img.shields.io/badge/version-3.3.0-red.svg?style=flat-square)](https://raw.githubusercontent.com/benct/lovelace-multiple-entity-row/master/multiple-entity-row.js)
 [![GH-last-commit](https://img.shields.io/github/last-commit/benct/lovelace-multiple-entity-row.svg?style=flat-square)](https://github.com/benct/lovelace-multiple-entity-row/commits/master)
 [![GH-code-size](https://img.shields.io/github/languages/code-size/benct/lovelace-multiple-entity-row.svg?style=flat-square)](https://github.com/benct/lovelace-multiple-entity-row)
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=flat-square)](https://github.com/hacs)
@@ -15,7 +15,7 @@ to your `<config>/www/` folder and add the following to the `configuration.yaml`
 ```yaml
 lovelace:
   resources:
-    - url: /local/multiple-entity-row.js?v=3.2.1
+    - url: /local/multiple-entity-row.js?v=3.3.0
       type: module
 ```
 
