@@ -87,7 +87,11 @@
             display: flex;
             align-items: flex-end;
             justify-content: space-evenly;
-        }`;
+          }
+          .entities-column .entity div {
+            display: inline-block;
+            vertical-align: middle;
+          }`;
         }
 
         render() {
