@@ -94,10 +94,11 @@ If `toggle` is set to `true` the default action is `toggle`, otherwise it is `mo
 
 | Name | Type | Default | Description
 | ---- | ---- | ------- | -----------
-| action | string | **Required** | Action to perform (`more-info`, `toggle`, `call-service`, `url`, `none`)
+| action | string | **Required** | Action to perform (`more-info`, `toggle`, `call-service`, `url`, `navigate`, `none`)
 | service | string | | Service to call (e.g. `light.turn_on`) when `action` is `call-service`
 | service_data | object | | Optional data to include when `action` is `call-service`
 | url_path | string | | URL to open when `action` is `url`
+| navigation_path | string | | Path to navigate to when `action` is `navigate`
 | confirmation | bool/string | `false` | Enable/set text to present in a confirmation dialog
 | entity | string | | A valid entity_id override when `action` is `more-info`
 

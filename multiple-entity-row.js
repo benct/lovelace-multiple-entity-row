@@ -288,7 +288,7 @@
                 }
                 const confirmation = config.confirmation === true ? 'Are you sure?' : config.confirmation;
                 if (config.action === 'call-service') {
-                    const [domain, service] = config.service.split(".");
+                    const [domain, service] = config.service.split('.');
                     return () => {
                         if (!confirmation || confirm(confirmation)) {
                             this._hass.callService(domain, service, config.service_data);
@@ -311,26 +311,34 @@
                         }
                     }
                 }
+                if (config.action === 'navigate') {
+                    return () => {
+                        if (config.navigation_path && (!confirmation || confirm(confirmation))) {
+                            history.pushState(null, '', config.navigation_path);
+                            this.fireEvent(window, 'location-changed', {replace: false});
+                        }
+                    }
+                }
             }
             return this.moreInfoAction(config, entityId);
         }
 
         moreInfoAction(config, entityId) {
-            return () => this.fireEvent('hass-more-info', (config && config.entity) || entityId);
+            return () => this.fireEvent(this, 'hass-more-info', {entityId: (config && config.entity) || entityId});
         }
 
-        fireEvent(type, entity, options = {}) {
+        fireEvent(node, type, detail = {}, options = {}) {
             const event = new Event(type, {
                 bubbles: options.bubbles || true,
                 cancelable: options.cancelable || true,
                 composed: options.composed || true,
             });
-            event.detail = {entityId: entity};
-            this.dispatchEvent(event);
+            event.detail = detail;
+            node.dispatchEvent(event);
         }
 
         forwardHaptic(type) {
-            const event = new Event("haptic", {bubbles: true, cancelable: false, composed: true});
+            const event = new Event('haptic', {bubbles: true, cancelable: false, composed: true});
             event.detail = type;
             this.dispatchEvent(event);
         }
