@@ -282,45 +282,53 @@
         }
 
         getAction(config, entityId) {
-            if (config && config.action) {
-                if (config.action === 'none') {
-                    return null;
-                }
-                const confirmation = config.confirmation === true ? 'Are you sure?' : config.confirmation;
-                if (config.action === 'call-service') {
-                    const [domain, service] = config.service.split('.');
-                    return () => {
-                        if (!confirmation || confirm(confirmation)) {
-                            this._hass.callService(domain, service, config.service_data);
-                            this.forwardHaptic('light');
-                        }
+            if (!config || !config.action || config.action === 'more-info') {
+                return this.moreInfoAction(config, entityId);
+            }
+            if (config.action === 'none') {
+                return null;
+            }
+
+            return () => {
+                if (config.confirmation) {
+                    this.forwardHaptic('warning');
+
+                    if (!confirm(config.confirmation === true ? `Are you sure?` : config.confirmation)) {
+                        return;
                     }
                 }
-                if (config.action === 'toggle') {
-                    return () => {
-                        if (!confirmation || confirm(confirmation)) {
-                            this._hass.callService('homeassistant', 'toggle', {entity_id: entityId});
-                            this.forwardHaptic('light');
+
+                switch (config.action) {
+                    case 'call-service': {
+                        if (!config.service) {
+                            this.forwardHaptic('failure');
+                            return;
                         }
+                        const [domain, service] = config.service.split('.');
+                        this._hass.callService(domain, service, config.service_data);
+                        this.forwardHaptic('light');
+                        break;
                     }
-                }
-                if (config.action === 'url') {
-                    return () => {
-                        if (config.url_path && (!confirmation || confirm(confirmation))) {
+                    case 'toggle': {
+                        this._hass.callService('homeassistant', 'toggle', {entity_id: entityId});
+                        this.forwardHaptic('light');
+                        break;
+                    }
+                    case 'url': {
+                        if (config.url_path) {
                             window.open(config.url_path);
                         }
+                        break;
                     }
-                }
-                if (config.action === 'navigate') {
-                    return () => {
-                        if (config.navigation_path && (!confirmation || confirm(confirmation))) {
+                    case 'navigate': {
+                        if (config.navigation_path) {
                             history.pushState(null, '', config.navigation_path);
                             this.fireEvent(window, 'location-changed', {replace: false});
                         }
+                        break;
                     }
                 }
             }
-            return this.moreInfoAction(config, entityId);
         }
 
         moreInfoAction(config, entityId) {
