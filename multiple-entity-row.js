@@ -110,7 +110,7 @@
                 <div class="${this._config.column ? 'entities-column' : 'entities-row'}">
                     ${this.state.entities.map(entity => this.renderEntity(entity))}
                     ${this.state.value ? html`
-                    <div class="state entity" @click="${this.onStateClick}">
+                    <div class="state entity" @click="${this.onRowClick}">
                         ${this.stateHeader && html`<span>${this.stateHeader}</span>`}
                         <div>${this.renderMainState()}</div>
                     </div>` : null}
@@ -172,10 +172,7 @@
 
             this.lastChanged = config.secondary_info === 'last-changed';
             this.stateHeader = config.state_header !== undefined ? config.state_header : null;
-            this.onRowClick = (!config.tap_action || config.tap_action.action !== 'none')
-                ? this.moreInfoAction(config.tap_action, config.entity)
-                : null;
-            this.onStateClick = this.getAction(config.tap_action, config.entity);
+            this.onRowClick = this.getAction(config.tap_action, config.entity);
 
             this._config = config;
         }
@@ -275,7 +272,7 @@
 
         getAction(config, entityId) {
             if (!config || !config.action || config.action === 'more-info') {
-                return this.moreInfoAction(config, entityId);
+                return () => this.fireEvent(this, 'hass-more-info', {entityId: (config && config.entity) || entityId});
             }
             if (config.action === 'none') {
                 return null;
@@ -321,10 +318,6 @@
                     }
                 }
             }
-        }
-
-        moreInfoAction(config, entityId) {
-            return () => this.fireEvent(this, 'hass-more-info', {entityId: (config && config.entity) || entityId});
         }
 
         fireEvent(node, type, detail = {}, options = {}) {
