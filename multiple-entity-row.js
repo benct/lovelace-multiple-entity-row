@@ -62,9 +62,6 @@
           .icon-small {
             width: auto;
           }
-          .toggle {
-            margin-left: 8px;
-          }
           .entity {
             text-align: center;
             cursor: pointer;
@@ -115,16 +112,16 @@
                     ${this.state.value ? html`
                     <div class="state entity" @click="${this.onStateClick}">
                         ${this.stateHeader && html`<span>${this.stateHeader}</span>`}
-                        ${this.renderMainState()}
+                        <div>${this.renderMainState()}</div>
                     </div>` : null}
                 </div>
             </div>`;
         }
 
         renderMainState() {
-            if (this.state.toggle) return html`<div class="toggle">${this.renderToggle(this.state.stateObj)}</div>`;
+            if (this.state.toggle) this.renderToggle(this.state.stateObj);
             else if (this._config.format) return this.renderTimestamp(this.state.value, this._config.format);
-            else return html`<div>${this.state.value}</div>`;
+            else return html`${this.state.value}`;
         }
 
         renderSecondaryInfo() {
