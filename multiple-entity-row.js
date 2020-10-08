@@ -120,7 +120,7 @@
 
         renderMainState() {
             if (this.state.toggle) this.renderToggle(this.state.stateObj);
-            else if (this._config.format) return this.renderTimestamp(this.state.value, this._config.format);
+            else if (this._config.format) return this.renderFormat(this.state.value, this._config.format);
             else return html`${this.state.value}`;
         }
 
@@ -128,7 +128,7 @@
             return this.lastChanged
                 ? html`<ha-relative-time datetime="${this.state.stateObj.last_changed}" .hass="${this._hass}"></ha-relative-time>`
                 : this.state.info && this.state.info.format
-                    ? this.renderTimestamp(this.state.info.value, this.state.info.format)
+                    ? this.renderFormat(this.state.info.value, this.state.info.format)
                     : (this.state.info && `${this.state.info.name ? `${this.state.info.name} ` : ''}${this.state.info.value}`)
         }
 
@@ -136,10 +136,12 @@
             return html`<ha-entity-toggle .stateObj="${stateObj}" .hass="${this._hass}"></ha-entity-toggle>`;
         }
 
-        renderTimestamp(value, format) {
-            return ![UNKNOWN, UNAVAILABLE].includes(value.toLowerCase())
-                ? html`<hui-timestamp-display .ts=${new Date(value)} .format=${format} .hass=${this._hass}></hui-timestamp-display>`
-                : html`${value}`;
+        renderFormat(value, format) {
+            return [UNKNOWN, UNAVAILABLE].includes(value.toLowerCase())
+                ? html`${value}`
+                : format === 'duration'
+                    ? html`${this.secondsToDuration(value)}`
+                    : html`<hui-timestamp-display .ts=${new Date(value)} .format=${format} .hass=${this._hass}></hui-timestamp-display>`;
         }
 
         renderIcon(entity) {
@@ -149,7 +151,7 @@
         renderEntityValue(entity) {
             if (entity.toggle) return this.renderToggle(entity.stateObj);
             else if (entity.icon !== undefined) return this.renderIcon(entity);
-            else if (entity.format) return this.renderTimestamp(entity.value, entity.format);
+            else if (entity.format) return this.renderFormat(entity.value, entity.format);
             else return html`${entity.value}`;
         }
 
@@ -346,6 +348,18 @@
             const event = new Event('haptic', {bubbles: true, cancelable: false, composed: true});
             event.detail = type;
             this.dispatchEvent(event);
+        }
+
+        secondsToDuration(sec) {
+            const h = Math.floor(sec / 3600);
+            const m = Math.floor((sec % 3600) / 60);
+            const s = Math.floor((sec % 3600) % 60);
+            const leftPad = (num) => (num < 10 ? `0${num}` : num);
+
+            if (h > 0) return `${h}:${leftPad(m)}:${leftPad(s)}`;
+            if (m > 0) return `${m}:${leftPad(s)}`;
+            if (s > 0) return `${s}`;
+            return null;
         }
     }
 
