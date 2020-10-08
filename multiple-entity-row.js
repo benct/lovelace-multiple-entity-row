@@ -265,13 +265,6 @@
             }
 
             const domain = stateObj.entity_id.substr(0, stateObj.entity_id.indexOf('.'));
-
-            if (domain === 'zwave') {
-                return ['initializing', 'dead'].includes(stateObj.state)
-                    ? this._hass.localize(`state.zwave.query_stage.${stateObj.state}`, 'query_stage', stateObj.attributes.query_stage)
-                    : this._hass.localize(`state.zwave.default.${stateObj.state}`);
-            }
-
             return (
                 (stateObj.attributes.device_class
                     && this._hass.localize(`component.${domain}.state.${stateObj.attributes.device_class}.${stateObj.state}`))
