@@ -125,7 +125,7 @@
         }
 
         renderMainState() {
-            if (this.state.toggle) this.renderToggle(this.state.stateObj);
+            if (this.state.toggle) return this.renderToggle(this.state.stateObj);
             else if (this._config.format) return this.renderFormat(this.state.value, this._config.format);
             else return html`${this.state.value}`;
         }
