@@ -1,6 +1,6 @@
 ((LitElement) => {
     console.info(
-        '%c MULTIPLE-ENTITY-ROW %c 3.3.0 ',
+        '%c MULTIPLE-ENTITY-ROW %c 3.4.0 ',
         'color: cyan; background: black; font-weight: bold;',
         'color: darkblue; background: white; font-weight: bold;',
     );

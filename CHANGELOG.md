@@ -1,6 +1,17 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 3.4.0
+
+**Added:**
+- Format option `duration` for displaying value in seconds as `hh:mm:ss` (#89)
+- Display `hui-warning` element when main entity is not available
+
+**Changed:**
+- Row tap action now affects entire row, not only state value (#107)
+- Simplify and improve tap action handling
+- Remove deprecated handling of zwave state values
+
 ## 3.3.0
 
 **Added:**
