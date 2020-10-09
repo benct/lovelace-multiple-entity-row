@@ -55,6 +55,9 @@
             display: block;
             color: var(--secondary-text-color);
           }
+          hui-warning {
+            width: 100%;
+          }
           state-badge {
             flex: 0 0 40px;
             cursor: pointer;
@@ -95,7 +98,7 @@
         }
 
         render() {
-            return html`
+            return this.state.stateObj ? html`
             <state-badge
                 .stateObj="${this.state.stateObj}"
                 .overrideIcon="${this._config.icon}"
@@ -115,7 +118,10 @@
                         <div>${this.renderMainState()}</div>
                     </div>` : null}
                 </div>
-            </div>`;
+            </div>` : html`
+            <hui-warning>
+                ${this._hass.localize('ui.panel.lovelace.warning.entity_not_found', 'entity', this._config.entity)}
+            </hui-warning>`;
         }
 
         renderMainState() {
@@ -183,9 +189,7 @@
             if (hass && this._config) {
                 const mainStateObj = hass.states[this._config.entity];
 
-                if (!mainStateObj) throw new Error(`Entity '${this._config.entity}' does not exist.`);
-
-                this.state = {
+                this.state = mainStateObj ? {
                     ...this.state,
 
                     stateObj: mainStateObj,
@@ -198,7 +202,7 @@
                         typeof this._config.secondary_info === 'string'
                             ? {value: this._config.secondary_info}
                             : this.initEntity(this._config.secondary_info, mainStateObj),
-                }
+                } : {};
             }
         }
 
