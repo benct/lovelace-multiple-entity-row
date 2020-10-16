@@ -1,9 +1,10 @@
 # multiple-entity-row
 Show multiple entity states, attributes and icons on entity rows in Home Assistant's Lovelace UI
 
-[![GH-release](https://img.shields.io/badge/version-3.4.0-red.svg?style=flat-square)](https://raw.githubusercontent.com/benct/lovelace-multiple-entity-row/master/multiple-entity-row.js)
+[![GH-release](https://img.shields.io/github/v/release/benct/lovelace-multiple-entity-row.svg?style=flat-square)](https://github.com/benct/lovelace-multiple-entity-row/releases)
+[![GH-downloads](https://img.shields.io/github/downloads/benct/lovelace-multiple-entity-row/total?style=flat-square)](https://github.com/benct/lovelace-multiple-entity-row/releases)
 [![GH-last-commit](https://img.shields.io/github/last-commit/benct/lovelace-multiple-entity-row.svg?style=flat-square)](https://github.com/benct/lovelace-multiple-entity-row/commits/master)
-[![GH-code-size](https://img.shields.io/github/languages/code-size/benct/lovelace-multiple-entity-row.svg?style=flat-square)](https://github.com/benct/lovelace-multiple-entity-row)
+[![GH-code-size](https://img.shields.io/github/languages/code-size/benct/lovelace-multiple-entity-row.svg?color=red&style=flat-square)](https://github.com/benct/lovelace-multiple-entity-row)
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=flat-square)](https://github.com/hacs)
 
 **NOTE:** This is not a standalone lovelace card, but a row element for the [entities](https://www.home-assistant.io/lovelace/entities/) card.
