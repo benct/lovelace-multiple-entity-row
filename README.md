@@ -48,6 +48,7 @@ This card produces an `entity-row` and must therefore be configured as an entity
 | state_color | bool | `false` | Enable colored icon when entity is active
 | format | string | | Format date/time value (`relative`, `date`, `time`, `datetime`, `duration`)
 | column | bool | `false` | Show entities in a column instead of a row
+| styles | object | | Add custom CSS styles to the state element
 | | | |
 | entities | list | *see below* | Additional entity IDs or entity object(s)
 | secondary_info | string/object | *see below* | Custom `secondary_info` entity object
@@ -72,8 +73,9 @@ attribute value instead of the state value. `icon` lets you display an icon inst
 | toggle | bool | `false` | Display a toggle if supported by domain
 | icon | string/bool | `false` | Display default or custom icon instead of state or attribute value
 | state_color | bool | `false` | Enable colored icon when entity is active
-| tap_action | object | *see below* | Custom entity tap action
 | format | string | | Format date/time value (`relative`, `date`, `time`, `datetime`, `duration`)
+| styles | object | | Add custom CSS styles to the entity element
+| tap_action | object | *see below* | Custom entity tap action
 
 ### Secondary Info
 
@@ -88,6 +90,7 @@ or an object containing the following configuration:
 | name | string/bool | `friendly_name` | Override entity `friendly_name`, or `false` to hide
 | unit | string | `unit_of_measurement` | Override entity `unit_of_measurement`
 | format | string | | Format date/time value (`relative`, `date`, `time`, `datetime`, `duration`)
+| styles | object | | Add custom CSS styles to the info element
 
 ### Tap Action
 
@@ -258,6 +261,23 @@ entities:
       - entity: sensor.bedroom_max_temp
         name: custom name
         unit: temp
+
+  - type: section
+  - entity: sensor.bedroom_temperature
+    type: custom:multiple-entity-row
+    name: Styles
+    styles:
+      width: 80px
+      text-align: right
+    secondary_info:
+      attribute: battery_level
+      styles:
+        font-weight: bold
+    entities:
+      - entity: sensor.bedroom_max_temp
+        styles:
+          width: 80px
+          text-align: left
 ```
 
 ## My cards

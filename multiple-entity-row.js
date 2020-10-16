@@ -108,12 +108,12 @@
             <div class="flex">
                 <div class="info" @click="${this.onRowClick}">
                     ${this.state.name}
-                    <div class="secondary">${this.renderSecondaryInfo()}</div>
+                    <div class="secondary" style="${this.state.info && this.state.info.style}">${this.renderSecondaryInfo()}</div>
                 </div>
                 <div class="${this._config.column ? 'entities-column' : 'entities-row'}">
                     ${this.state.entities.map(entity => this.renderEntity(entity))}
                     ${this.state.value ? html`
-                    <div class="state entity" @click="${this.onRowClick}">
+                    <div class="state entity" style="${this.state.style}" @click="${this.onRowClick}">
                         ${this.stateHeader && html`<span>${this.stateHeader}</span>`}
                         <div>${this.renderMainState()}</div>
                     </div>` : null}
@@ -163,7 +163,7 @@
 
         renderEntity(entity) {
             return entity ? html`
-            <div class="entity" @click="${entity.onClick}">
+            <div class="entity" style="${entity.style}" @click="${entity.onClick}">
                 <span>${entity.name}</span>
                 <div>${this.renderEntityValue(entity)}</div>
             </div>` : null;
@@ -196,6 +196,7 @@
                     name: this.entityName(this._config.name, mainStateObj),
                     value: this._config.show_state !== false ? this.entityStateValue(mainStateObj, this._config.unit) : null,
                     toggle: this.checkToggle(this._config, mainStateObj),
+                    style: this.entityStyles(this._config),
 
                     entities: this._config.entities ? this._config.entities.map(entity => this.initEntity(entity, mainStateObj)) : [],
                     info: this.lastChanged ? null :
@@ -238,6 +239,7 @@
                 icon: config.icon === true ? (stateObj.attributes.icon || null) : config.icon,
                 format: config.format || false,
                 state_color: config.state_color || false,
+                style: this.entityStyles(config),
                 onClick: this.getAction(config.tap_action, stateObj.entity_id),
             };
         }
@@ -272,6 +274,11 @@
                 || this._hass.localize(`component.${domain}.state._.${stateObj.state}`)
                 || stateObj.state
             );
+        }
+
+        entityStyles(config) {
+            return config.styles && typeof config.styles === 'object'
+                ? Object.keys(config.styles).map(key => `${key}: ${config.styles[key]};`).join('') : '';
         }
 
         getAction(config, entityId) {
