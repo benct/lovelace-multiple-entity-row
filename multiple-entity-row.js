@@ -143,11 +143,13 @@
         }
 
         renderFormat(value, format) {
-            return [UNKNOWN, UNAVAILABLE].includes(value.toLowerCase())
-                ? html`${value}`
-                : format === 'duration'
-                    ? html`${this.secondsToDuration(value)}`
-                    : html`<hui-timestamp-display .ts=${new Date(value)} .format=${format} .hass=${this._hass}></hui-timestamp-display>`;
+            if ([UNKNOWN, UNAVAILABLE].includes(value.toLowerCase())) return html`${value}`;
+            if (format === 'duration') return html`${this.secondsToDuration(value)}`;
+            if (format.startsWith('precision')) {
+                const precision = parseInt(format.slice(-1), 10);
+                return html`${parseFloat(value).toFixed(precision)}`;
+            }
+            return html`<hui-timestamp-display .ts=${new Date(value)} .format=${format} .hass=${this._hass}></hui-timestamp-display>`;
         }
 
         renderIcon(entity) {

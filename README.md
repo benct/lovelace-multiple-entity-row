@@ -46,13 +46,13 @@ This card produces an `entity-row` and must therefore be configured as an entity
 | show_state | bool | `true` | Set to `false` to hide the entity state
 | state_header | string | | Show header text above the main entity state
 | state_color | bool | `false` | Enable colored icon when entity is active
-| format | string | | Format date/time value (`relative`, `date`, `time`, `datetime`, `duration`)
 | column | bool | `false` | Show entities in a column instead of a row
 | styles | object | | Add custom CSS styles to the state element
 | | | |
 | entities | list | *see below* | Additional entity IDs or entity object(s)
 | secondary_info | string/object | *see below* | Custom `secondary_info` entity object
 | tap_action | object | *see below* | Custom tap action on main entity state
+| format | string | *see below* | Format main state value
 
 ### Entity Objects
 
@@ -73,9 +73,9 @@ attribute value instead of the state value. `icon` lets you display an icon inst
 | toggle | bool | `false` | Display a toggle if supported by domain
 | icon | string/bool | `false` | Display default or custom icon instead of state or attribute value
 | state_color | bool | `false` | Enable colored icon when entity is active
-| format | string | | Format date/time value (`relative`, `date`, `time`, `datetime`, `duration`)
 | styles | object | | Add custom CSS styles to the entity element
 | tap_action | object | *see below* | Custom entity tap action
+| format | string | *see below* | Format entity value
 
 ### Secondary Info
 
@@ -89,8 +89,8 @@ or an object containing the following configuration:
 | attribute | string | | A valid attribute key for the entity
 | name | string/bool | `friendly_name` | Override entity `friendly_name`, or `false` to hide
 | unit | string | `unit_of_measurement` | Override entity `unit_of_measurement`
-| format | string | | Format date/time value (`relative`, `date`, `time`, `datetime`, `duration`)
 | styles | object | | Add custom CSS styles to the info element
+| format | string | *see below* | Format secondary info value
 
 ### Tap Action
 
@@ -105,6 +105,19 @@ If `toggle` is set to `true` the default action is `toggle`, otherwise it is `mo
 | navigation_path | string | | Path to navigate to when `action` is `navigate`
 | confirmation | bool/string | `false` | Enable/set text to present in a confirmation dialog
 | entity | string | | A valid entity_id override when `action` is `more-info`
+
+### Format
+
+The format option supports the following values:
+
+| Value | Type | Description
+| ----- | ---- | -----------
+| relative | `timestamp` | Convert value to relative time (`5 minutes ago`)
+| date | `timestamp` | Convert timestamp value to date
+| time | `timestamp` | Convert timestamp value to time
+| datetime | `timestamp` | Convert timestamp value to date and time
+| duration | `number` | Convert number of seconds to duration (`5:38:50`)
+| precision<0-9> | `number` | Set decimal precision of number value (`precision3` -> `18.123`)
 
 ## Examples
 
