@@ -1,6 +1,17 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 3.5.0
+
+**Added:**
+- Support custom styling on state and entity objects (#111, #112)
+- Format option `precision<0-9>` for value decimal precision (#110)
+- Option `hide_unavailable` to hide entity if unavailable (#77)
+
+**Fixed:**
+- Secondary info name not being rendered when `format` option is set (#60)
+- Call correct service when toggling `lock` or `cover` entity (#32)
+
 ## 3.4.0
 
 **Added:**
