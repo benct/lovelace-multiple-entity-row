@@ -316,7 +316,7 @@
                         break;
                     }
                     case 'toggle': {
-                        this._hass.callService('homeassistant', 'toggle', {entity_id: entityId});
+                        this.toggleEntity(entityId);
                         this.forwardHaptic('light');
                         break;
                     }
@@ -335,6 +335,25 @@
                     }
                 }
             }
+        }
+
+        toggleEntity(entityId) {
+            const turnOn = ["closed", "locked", "off"].includes(this._hass.states[entityId].state);
+            const stateDomain = entityId.split('.')[0];
+            const serviceDomain = stateDomain === "group" ? "homeassistant" : stateDomain;
+
+            let service;
+            switch (stateDomain) {
+                case "lock":
+                    service = turnOn ? "unlock" : "lock";
+                    break;
+                case "cover":
+                    service = turnOn ? "open_cover" : "close_cover";
+                    break;
+                default:
+                    service = turnOn ? "turn_on" : "turn_off";
+            }
+            this._hass.callService(serviceDomain, service, {entity_id: entityId});
         }
 
         fireEvent(node, type, detail = {}, options = {}) {
