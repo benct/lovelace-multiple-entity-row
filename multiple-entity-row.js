@@ -131,11 +131,13 @@
         }
 
         renderSecondaryInfo() {
-            return this.lastChanged
-                ? html`<ha-relative-time datetime="${this.state.stateObj.last_changed}" .hass="${this._hass}"></ha-relative-time>`
-                : this.state.info && this.state.info.format
-                    ? this.renderFormat(this.state.info.value, this.state.info.format)
-                    : (this.state.info && `${this.state.info.name ? `${this.state.info.name} ` : ''}${this.state.info.value}`)
+            if (this.lastChanged)
+                return html`<ha-relative-time datetime="${this.state.stateObj.last_changed}" .hass="${this._hass}"></ha-relative-time>`;
+            if (this.state.info) {
+                const value = this.state.info.format ?
+                    this.renderFormat(this.state.info.value, this.state.info.format) : this.state.info.value;
+                return html`${this.state.info.name ? `${this.state.info.name} ` : ''}${value}`;
+            }
         }
 
         renderToggle(stateObj) {
