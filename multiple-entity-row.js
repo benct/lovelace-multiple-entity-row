@@ -220,7 +220,7 @@
         }
 
         checkToggle(config, stateObj) {
-            return config.toggle === true && stateObj.state && !['unknown', 'unavailable'].includes(stateObj.state)
+            return config.toggle === true && stateObj.state && ![UNKNOWN, UNAVAILABLE].includes(stateObj.state)
         }
 
         initEntity(config, mainStateObj) {
@@ -228,6 +228,8 @@
 
             const entity = typeof config === 'string' ? config : config.entity;
             const stateObj = entity ? (this._hass && this._hass.states[entity]) : mainStateObj;
+
+            if (config.hide_unavailable && (!stateObj || [UNKNOWN, UNAVAILABLE].includes(stateObj.state))) return null;
 
             if (!stateObj) return {value: this._hass.localize('state.default.unavailable')};
 

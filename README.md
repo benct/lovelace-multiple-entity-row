@@ -73,6 +73,7 @@ attribute value instead of the state value. `icon` lets you display an icon inst
 | toggle | bool | `false` | Display a toggle if supported by domain
 | icon | string/bool | `false` | Display default or custom icon instead of state or attribute value
 | state_color | bool | `false` | Enable colored icon when entity is active
+| hide_unavailable | bool | `false` | Hide entity if unavailable or not found
 | styles | object | | Add custom CSS styles to the entity element
 | tap_action | object | *see below* | Custom entity tap action
 | format | string | *see below* | Format entity value
