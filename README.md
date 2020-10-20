@@ -69,7 +69,7 @@ attribute value instead of the state value. `icon` lets you display an icon inst
 | entity | string | | A valid entity_id (or skip to use main entity)
 | attribute | string | | A valid attribute key for the entity
 | name | string/bool | `friendly_name` | Override entity `friendly_name`, or `false` to hide
-| unit | string | `unit_of_measurement` | Override entity `unit_of_measurement`
+| unit | string/bool | `unit_of_measurement` | Override entity `unit_of_measurement`, or `false` to hide
 | toggle | bool | `false` | Display a toggle if supported by domain
 | icon | string/bool | `false` | Display default or custom icon instead of state or attribute value
 | state_color | bool | `false` | Enable colored icon when entity is active
@@ -89,7 +89,7 @@ or an object containing the following configuration:
 | entity | string | | A valid entity_id (or skip to use main entity)
 | attribute | string | | A valid attribute key for the entity
 | name | string/bool | `friendly_name` | Override entity `friendly_name`, or `false` to hide
-| unit | string | `unit_of_measurement` | Override entity `unit_of_measurement`
+| unit | string/bool | `unit_of_measurement` | Override entity `unit_of_measurement`
 | styles | object | | Add custom CSS styles to the info element
 | format | string | *see below* | Format secondary info value
 
