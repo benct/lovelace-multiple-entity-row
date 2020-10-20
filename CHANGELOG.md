@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 3.5.1
+
+**Fixed:**
+- Unit not being rendered when `format` option is set (#117)
+
 ## 3.5.0
 
 **Added:**
