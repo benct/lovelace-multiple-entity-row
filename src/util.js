@@ -1,4 +1,12 @@
-import { handleClick } from 'custom-card-helpers';
+const SECONDARY_INFO_VALUES = [
+    'entity-id',
+    'last-changed',
+    'last-updated',
+    'last-triggered',
+    'position',
+    'tilt-position',
+    'brightness',
+];
 
 export const isObject = (obj) => typeof obj === 'object' && !Array.isArray(obj) && !!obj;
 
@@ -6,8 +14,7 @@ export const isUnavailable = (stateObj) => !stateObj || ['unknown', 'unavailable
 
 export const hasToggle = (stateObj, config) => config.toggle === true && !isUnavailable(stateObj);
 
-export const clickHandler = (node, entity, actionConfig) => () =>
-    handleClick(node, node._hass, { entity, tap_action: actionConfig }, false, false);
+export const hasGenericSecondaryInfo = (config) => typeof config === 'string' && SECONDARY_INFO_VALUES.includes(config);
 
 export const getEntityIds = (config) =>
     [config.entity, config.secondary_info?.entity]

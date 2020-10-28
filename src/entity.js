@@ -17,8 +17,11 @@ export const entityName = (stateObj, name) => {
     return stateObj.attributes.friendly_name || computeEntity(stateObj.entity_id) || '';
 };
 
-export const entityRawValue = (stateObj, config) =>
+export const entityValue = (stateObj, config) =>
     config.attribute !== undefined ? stateObj.attributes[config.attribute] : stateObj.state;
+
+export const entityUnit = (stateObj, config) =>
+    config.attribute !== undefined ? config.unit : config.unit || stateObj.attributes.unit_of_measurement;
 
 export const entityStateDisplay = (hass, stateObj, config) => {
     if (isUnavailable(stateObj)) {
@@ -27,7 +30,7 @@ export const entityStateDisplay = (hass, stateObj, config) => {
 
     if (config.attribute) {
         return config.attribute in stateObj.attributes
-            ? stateObj.attributes[config.attribute] + (config.unit || '')
+            ? `${stateObj.attributes[config.attribute]}${config.unit ? ` ${config.unit}` : ''}`
             : hass.localize('state.default.unavailable');
     }
 

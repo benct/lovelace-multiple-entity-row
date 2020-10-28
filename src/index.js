@@ -1,6 +1,6 @@
-import { secondsToDuration } from 'custom-card-helpers';
-import { clickHandler, getEntityIds, hasConfigOrEntitiesChanged, hasToggle, isObject } from './util';
-import { checkEntity, entityName, entityRawValue, entityStateDisplay, entityStyles } from './entity';
+import { handleClick, secondsToDuration } from 'custom-card-helpers';
+import { getEntityIds, hasConfigOrEntitiesChanged, hasGenericSecondaryInfo, hasToggle, isObject } from './util';
+import { checkEntity, entityName, entityStateDisplay, entityStyles, entityUnit, entityValue } from './entity';
 import { style } from './styles';
 
 const LitElement =
@@ -35,7 +35,7 @@ class MultipleEntityRow extends LitElement {
         }
 
         this.entityIds = getEntityIds(config);
-        this.onRowClick = clickHandler(this, config.entity, config.tap_action);
+        this.onRowClick = this.clickHandler(config.entity, config.tap_action);
 
         this.config = config;
     }
@@ -67,48 +67,31 @@ class MultipleEntityRow extends LitElement {
     }
 
     render() {
-        // TODO use <hui-generic-entity-row>?
-        if (!this.stateObj) {
-            return this.renderWarning();
-        }
-        return html`<state-badge
-                .stateObj="${this.stateObj}"
-                .overrideIcon="${this.config.icon}"
-                .stateColor="${this.config.state_color}"
-                @click="${this.onRowClick}"
-            ></state-badge>
-            <div class="flex">
-                <div class="info" @click="${this.onRowClick}">
-                    ${entityName(this.stateObj, this.config.name)}
-                    <div class="secondary" style="${entityStyles(this.config.secondary_info)}">
-                        ${this.renderSecondaryInfo()}
-                    </div>
-                </div>
-                <div class="${this.config.column ? 'entities-column' : 'entities-row'}">
-                    ${this.entities.map((entity) => this.renderEntity(entity.stateObj, entity))}
-                    ${this.renderMainEntity()}
-                </div>
-            </div>`;
+        if (!this._hass || !this.config) return html``;
+        if (!this.stateObj) return this.renderWarning();
+
+        return html`<hui-generic-entity-row
+            .hass="${this._hass}"
+            .config="${this.config}"
+            .secondaryText="${this.renderSecondaryInfo()}"
+        >
+            <div class="${this.config.column ? 'entities-column' : 'entities-row'}">
+                ${this.entities.map((entity) => this.renderEntity(entity.stateObj, entity))}${this.renderMainEntity()}
+            </div>
+        </hui-generic-entity-row>`;
     }
 
     renderSecondaryInfo() {
-        if (!this.config.secondary_info) {
+        if (!this.config.secondary_info || hasGenericSecondaryInfo(this.config.secondary_info)) {
             return null;
-        }
-        if (this.config.secondary_info === 'last-changed') {
-            return html`<ha-relative-time
-                datetime="${this.stateObj.last_changed}"
-                .hass="${this._hass}"
-            ></ha-relative-time>`;
         }
         if (typeof this.config.secondary_info === 'string') {
             return html`${this.config.secondary_info}`;
         }
-        return html`${entityName(this.info, this.config.secondary_info.name)}
-        ${this.renderValue(this.info, this.config.secondary_info)}`;
+        const name = entityName(this.info, this.config.secondary_info.name);
+        return html`${name} ${this.renderValue(this.info, this.config.secondary_info)}`;
     }
 
-    // TODO main entity now supports attribute
     renderMainEntity() {
         if (this.config.show_state === false) {
             return null;
@@ -123,7 +106,7 @@ class MultipleEntityRow extends LitElement {
         if (!stateObj) {
             return null;
         }
-        const onClick = clickHandler(this, stateObj.entity_id, config.tap_action);
+        const onClick = this.clickHandler(stateObj.entity_id, config.tap_action);
         return html`<div class="entity" style="${entityStyles(config)}" @click="${onClick}">
             <span>${entityName(stateObj, config.name)}</span>
             <div>${config.icon ? this.renderIcon(stateObj, config) : this.renderValue(stateObj, config)}</div>
@@ -135,13 +118,15 @@ class MultipleEntityRow extends LitElement {
             return html`<ha-entity-toggle .stateObj="${stateObj}" .hass="${this._hass}"></ha-entity-toggle>`;
         }
         if (config.format) {
-            const value = entityRawValue(stateObj, config);
+            const value = entityValue(stateObj, config);
+            const unit = entityUnit(stateObj, config);
+
             if (config.format === 'duration') {
                 return secondsToDuration(value);
             }
             if (config.format.startsWith('precision')) {
                 const precision = parseInt(config.format.slice(-1), 10);
-                return parseFloat(value).toFixed(precision);
+                return `${parseFloat(value).toFixed(precision)}${unit ? ` ${unit}` : ''}`;
             }
             return html`<hui-timestamp-display
                 .ts=${new Date(value)}
@@ -165,6 +150,10 @@ class MultipleEntityRow extends LitElement {
         return html`<hui-warning>
             ${this._hass.localize('ui.panel.lovelace.warning.entity_not_found', 'entity', this.config.entity)}
         </hui-warning>`;
+    }
+
+    clickHandler(entity, actionConfig) {
+        handleClick(this, this._hass, { entity, tap_action: actionConfig }, false, false);
     }
 }
 
