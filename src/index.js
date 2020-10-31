@@ -153,7 +153,7 @@ class MultipleEntityRow extends LitElement {
     }
 
     clickHandler(entity, actionConfig) {
-        handleClick(this, this._hass, { entity, tap_action: actionConfig }, false, false);
+        return () => handleClick(this, this._hass, { entity, tap_action: actionConfig }, false, false);
     }
 }
 
