@@ -57,7 +57,7 @@ class MultipleEntityRow extends LitElement {
             this.entities =
                 this.config.entities?.map((config) => {
                     const conf = typeof config === 'string' ? { entity: config } : config;
-                    return { ...conf, stateObj: hass.states[conf.entity] ?? this.stateObj };
+                    return { ...conf, stateObj: conf.entity ? hass.states[conf.entity] : this.stateObj };
                 }) ?? [];
         }
     }
@@ -88,7 +88,7 @@ class MultipleEntityRow extends LitElement {
         if (typeof this.config.secondary_info === 'string') {
             return html`${this.config.secondary_info}`;
         }
-        const name = entityName(this.info, this.config.secondary_info.name);
+        const name = entityName(this.info, this.config.secondary_info);
         return html`${name} ${this.renderValue(this.info, this.config.secondary_info)}`;
     }
 
@@ -108,7 +108,7 @@ class MultipleEntityRow extends LitElement {
         }
         const onClick = this.clickHandler(stateObj.entity_id, config.tap_action);
         return html`<div class="entity" style="${entityStyles(config)}" @click="${onClick}">
-            <span>${entityName(stateObj, config.name)}</span>
+            <span>${entityName(stateObj, config)}</span>
             <div>${config.icon ? this.renderIcon(stateObj, config) : this.renderValue(stateObj, config)}</div>
         </div>`;
     }

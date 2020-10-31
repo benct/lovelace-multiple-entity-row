@@ -11,10 +11,13 @@ export const checkEntity = (config) => {
     }
 };
 
-export const entityName = (stateObj, name) => {
-    if (name === false) return null;
-    if (name !== undefined) return name;
-    return stateObj.attributes.friendly_name || computeEntity(stateObj.entity_id) || '';
+export const entityName = (stateObj, config) => {
+    if (config.name === false) return null;
+    return (
+        config.name ||
+        (config.entity ? stateObj.attributes.friendly_name || computeEntity(stateObj.entity_id) : null) ||
+        null
+    );
 };
 
 export const entityValue = (stateObj, config) =>
