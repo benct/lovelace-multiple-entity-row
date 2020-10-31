@@ -12,6 +12,10 @@ export const isObject = (obj) => typeof obj === 'object' && !Array.isArray(obj) 
 
 export const isUnavailable = (stateObj) => !stateObj || ['unknown', 'unavailable'].includes(stateObj.state);
 
+export const hideUnavailable = (stateObj, config) =>
+    config.hide_unavailable &&
+    (isUnavailable(stateObj) || (config.attribute && stateObj.attributes[config.attribute] === undefined));
+
 export const hasToggle = (stateObj, config) => config.toggle === true && !isUnavailable(stateObj);
 
 export const hasGenericSecondaryInfo = (config) => typeof config === 'string' && SECONDARY_INFO_VALUES.includes(config);

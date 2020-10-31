@@ -1,6 +1,13 @@
 import { handleClick, secondsToDuration } from 'custom-card-helpers';
-import { getEntityIds, hasConfigOrEntitiesChanged, hasGenericSecondaryInfo, hasToggle, isObject } from './util';
 import { checkEntity, entityName, entityStateDisplay, entityStyles, entityUnit, entityValue } from './entity';
+import {
+    getEntityIds,
+    hasConfigOrEntitiesChanged,
+    hasGenericSecondaryInfo,
+    hasToggle,
+    isObject,
+    hideUnavailable,
+} from './util';
 import { style } from './styles';
 
 const LitElement =
@@ -103,7 +110,7 @@ class MultipleEntityRow extends LitElement {
     }
 
     renderEntity(stateObj, config) {
-        if (!stateObj) {
+        if (!stateObj || hideUnavailable(stateObj, config)) {
             return null;
         }
         const onClick = this.clickHandler(stateObj.entity_id, config.tap_action);
