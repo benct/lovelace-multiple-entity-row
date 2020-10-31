@@ -1,4 +1,5 @@
 # multiple-entity-row
+
 Show multiple entity states, attributes and icons on entity rows in Home Assistant's Lovelace UI
 
 [![GH-release](https://img.shields.io/github/v/release/benct/lovelace-multiple-entity-row.svg?style=flat-square)](https://github.com/benct/lovelace-multiple-entity-row/releases)
@@ -35,28 +36,33 @@ or added by clicking the "Add to lovelace" button on the HACS dashboard after in
 
 This card produces an `entity-row` and must therefore be configured as an entity in an [entities](https://www.home-assistant.io/lovelace/entities/) card.
 
-| Name | Type | Default | Description
-| ---- | ---- | ------- | -----------
-| type | string | **Required** | `custom:multiple-entity-row`
-| entity | string | **Required** | `domain.my_entity_id`
-| name | string | | Override entity `friendly_name`
-| unit | string | | Override entity `unit_of_measurement`
-| icon | string | | Override entity `icon`
-| toggle | bool | `false` | Display a toggle (if supported) instead of state
-| show_state | bool | `true` | Set to `false` to hide the entity state
-| state_header | string | | Show header text above the main entity state
-| state_color | bool | `false` | Enable colored icon when entity is active
-| column | bool | `false` | Show entities in a column instead of a row
-| styles | object | | Add custom CSS styles to the state element
-| | | |
-| entities | list | *see below* | Additional entity IDs or entity object(s)
-| secondary_info | string/object | *see below* | Custom `secondary_info` entity object
-| tap_action | object | *see below* | Custom tap action on main entity state
-| format | string | *see below* | Format main state value
+| Name              | Type          | Default                             | Description                                      |
+| ----------------- | ------------- | ----------------------------------- | ------------------------------------------------ |
+| type              | string        | **Required**                        | `custom:multiple-entity-row`                     |
+| entity            | string        | **Required**                        | Entity ID (`domain.my_entity_id`)                |
+| attribute         | string        |                                     | Show an attribute instead of the state value     |
+| name              | string        | `friendly_name`                     | Override entity friendly name                    |
+| unit              | string        | `unit_of_measurement`               | Override entity unit of measurement              |
+| icon              | string        | `icon`                              | Override entity icon or image                    |
+| image             | string        |                                     | Show an image instead of icon                    |
+| toggle            | bool          | `false`                             | Display a toggle (if supported) instead of state |
+| show_state        | bool          | `true`                              | Set to `false` to hide the main entity           |
+| state_header      | string        |                                     | Show header text above the main entity state     |
+| state_color       | bool          | `false`                             | Enable colored icon when entity is active        |
+| column            | bool          | `false`                             | Show entities in a column instead of a row       |
+| styles            | object        |                                     | Add custom CSS styles to the state element       |
+| format            | string        | _[Formatting](#formatting)_         | Format main state/attribute value                |
+|                   |
+| entities          | list          | _[Entity Objects](#entity-objects)_ | Additional entity IDs or entity object(s)        |
+| secondary_info    | string/object | _[Secondary Info](#secondary-info)_ | Custom `secondary_info` entity                   |
+|                   |
+| tap_action        | object        | _[Actions](#actions)_               | Custom tap action on entity row and state value  |
+| hold_action       | object        |                                     | Custom hold action on entity row                 |
+| double_tap_action | object        |                                     | Custom double tap action on entity row           |
 
 ### Entity Objects
 
-Similarly as with the default HA `entities` card, each entity can be specified by a simple entity ID string,
+Similarly as the default HA `entities` card, each entity can be specified by an entity ID string,
 or by an object which allows more customization and configuration.
 
 If you define entities as objects, either `entity`, `attribute` or `icon` needs to be specified. `entity` is only required if you want
@@ -64,61 +70,60 @@ to display data from another entity than the main entity specified above. `attri
 attribute value instead of the state value. `icon` lets you display an icon instead of a state or attribute value
 (works well together with a custom `tap_action`).
 
-| Name | Type | Default | Description
-| ---- | ---- | ------- | -----------
-| entity | string | | A valid entity_id (or skip to use main entity)
-| attribute | string | | A valid attribute key for the entity
-| name | string/bool | `friendly_name` | Override entity `friendly_name`, or `false` to hide
-| unit | string/bool | `unit_of_measurement` | Override entity `unit_of_measurement`, or `false` to hide
-| toggle | bool | `false` | Display a toggle if supported by domain
-| icon | string/bool | `false` | Display default or custom icon instead of state or attribute value
-| state_color | bool | `false` | Enable colored icon when entity is active
-| hide_unavailable | bool | `false` | Hide entity if unavailable or not found
-| styles | object | | Add custom CSS styles to the entity element
-| tap_action | object | *see below* | Custom entity tap action
-| format | string | *see below* | Format entity value
+| Name             | Type        | Default                     | Description                                                        |
+| ---------------- | ----------- | --------------------------- | ------------------------------------------------------------------ |
+| entity           | string      |                             | A valid entity_id (or skip to use main entity)                     |
+| attribute        | string      |                             | A valid attribute key for the entity                               |
+| name             | string/bool | `friendly_name`             | Override entity friendly name (or `false` to hide)                 |
+| unit             | string/bool | `unit_of_measurement`       | Override entity unit of measurement (or `false` to hide)           |
+| toggle           | bool        | `false`                     | Display a toggle if supported by domain                            |
+| icon             | string/bool | `false`                     | Display default or custom icon instead of state or attribute value |
+| state_color      | bool        | `false`                     | Enable colored icon when entity is active                          |
+| hide_unavailable | bool        | `false`                     | Hide entity if unavailable or not found                            |
+| styles           | object      |                             | Add custom CSS styles to the entity element                        |
+| format           | string      | _[Formatting](#formatting)_ | Format entity value                                                |
+| tap_action       | object      | _[Actions](#actions)_       | Custom entity tap action                                           |
+
+_Note:_ `hold_action` and `double_tap_action` are currently not supported on additional entities.
 
 ### Secondary Info
 
-The `secondary_info` field can either be *any string* if you just want to display some text,
-the string `last-changed` if you want to display the entity's last changed time,
-or an object containing the following configuration:
+The `secondary_info` field can either be _any string_ if you just want to display some text,
+an object containing configuration options listed below, or any of the default string values from HA
+(`entity-id`, `last-changed`, `last-updated`, `last-triggered`, `position`, `tilt-position`, `brightness`).
 
-| Name | Type | Default | Description
-| ---- | ---- | ------- | -----------
-| entity | string | | A valid entity_id (or skip to use main entity)
-| attribute | string | | A valid attribute key for the entity
-| name | string/bool | `friendly_name` | Override entity `friendly_name`, or `false` to hide
-| unit | string/bool | `unit_of_measurement` | Override entity `unit_of_measurement`
-| styles | object | | Add custom CSS styles to the info element
-| format | string | *see below* | Format secondary info value
+| Name      | Type        | Default                     | Description                                              |
+| --------- | ----------- | --------------------------- | -------------------------------------------------------- |
+| entity    | string      |                             | A valid entity_id (or skip to use main entity)           |
+| attribute | string      |                             | A valid attribute key for the entity                     |
+| name      | string/bool | `friendly_name`             | Override entity friendly name (or `false` to hide)       |
+| unit      | string/bool | `unit_of_measurement`       | Override entity unit of measurement (or `false` to hide) |
+| format    | string      | _[Formatting](#formatting)_ | Format secondary info value                              |
 
-### Tap Action
+### Actions
 
-If `toggle` is set to `true` the default action is `toggle`, otherwise it is `more-info`.
+| Name            | Type        | Default      | Description                                                      |
+| --------------- | ----------- | ------------ | ---------------------------------------------------------------- |
+| action          | string      | **Required** | `more-info`, `toggle`, `call-service`, `url`, `navigate`, `none` |
+| service         | string      |              | Service to call when `action` is `call-service`                  |
+| service_data    | object      |              | Optional data to include when `action` is `call-service`         |
+| url_path        | string      |              | URL to open when `action` is `url`                               |
+| navigation_path | string      |              | Path to navigate to when `action` is `navigate`                  |
+| confirmation    | bool/string | `false`      | Enable/set text to present in a confirmation dialog              |
+| entity          | string      |              | A valid entity_id override when `action` is `more-info`          |
 
-| Name | Type | Default | Description
-| ---- | ---- | ------- | -----------
-| action | string | **Required** | Action to perform (`more-info`, `toggle`, `call-service`, `url`, `navigate`, `none`)
-| service | string | | Service to call (e.g. `light.turn_on`) when `action` is `call-service`
-| service_data | object | | Optional data to include when `action` is `call-service`
-| url_path | string | | URL to open when `action` is `url`
-| navigation_path | string | | Path to navigate to when `action` is `navigate`
-| confirmation | bool/string | `false` | Enable/set text to present in a confirmation dialog
-| entity | string | | A valid entity_id override when `action` is `more-info`
+### Formatting
 
-### Format
+The `format` option supports the following values:
 
-The format option supports the following values:
-
-| Value | Type | Description
-| ----- | ---- | -----------
-| relative | `timestamp` | Convert value to relative time (`5 minutes ago`)
-| date | `timestamp` | Convert timestamp value to date
-| time | `timestamp` | Convert timestamp value to time
-| datetime | `timestamp` | Convert timestamp value to date and time
-| duration | `number` | Convert number of seconds to duration (`5:38:50`)
-| precision<0-9> | `number` | Set decimal precision of number value (`precision3` -> `18.123`)
+| Value          | Type        | Description                                                      |
+| -------------- | ----------- | ---------------------------------------------------------------- |
+| relative       | `timestamp` | Convert value to relative time (`5 minutes ago`)                 |
+| date           | `timestamp` | Convert timestamp value to date                                  |
+| time           | `timestamp` | Convert timestamp value to time                                  |
+| datetime       | `timestamp` | Convert timestamp value to date and time                         |
+| duration       | `number`    | Convert number of seconds to duration (`5:38:50`)                |
+| precision<0-9> | `number`    | Set decimal precision of number value (`precision3` -> `18.123`) |
 
 ## Examples
 
@@ -230,10 +235,10 @@ entities:
   - type: section
   - entity: light.living_room
     type: custom:multiple-entity-row
-    name: Toggle with tap_action
+    name: Toggle with hold_action
     state_header: Livingroom
     toggle: false
-    tap_action:
+    hold_action:
       action: toggle
     entities:
       - entity: light.nightstand
@@ -296,10 +301,10 @@ entities:
 
 ## My cards
 
-[xiaomi-vacuum-card](https://github.com/benct/lovelace-xiaomi-vacuum-card) | 
-[multiple-entity-row](https://github.com/benct/lovelace-multiple-entity-row) | 
-[github-entity-row](https://github.com/benct/lovelace-github-entity-row) | 
-[battery-entity-row](https://github.com/benct/lovelace-battery-entity-row) | 
+[xiaomi-vacuum-card](https://github.com/benct/lovelace-xiaomi-vacuum-card) |
+[multiple-entity-row](https://github.com/benct/lovelace-multiple-entity-row) |
+[github-entity-row](https://github.com/benct/lovelace-github-entity-row) |
+[battery-entity-row](https://github.com/benct/lovelace-battery-entity-row) |
 [~~attribute-entity-row~~](https://github.com/benct/lovelace-attribute-entity-row)
 
 [![BMC](https://www.buymeacoffee.com/assets/img/custom_images/white_img.png)](https://www.buymeacoff.ee/benct)
