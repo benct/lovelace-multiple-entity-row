@@ -1,10 +1,12 @@
 const webpack = require('webpack');
+const path = require('path');
 
 module.exports = {
     mode: 'production',
-    entry: './src/index.js',
+    entry: path.resolve(__dirname, 'src', 'index.js'),
     output: {
         filename: 'multiple-entity-row.js',
+        path: path.resolve(__dirname),
     },
     module: {
         rules: [

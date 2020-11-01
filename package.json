@@ -31,7 +31,6 @@
   },
   "scripts": {
     "lint": "eslint src/*.js",
-    "clean": "rm -rf ./dist",
     "dev": "webpack -c webpack.config.js",
     "build": "yarn lint && webpack -c webpack.config.js"
   }
