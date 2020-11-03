@@ -1,6 +1,30 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 4.0.0
+
+This release includes a major refactoring of the codebase, but should not contain any (significant) breaking changes.
+Please report any bugs or issues [here](https://github.com/benct/lovelace-multiple-entity-row/issues).
+
+**Added:**
+- Support showing `attribute` instead of state on main entity (#124)
+- Support all standard HA `secondary_info` options (#113, #123)
+- Support standard `image` option for entity row (#114)
+- Support `hold_action` and `double_tap_action` (on entity row only) (#50)
+- Prevent unnecessary re-rendering with `shouldUpdate` function (#125)
+- Option `hide_unavailable` now also supports attributes (#119)
+- Several external packages and tools to improve developer experience
+
+**Changed:**
+- Major refactoring and improvements of entire codebase
+- Use `hui-generic-entity-row` to handle generic parts of row
+- Move CSS and utility functions to separate files
+- Replace some utility methods with equivalents from `custom-card-helpers`
+- Simplify most configuration handling
+
+**Removed:**
+- Custom styles option on secondary info
+
 ## 3.5.1
 
 **Fixed:**

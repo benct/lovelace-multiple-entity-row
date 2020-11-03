@@ -16,7 +16,7 @@ const LitElement =
 const { html, css } = LitElement.prototype;
 
 console.info(
-    '%c MULTIPLE-ENTITY-ROW %c 3.5.1 ',
+    '%c MULTIPLE-ENTITY-ROW %c 4.0.0 ',
     'color: cyan; background: black; font-weight: bold;',
     'color: darkblue; background: white; font-weight: bold;'
 );

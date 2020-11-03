@@ -17,7 +17,7 @@ to your `<config>/www/` folder and add the following to the `configuration.yaml`
 ```yaml
 lovelace:
   resources:
-    - url: /local/multiple-entity-row.js?v=3.5.1
+    - url: /local/multiple-entity-row.js?v=4.0.0
       type: module
 ```
 
@@ -84,7 +84,7 @@ attribute value instead of the state value. `icon` lets you display an icon inst
 | format           | string      | _[Formatting](#formatting)_ | Format entity value                                                |
 | tap_action       | object      | _[Actions](#actions)_       | Custom entity tap action                                           |
 
-_Note:_ `hold_action` and `double_tap_action` are currently not supported on additional entities.
+Note that `hold_action` and `double_tap_action` are currently **not** supported on additional entities.
 
 ### Secondary Info
 
