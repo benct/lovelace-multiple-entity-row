@@ -128,6 +128,9 @@ class MultipleEntityRow extends LitElement {
             const value = entityValue(stateObj, config);
             const unit = entityUnit(stateObj, config);
 
+            if (config.format === 'brightness') {
+                return `${Math.round((value / 255) * 100)} %`;
+            }
             if (config.format === 'duration') {
                 return secondsToDuration(value);
             }
