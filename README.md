@@ -121,7 +121,6 @@ The `format` option supports the following values:
 | date           | `timestamp` | Convert timestamp value to date                                  |
 | time           | `timestamp` | Convert timestamp value to time                                  |
 | datetime       | `timestamp` | Convert timestamp value to date and time                         |
-| brightness     | `number`    | Convert brightness value to percentage                           |
 | duration       | `number`    | Convert number of seconds to duration (`5:38:50`)                |
 | precision<0-9> | `number`    | Set decimal precision of number value (`precision3` -> `18.123`) |
 
