@@ -128,6 +128,9 @@ class MultipleEntityRow extends LitElement {
             const value = entityValue(stateObj, config);
             const unit = entityUnit(stateObj, config);
 
+            if (isNaN(parseFloat(value)) || !isFinite(value)) {
+                return value;
+            }
             if (config.format === 'brightness') {
                 return `${Math.round((value / 255) * 100)} %`;
             }
