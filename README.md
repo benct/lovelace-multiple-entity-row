@@ -123,6 +123,7 @@ The `format` option supports the following values:
 | datetime       | `timestamp` | Convert timestamp value to date and time                         |
 | duration       | `number`    | Convert number of seconds to duration (`5:38:50`)                |
 | precision<0-9> | `number`    | Set decimal precision of number value (`precision3` -> `18.123`) |
+| brightness_pct | `number`    | Convert brightness into brightness_pct                           |
 
 ## Examples
 

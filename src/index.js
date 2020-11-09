@@ -135,6 +135,9 @@ class MultipleEntityRow extends LitElement {
                 const precision = parseInt(config.format.slice(-1), 10);
                 return `${parseFloat(value).toFixed(precision)}${unit ? ` ${unit}` : ''}`;
             }
+            if (config.format === 'brightness_pct') {
+                return `${parseFloat(value / 2.55).toFixed(2)}${unit ? ` ${unit}` : ''}`;
+            }
             return html`<hui-timestamp-display
                 .ts=${new Date(value)}
                 .format=${config.format}

@@ -1,10 +1,15 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## 4.0.0
+## 4.1.0
 
 This release includes a major refactoring of the codebase, but should not contain any (significant) breaking changes.
 Please report any bugs or issues [here](https://github.com/benct/lovelace-multiple-entity-row/issues).
+
+**Added:**
+- Format option `brightness_to_percentage` for converting bit brightness into percentages.
+
+## 4.0.0
 
 **Added:**
 - Support showing `attribute` instead of state on main entity (#124)
