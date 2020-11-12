@@ -102,6 +102,9 @@ an object containing configuration options listed below, or any of the default s
 
 ### Actions
 
+This card supports all the default HA actions. See [Lovelace Actions](https://www.home-assistant.io/lovelace/actions/)
+for more detailed descriptions and examples.
+
 | Name            | Type        | Default      | Description                                                      |
 | --------------- | ----------- | ------------ | ---------------------------------------------------------------- |
 | action          | string      | **Required** | `more-info`, `toggle`, `call-service`, `url`, `navigate`, `none` |
@@ -109,7 +112,7 @@ an object containing configuration options listed below, or any of the default s
 | service_data    | object      |              | Optional data to include when `action` is `call-service`         |
 | url_path        | string      |              | URL to open when `action` is `url`                               |
 | navigation_path | string      |              | Path to navigate to when `action` is `navigate`                  |
-| confirmation    | bool/string | `false`      | Enable/set text to present in a confirmation dialog              |
+| confirmation    | bool/object | `false`      | Enable confirmation dialog                                       |
 
 ### Formatting
 
@@ -267,7 +270,8 @@ entities:
           service: light.turn_on
           service_data:
             entity_id: light.living_room
-          confirmation: 'Are you sure?'
+          confirmation:
+            text: 'Are you sure?'
 
   - type: section
   - entity: sensor.bedroom_temperature
