@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 4.1.0
+
+**Added:**
+- Handle non-numeric values when using `format` option (#127)
+- Support `brightness` as a formatting option (#128)
+- Support `hide_unavailable` option on secondary info objects (#136)
+
 ## 4.0.0
 
 This release includes a major refactoring of the codebase, but should not contain any (significant) breaking changes.
