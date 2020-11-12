@@ -92,13 +92,14 @@ The `secondary_info` field can either be _any string_ if you just want to displa
 an object containing configuration options listed below, or any of the default string values from HA
 (`entity-id`, `last-changed`, `last-updated`, `last-triggered`, `position`, `tilt-position`, `brightness`).
 
-| Name      | Type        | Default                     | Description                                              |
-| --------- | ----------- | --------------------------- | -------------------------------------------------------- |
-| entity    | string      |                             | A valid entity_id (or skip to use main entity)           |
-| attribute | string      |                             | A valid attribute key for the entity                     |
-| name      | string/bool | `friendly_name`             | Override entity friendly name (or `false` to hide)       |
-| unit      | string/bool | `unit_of_measurement`       | Override entity unit of measurement (or `false` to hide) |
-| format    | string      | _[Formatting](#formatting)_ | Format secondary info value                              |
+| Name             | Type        | Default                     | Description                                              |
+| ---------------- | ----------- | --------------------------- | -------------------------------------------------------- |
+| entity           | string      |                             | A valid entity_id (or skip to use main entity)           |
+| attribute        | string      |                             | A valid attribute key for the entity                     |
+| name             | string/bool | `friendly_name`             | Override entity friendly name (or `false` to hide)       |
+| unit             | string/bool | `unit_of_measurement`       | Override entity unit of measurement (or `false` to hide) |
+| hide_unavailable | bool        | `false`                     | Hide secondary info if unavailable or not found          |
+| format           | string      | _[Formatting](#formatting)_ | Format secondary info value                              |
 
 ### Actions
 
