@@ -129,29 +129,40 @@ class MultipleEntityRow extends LitElement {
             return html`<ha-entity-toggle .stateObj="${stateObj}" .hass="${this._hass}"></ha-entity-toggle>`;
         }
         if (config.format) {
-            const value = entityValue(stateObj, config);
-            const unit = entityUnit(stateObj, config);
+            return this.renderFormat(stateObj, config);
+        }
+        return entityStateDisplay(this._hass, stateObj, config);
+    }
 
-            if (isNaN(parseFloat(value)) || !isFinite(value)) {
+    renderFormat(stateObj, config) {
+        const value = entityValue(stateObj, config);
+
+        if (['relative', 'total', 'date', 'time', 'datetime'].includes(config.format)) {
+            const timestamp = new Date(value);
+            if (!(timestamp instanceof Date) || isNaN(timestamp.getTime())) {
                 return value;
             }
-            if (config.format === 'brightness') {
-                return `${Math.round((value / 255) * 100)} %`;
-            }
-            if (config.format === 'duration') {
-                return secondsToDuration(value);
-            }
-            if (config.format.startsWith('precision')) {
-                const precision = parseInt(config.format.slice(-1), 10);
-                return `${parseFloat(value).toFixed(precision)}${unit ? ` ${unit}` : ''}`;
-            }
             return html`<hui-timestamp-display
-                .ts=${new Date(value)}
+                .ts=${timestamp}
                 .format=${config.format}
                 .hass=${this._hass}
             ></hui-timestamp-display>`;
         }
-        return entityStateDisplay(this._hass, stateObj, config);
+        if (isNaN(parseFloat(value)) || !isFinite(value)) {
+            return value;
+        }
+        if (config.format === 'brightness') {
+            return `${Math.round((value / 255) * 100)} %`;
+        }
+        if (config.format === 'duration') {
+            return secondsToDuration(value);
+        }
+        if (config.format.startsWith('precision')) {
+            const unit = entityUnit(stateObj, config);
+            const precision = parseInt(config.format.slice(-1), 10);
+            return `${parseFloat(value).toFixed(precision)}${unit ? ` ${unit}` : ''}`;
+        }
+        return value;
     }
 
     renderIcon(stateObj, config) {
