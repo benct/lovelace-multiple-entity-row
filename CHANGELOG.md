@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 4.1.1
+
+**Fixed:**
+- Incorrect handling of datetime string values (#142)
+
 ## 4.1.0
 
 **Added:**
