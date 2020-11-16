@@ -122,6 +122,7 @@ The `format` option supports the following values:
 | Value          | Type        | Description                                                      |
 | -------------- | ----------- | ---------------------------------------------------------------- |
 | relative       | `timestamp` | Convert value to relative time (`5 minutes ago`)                 |
+| total          | `timestamp` | Convert value to relative time (`5 minutes`)                     |
 | date           | `timestamp` | Convert timestamp value to date                                  |
 | time           | `timestamp` | Convert timestamp value to time                                  |
 | datetime       | `timestamp` | Convert timestamp value to date and time                         |
