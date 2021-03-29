@@ -24,7 +24,11 @@ export const entityValue = (stateObj, config) =>
     config.attribute !== undefined ? stateObj.attributes[config.attribute] : stateObj.state;
 
 export const entityUnit = (stateObj, config) =>
-    config.attribute !== undefined ? config.unit : config.unit || stateObj.attributes.unit_of_measurement;
+    config.unit === false
+        ? null
+        : config.attribute !== undefined
+        ? config.unit
+        : config.unit || stateObj.attributes.unit_of_measurement;
 
 export const entityStateDisplay = (hass, stateObj, config) => {
     if (isUnavailable(stateObj)) {
