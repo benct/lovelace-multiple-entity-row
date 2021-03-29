@@ -35,17 +35,22 @@ export const entityStateDisplay = (hass, stateObj, config) => {
         return hass.localize(`state.default.${stateObj.state}`);
     }
 
+    const domain = computeStateDomain(stateObj);
+    const computeDisplay = (value) =>
+        (stateObj.attributes.device_class &&
+            hass.localize(`component.${domain}.state.${stateObj.attributes.device_class}.${value}`)) ||
+        hass.localize(`component.${domain}.state._.${value}`) ||
+        value;
+
     if (config.attribute) {
         return config.attribute in stateObj.attributes
-            ? `${stateObj.attributes[config.attribute]}${config.unit ? ` ${config.unit}` : ''}`
+            ? `${computeDisplay(stateObj.attributes[config.attribute])}${config.unit ? ` ${config.unit}` : ''}`
             : hass.localize('state.default.unavailable');
     }
 
     if (config.unit !== false && (config.unit || stateObj.attributes.unit_of_measurement)) {
         return `${stateObj.state} ${config.unit || stateObj.attributes.unit_of_measurement}`;
     }
-
-    const domain = computeStateDomain(stateObj);
 
     if (domain === 'input_datetime') {
         let date;
@@ -75,12 +80,7 @@ export const entityStateDisplay = (hass, stateObj, config) => {
         return formatDateTime(date, hass.language);
     }
 
-    return (
-        (stateObj.attributes.device_class &&
-            hass.localize(`component.${domain}.state.${stateObj.attributes.device_class}.${stateObj.state}`)) ||
-        hass.localize(`component.${domain}.state._.${stateObj.state}`) ||
-        stateObj.state
-    );
+    return computeDisplay(stateObj.state);
 };
 
 export const entityStyles = (config) =>
