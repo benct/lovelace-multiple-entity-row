@@ -1,6 +1,21 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 4.2.0
+
+**Added:**
+- Support `fire-dom-event` custom action (#173)
+- Support haptic feedback configuration on actions (#164)
+- Support custom entity on `more-info` action (#161)
+
+**Changed:**
+- Use localization on `attribute` values (#178)
+- Render disabled toggles on unavailable state (#160)
+- Improve state display of `input_dateime` entities (#140)
+
+**Fixed:**
+- Incorrect rendering of `unit` when `false` (#145)
+
 ## 4.1.1
 
 **Fixed:**
