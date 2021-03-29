@@ -16,7 +16,7 @@ export const hideUnavailable = (stateObj, config) =>
     config.hide_unavailable &&
     (isUnavailable(stateObj) || (config.attribute && stateObj.attributes[config.attribute] === undefined));
 
-export const hasToggle = (stateObj, config) => config.toggle === true && !isUnavailable(stateObj);
+export const hasToggle = (stateObj, config) => config.toggle === true;
 
 export const hasGenericSecondaryInfo = (config) => typeof config === 'string' && SECONDARY_INFO_VALUES.includes(config);
 
