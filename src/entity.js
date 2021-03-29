@@ -1,5 +1,5 @@
 import { computeEntity, computeStateDomain } from 'custom-card-helpers';
-import { isObject, isUnavailable } from './util';
+import { isObject, isUnavailable, hasToggle } from './util';
 
 export const checkEntity = (config) => {
     if (isObject(config) && !(config.entity || config.attribute || config.icon)) {
@@ -27,7 +27,7 @@ export const entityUnit = (stateObj, config) =>
     config.attribute !== undefined ? config.unit : config.unit || stateObj.attributes.unit_of_measurement;
 
 export const entityStateDisplay = (hass, stateObj, config) => {
-    if (isUnavailable(stateObj)) {
+    if (isUnavailable(stateObj) && !hasToggle(stateObj, config)) {
         return hass.localize(`state.default.${stateObj.state}`);
     }
 
