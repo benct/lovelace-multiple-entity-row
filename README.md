@@ -106,14 +106,16 @@ an object containing configuration options listed below, or any of the default s
 This card supports all the default HA actions. See [Lovelace Actions](https://www.home-assistant.io/lovelace/actions/)
 for more detailed descriptions and examples.
 
-| Name            | Type        | Default      | Description                                                      |
-| --------------- | ----------- | ------------ | ---------------------------------------------------------------- |
-| action          | string      | **Required** | `more-info`, `toggle`, `call-service`, `url`, `navigate`, `none` |
-| service         | string      |              | Service to call when `action` is `call-service`                  |
-| service_data    | object      |              | Optional data to include when `action` is `call-service`         |
-| url_path        | string      |              | URL to open when `action` is `url`                               |
-| navigation_path | string      |              | Path to navigate to when `action` is `navigate`                  |
-| confirmation    | bool/object | `false`      | Enable confirmation dialog                                       |
+| Name            | Type        | Default      | Description                                                                                |
+| --------------- | ----------- | ------------ | ------------------------------------------------------------------------------------------ |
+| action          | string      | **Required** | `more-info`, `toggle`, `call-service`, `url`, `navigate`, `fire-dom-event`, `none`         |
+| entity          | string      |              | Override entity-id when `action` is `more-info`                                            |
+| service         | string      |              | Service to call when `action` is `call-service`                                            |
+| service_data    | object      |              | Optional data to include when `action` is `call-service`                                   |
+| url_path        | string      |              | URL to open when `action` is `url`                                                         |
+| navigation_path | string      |              | Path to navigate to when `action` is `navigate`                                            |
+| confirmation    | bool/object | `false`      | Enable confirmation dialog                                                                 |
+| haptic          | string      | `none`       | Haptic feedback (`success`, `warning`, `failure`, `light`, `medium`, `heavy`, `selection`) |
 
 ### Formatting
 
