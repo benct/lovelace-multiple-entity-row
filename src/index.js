@@ -1,13 +1,6 @@
 import { handleClick, secondsToDuration } from 'custom-card-helpers';
 import { checkEntity, entityName, entityStateDisplay, entityStyles, entityUnit, entityValue } from './entity';
-import {
-    getEntityIds,
-    hasConfigOrEntitiesChanged,
-    hasGenericSecondaryInfo,
-    hasToggle,
-    isObject,
-    hideUnavailable,
-} from './util';
+import { getEntityIds, hasConfigOrEntitiesChanged, hasGenericSecondaryInfo, isObject, hideUnavailable } from './util';
 import { style } from './styles';
 
 const LitElement =
@@ -125,7 +118,7 @@ class MultipleEntityRow extends LitElement {
     }
 
     renderValue(stateObj, config) {
-        if (hasToggle(stateObj, config)) {
+        if (config.toggle === true) {
             return html`<ha-entity-toggle .stateObj="${stateObj}" .hass="${this._hass}"></ha-entity-toggle>`;
         }
         if (config.format) {
