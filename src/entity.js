@@ -1,4 +1,4 @@
-import { computeEntity, computeStateDomain } from 'custom-card-helpers';
+import { computeEntity, computeStateDomain, formatDate, formatDateTime, formatTime } from 'custom-card-helpers';
 import { isObject, isUnavailable } from './util';
 
 export const checkEntity = (config) => {
@@ -46,6 +46,35 @@ export const entityStateDisplay = (hass, stateObj, config) => {
     }
 
     const domain = computeStateDomain(stateObj);
+
+    if (domain === 'input_datetime') {
+        let date;
+        if (!stateObj.attributes.has_time) {
+            date = new Date(stateObj.attributes.year, stateObj.attributes.month - 1, stateObj.attributes.day);
+            return formatDate(date, hass.language);
+        }
+        if (!stateObj.attributes.has_date) {
+            const now = new Date();
+            date = new Date(
+                now.getFullYear(),
+                now.getMonth(),
+                now.getDay(),
+                stateObj.attributes.hour,
+                stateObj.attributes.minute
+            );
+            return formatTime(date, hass.language);
+        }
+
+        date = new Date(
+            stateObj.attributes.year,
+            stateObj.attributes.month - 1,
+            stateObj.attributes.day,
+            stateObj.attributes.hour,
+            stateObj.attributes.minute
+        );
+        return formatDateTime(date, hass.language);
+    }
+
     return (
         (stateObj.attributes.device_class &&
             hass.localize(`component.${domain}.state.${stateObj.attributes.device_class}.${stateObj.state}`)) ||
