@@ -1,4 +1,4 @@
-import { computeEntity, computeStateDomain, formatDate, formatDateTime, formatTime } from 'custom-card-helpers';
+import { computeEntity, computeStateDomain, formatDate, formatDateTime, formatTime, formatNumber } from 'custom-card-helpers';
 import { isObject, isUnavailable } from './util';
 
 export const checkEntity = (config) => {
@@ -43,13 +43,24 @@ export const entityStateDisplay = (hass, stateObj, config) => {
         value;
 
     if (config.attribute) {
-        return config.attribute in stateObj.attributes
-            ? `${computeDisplay(stateObj.attributes[config.attribute])}${config.unit ? ` ${config.unit}` : ''}`
-            : hass.localize('state.default.unavailable');
+		if (isNaN(stateObj.attributes[config.attribute])) {
+			return config.attribute in stateObj.attributes
+				? `${computeDisplay(stateObj.attributes[config.attribute])}${config.unit ? ` ${config.unit}` : ''}`
+				: hass.localize('state.default.unavailable');
+		} else {
+			return config.attribute in stateObj.attributes
+				? formatNumber(computeDisplay(stateObj.attributes[config.attribute]))+`${config.unit ? ` ${config.unit}` : ''}`
+				: hass.localize('state.default.unavailable');
+		}
+
     }
 
     if (config.unit !== false && (config.unit || stateObj.attributes.unit_of_measurement)) {
-        return `${stateObj.state} ${config.unit || stateObj.attributes.unit_of_measurement}`;
+		if (isNaN(stateObj.state)) {
+			return `${stateObj.state} ${config.unit || stateObj.attributes.unit_of_measurement}`;
+		} else {
+			return formatNumber(stateObj.state)+` ${config.unit || stateObj.attributes.unit_of_measurement}`;
+		}
     }
 
     if (domain === 'input_datetime') {
