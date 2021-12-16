@@ -16,18 +16,18 @@
   "author": "benct <ben@tomlin.no>",
   "license": "MIT",
   "dependencies": {
-    "custom-card-helpers": "^1.7.0"
+    "custom-card-helpers": "^1.8.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.13.13",
-    "@babel/preset-env": "^7.13.12",
-    "babel-loader": "^8.2.2",
-    "eslint": "^7.23.0",
-    "eslint-config-prettier": "^8.1.0",
-    "eslint-plugin-prettier": "^3.3.1",
-    "prettier": "^2.2.1",
-    "webpack": "^5.28.0",
-    "webpack-cli": "^4.6.0"
+    "@babel/core": "^7.16.5",
+    "@babel/preset-env": "^7.16.5",
+    "babel-loader": "^8.2.3",
+    "eslint": "^8.4.1",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "prettier": "^2.5.1",
+    "webpack": "^5.65.0",
+    "webpack-cli": "^4.9.1"
   },
   "scripts": {
     "lint": "eslint src/*.js",
