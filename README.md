@@ -41,8 +41,8 @@ This card produces an `entity-row` and must therefore be configured as an entity
 | type              | string        | **Required**                        | `custom:multiple-entity-row`                     |
 | entity            | string        | **Required**                        | Entity ID (`domain.my_entity_id`)                |
 | attribute         | string        |                                     | Show an attribute instead of the state value     |
-| name              | string        | `friendly_name`                     | Override entity friendly name                    |
-| unit              | string        | `unit_of_measurement`               | Override entity unit of measurement              |
+| name              | string/bool   | `friendly_name`                     | Override entity friendly name                    |
+| unit              | string/bool   | `unit_of_measurement`               | Override entity unit of measurement              |
 | icon              | string        | `icon`                              | Override entity icon or image                    |
 | image             | string        |                                     | Show an image instead of icon                    |
 | toggle            | bool          | `false`                             | Display a toggle (if supported) instead of state |

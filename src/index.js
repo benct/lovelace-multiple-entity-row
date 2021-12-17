@@ -34,7 +34,7 @@ class MultipleEntityRow extends LitElement {
         this.entityIds = getEntityIds(config);
         this.onRowClick = this.clickHandler(config.entity, config.tap_action);
 
-        this.config = config;
+        this.config = { ...config, name: config.name === false ? ' ' : config.name };
     }
 
     shouldUpdate(changedProps) {
