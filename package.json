@@ -16,7 +16,8 @@
   "author": "benct <ben@tomlin.no>",
   "license": "MIT",
   "dependencies": {
-    "custom-card-helpers": "^1.8.0"
+    "custom-card-helpers": "^1.8.0",
+    "lit": "^2.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.16.5",

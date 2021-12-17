@@ -1,12 +1,9 @@
+import { LitElement, html, css } from 'lit';
 import { handleClick, secondsToDuration, formatNumber } from 'custom-card-helpers';
+
 import { checkEntity, entityName, entityStateDisplay, entityStyles, entityUnit, entityValue } from './entity';
 import { getEntityIds, hasConfigOrEntitiesChanged, hasGenericSecondaryInfo, isObject, hideUnavailable } from './util';
 import { style } from './styles';
-
-const LitElement =
-    window.LitElement ||
-    Object.getPrototypeOf(customElements.get('hui-masonry-view') || customElements.get('hui-view'));
-const { html, css } = LitElement.prototype;
 
 console.info(
     '%c MULTIPLE-ENTITY-ROW %c 4.2.0 ',
