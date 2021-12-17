@@ -1,4 +1,4 @@
-import { computeEntity, computeStateDomain, formatDate, formatDateTime, formatTime } from 'custom-card-helpers';
+import { computeEntity, computeStateDisplay, formatNumber, secondsToDuration } from 'custom-card-helpers';
 import { isObject, isUnavailable } from './util';
 
 export const checkEntity = (config) => {
@@ -20,67 +20,47 @@ export const entityName = (stateObj, config) => {
     );
 };
 
-export const entityValue = (stateObj, config) =>
-    config.attribute !== undefined ? stateObj.attributes[config.attribute] : stateObj.state;
-
-export const entityUnit = (stateObj, config) =>
-    config.unit === false
-        ? null
-        : config.attribute !== undefined
-        ? config.unit
-        : config.unit || stateObj.attributes.unit_of_measurement;
-
 export const entityStateDisplay = (hass, stateObj, config) => {
     if (isUnavailable(stateObj)) {
         return hass.localize(`state.default.${stateObj.state}`);
     }
 
-    const domain = computeStateDomain(stateObj);
-    const computeDisplay = (value) =>
-        (stateObj.attributes.device_class &&
-            hass.localize(`component.${domain}.state.${stateObj.attributes.device_class}.${value}`)) ||
-        hass.localize(`component.${domain}.state._.${value}`) ||
-        value;
+    const value = config.attribute ? stateObj.attributes[config.attribute] : stateObj.state;
+    const unit =
+        config.unit === false
+            ? undefined
+            : config.attribute !== undefined
+            ? config.unit
+            : config.unit || stateObj.attributes.unit_of_measurement;
+
+    if (config.format) {
+        if (isNaN(parseFloat(value)) || !isFinite(value)) {
+            return value;
+        }
+        if (config.format === 'brightness') {
+            return `${Math.round((value / 255) * 100)} %`;
+        }
+        if (config.format === 'duration') {
+            return secondsToDuration(value);
+        }
+        if (config.format.startsWith('precision')) {
+            const precision = parseInt(config.format.slice(-1), 10);
+            const formatted = formatNumber(parseFloat(value), hass.language, {
+                minimumFractionDigits: precision,
+                maximumFractionDigits: precision,
+            });
+            return `${formatted}${unit ? ` ${unit}` : ''}`;
+        }
+        return value;
+    }
 
     if (config.attribute) {
-        return config.attribute in stateObj.attributes
-            ? `${computeDisplay(stateObj.attributes[config.attribute])}${config.unit ? ` ${config.unit}` : ''}`
-            : hass.localize('state.default.unavailable');
+        return `${isNaN(value) ? value : formatNumber(value, hass.language)}${unit ? ` ${unit}` : ''}`;
     }
 
-    if (config.unit !== false && (config.unit || stateObj.attributes.unit_of_measurement)) {
-        return `${stateObj.state} ${config.unit || stateObj.attributes.unit_of_measurement}`;
-    }
+    const modifiedStateObj = { ...stateObj, attributes: { ...stateObj.attributes, unit_of_measurement: unit } };
 
-    if (domain === 'input_datetime') {
-        let date;
-        if (!stateObj.attributes.has_time) {
-            date = new Date(stateObj.attributes.year, stateObj.attributes.month - 1, stateObj.attributes.day);
-            return formatDate(date, hass.language);
-        }
-        if (!stateObj.attributes.has_date) {
-            const now = new Date();
-            date = new Date(
-                now.getFullYear(),
-                now.getMonth(),
-                now.getDay(),
-                stateObj.attributes.hour,
-                stateObj.attributes.minute
-            );
-            return formatTime(date, hass.language);
-        }
-
-        date = new Date(
-            stateObj.attributes.year,
-            stateObj.attributes.month - 1,
-            stateObj.attributes.day,
-            stateObj.attributes.hour,
-            stateObj.attributes.minute
-        );
-        return formatDateTime(date, hass.language);
-    }
-
-    return computeDisplay(stateObj.state);
+    return computeStateDisplay(hass.localize, modifiedStateObj, hass.language);
 };
 
 export const entityStyles = (config) =>

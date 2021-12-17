@@ -1,8 +1,8 @@
-import { LitElement, html, css } from 'lit';
-import { handleClick, secondsToDuration, formatNumber } from 'custom-card-helpers';
+import { css, html, LitElement } from 'lit';
+import { handleClick } from 'custom-card-helpers';
 
-import { checkEntity, entityName, entityStateDisplay, entityStyles, entityUnit, entityValue } from './entity';
-import { getEntityIds, hasConfigOrEntitiesChanged, hasGenericSecondaryInfo, isObject, hideUnavailable } from './util';
+import { checkEntity, entityName, entityStateDisplay, entityStyles } from './entity';
+import { getEntityIds, hasConfigOrEntitiesChanged, hasGenericSecondaryInfo, hideUnavailable, isObject } from './util';
 import { style } from './styles';
 
 console.info(
@@ -118,42 +118,20 @@ class MultipleEntityRow extends LitElement {
         if (config.toggle === true) {
             return html`<ha-entity-toggle .stateObj="${stateObj}" .hass="${this._hass}"></ha-entity-toggle>`;
         }
-        if (config.format) {
-            return this.renderFormat(stateObj, config);
-        }
-        return entityStateDisplay(this._hass, stateObj, config);
-    }
-
-    renderFormat(stateObj, config) {
-        const value = entityValue(stateObj, config);
-
-        if (['relative', 'total', 'date', 'time', 'datetime'].includes(config.format)) {
+        if (config.format && ['relative', 'total', 'date', 'time', 'datetime'].includes(config.format)) {
+            const value = config.attribute ? stateObj.attributes[config.attribute] : stateObj.state;
             const timestamp = new Date(value);
             if (!(timestamp instanceof Date) || isNaN(timestamp.getTime())) {
                 return value;
             }
             return html`<hui-timestamp-display
+                .hass=${this._hass}
                 .ts=${timestamp}
                 .format=${config.format}
-                .hass=${this._hass}
+                capitalize
             ></hui-timestamp-display>`;
         }
-        if (isNaN(parseFloat(value)) || !isFinite(value)) {
-            return value;
-        }
-        if (config.format === 'brightness') {
-            return `${Math.round((value / 255) * 100)} %`;
-        }
-        if (config.format === 'duration') {
-            return secondsToDuration(value);
-        }
-        if (config.format.startsWith('precision')) {
-            const unit = entityUnit(stateObj, config);
-            const precision = parseInt(config.format.slice(-1), 10);
-            const formatted = formatNumber(parseFloat(value).toFixed(precision), this._hass.language);
-            return `${formatted}${unit ? ` ${unit}` : ''}`;
-        }
-        return value;
+        return entityStateDisplay(this._hass, stateObj, config);
     }
 
     renderIcon(stateObj, config) {
