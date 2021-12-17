@@ -7,6 +7,7 @@ Show multiple entity states, attributes and icons on entity rows in Home Assista
 [![GH-last-commit](https://img.shields.io/github/last-commit/benct/lovelace-multiple-entity-row.svg?style=flat-square)](https://github.com/benct/lovelace-multiple-entity-row/commits/master)
 [![GH-code-size](https://img.shields.io/github/languages/code-size/benct/lovelace-multiple-entity-row.svg?color=red&style=flat-square)](https://github.com/benct/lovelace-multiple-entity-row)
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=flat-square)](https://github.com/hacs)
+<a href="https://www.buymeacoffee.com/benct"><img src="https://cdn.buymeacoffee.com/buttons/default-yellow.png" height="20"></a>
 
 **NOTE:** This is not a standalone lovelace card, but a row element for the [entities](https://www.home-assistant.io/lovelace/entities/) card.
 
@@ -17,7 +18,7 @@ to your `<config>/www/` folder and add the following to the `configuration.yaml`
 ```yaml
 lovelace:
   resources:
-    - url: /local/multiple-entity-row.js?v=4.2.0
+    - url: /local/multiple-entity-row.js?v=4.3.0
       type: module
 ```
 

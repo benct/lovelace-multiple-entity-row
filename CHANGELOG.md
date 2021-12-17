@@ -1,6 +1,20 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 4.3.0
+
+**Added:**
+- Support hiding main entity name with `name: false` (#131, #134, #179)
+- Locale-aware number formatting of state and attribute values (#208)
+- Locale-aware number formatting when using `precision` format option (#212)
+
+**Changed:**
+- Bundle `Lit` in card rather than importing from HA (#192)
+- Simplify and improve handling of entity state display
+
+**Fixed:**
+- Incorrect triggering of `more-info` dialog when clicking additional entities (#216, #217)
+
 ## 4.2.0
 
 **Added:**
