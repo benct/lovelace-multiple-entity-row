@@ -1,4 +1,4 @@
-import { handleClick, secondsToDuration } from 'custom-card-helpers';
+import { handleClick, secondsToDuration, formatNumber } from 'custom-card-helpers';
 import { checkEntity, entityName, entityStateDisplay, entityStyles, entityUnit, entityValue } from './entity';
 import { getEntityIds, hasConfigOrEntitiesChanged, hasGenericSecondaryInfo, isObject, hideUnavailable } from './util';
 import { style } from './styles';
@@ -153,7 +153,7 @@ class MultipleEntityRow extends LitElement {
         if (config.format.startsWith('precision')) {
             const unit = entityUnit(stateObj, config);
             const precision = parseInt(config.format.slice(-1), 10);
-            return `${parseFloat(value).toFixed(precision)}${unit ? ` ${unit}` : ''}`;
+            return `${formatNumber(parseFloat(value).toFixed(precision))}${unit ? ` ${unit}` : ''}`;
         }
         return value;
     }
