@@ -150,7 +150,8 @@ class MultipleEntityRow extends LitElement {
         if (config.format.startsWith('precision')) {
             const unit = entityUnit(stateObj, config);
             const precision = parseInt(config.format.slice(-1), 10);
-            return `${formatNumber(parseFloat(value).toFixed(precision))}${unit ? ` ${unit}` : ''}`;
+            const formatted = formatNumber(parseFloat(value).toFixed(precision), this._hass.language);
+            return `${formatted}${unit ? ` ${unit}` : ''}`;
         }
         return value;
     }
