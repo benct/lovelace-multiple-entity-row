@@ -1,12 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 4.3.1
+
+**Fixed:**
+- Use correct locale field on entity value formatting (#212)
+
 ## 4.3.0
 
 **Added:**
 - Support hiding main entity name with `name: false` (#131, #134, #179)
-- Locale-aware number formatting of state and attribute values (#208)
-- Locale-aware number formatting when using `precision` format option (#212)
+- Locale-aware number formatting of all entity values (#149, #162, #208, #212)
 
 **Changed:**
 - Bundle `Lit` in card rather than importing from HA (#192)
