@@ -45,7 +45,7 @@ export const entityStateDisplay = (hass, stateObj, config) => {
         }
         if (config.format.startsWith('precision')) {
             const precision = parseInt(config.format.slice(-1), 10);
-            const formatted = formatNumber(parseFloat(value), hass.language, {
+            const formatted = formatNumber(parseFloat(value), hass.locale, {
                 minimumFractionDigits: precision,
                 maximumFractionDigits: precision,
             });
@@ -55,12 +55,12 @@ export const entityStateDisplay = (hass, stateObj, config) => {
     }
 
     if (config.attribute) {
-        return `${isNaN(value) ? value : formatNumber(value, hass.language)}${unit ? ` ${unit}` : ''}`;
+        return `${isNaN(value) ? value : formatNumber(value, hass.locale)}${unit ? ` ${unit}` : ''}`;
     }
 
     const modifiedStateObj = { ...stateObj, attributes: { ...stateObj.attributes, unit_of_measurement: unit } };
 
-    return computeStateDisplay(hass.localize, modifiedStateObj, hass.language);
+    return computeStateDisplay(hass.localize, modifiedStateObj, hass.locale);
 };
 
 export const entityStyles = (config) =>
