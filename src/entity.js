@@ -29,8 +29,8 @@ export const entityStateDisplay = (hass, stateObj, config) => {
         return hass.localize(`state.default.${stateObj.state}`);
     }
 
-    const value = config.attribute ? stateObj.attributes[config.attribute] : stateObj.state;
-    const unit =
+    let value = config.attribute ? stateObj.attributes[config.attribute] : stateObj.state;
+    let unit =
         config.unit === false
             ? undefined
             : config.attribute !== undefined
@@ -39,23 +39,27 @@ export const entityStateDisplay = (hass, stateObj, config) => {
 
     if (config.format) {
         if (isNaN(parseFloat(value)) || !isFinite(value)) {
-            return value;
-        }
-        if (config.format === 'brightness') {
-            return `${Math.round((value / 255) * 100)} %`;
-        }
-        if (config.format === 'duration') {
-            return secondsToDuration(value);
-        }
-        if (config.format.startsWith('precision')) {
+            // do nothing if not a number
+        } else if (config.format === 'brightness') {
+            value = Math.round((value / 255) * 100);
+            unit = '%';
+        } else if (config.format.startsWith('duration')) {
+            value = secondsToDuration(config.format === 'duration-m' ? value / 1000 : value);
+            unit = undefined;
+        } else if (config.format.startsWith('precision')) {
             const precision = parseInt(config.format.slice(-1), 10);
-            const formatted = formatNumber(parseFloat(value), hass.locale, {
+            value = formatNumber(parseFloat(value), hass.locale, {
                 minimumFractionDigits: precision,
                 maximumFractionDigits: precision,
             });
-            return `${formatted}${unit ? ` ${unit}` : ''}`;
+        } else if (config.format === 'kilo') {
+            value = formatNumber(value / 1000, hass.locale, { maximumFractionDigits: 2 });
+        } else if (config.format === 'invert') {
+            value = value - value * 2;
+        } else if (config.format === 'position') {
+            value = 100 - value;
         }
-        return value;
+        return `${value}${unit ? ` ${unit}` : ''}`;
     }
 
     if (config.attribute) {
