@@ -1,7 +1,7 @@
 {
   "multiple-entity-row": {
-    "updated_at": "2021-12-19",
-    "version": "4.3.1",
+    "updated_at": "2021-12-22",
+    "version": "4.3.2",
     "remote_location": "https://raw.githubusercontent.com/benct/lovelace-multiple-entity-row/master/multiple-entity-row.js",
     "visit_repo": "https://github.com/benct/lovelace-multiple-entity-row",
     "changelog": "https://github.com/benct/lovelace-multiple-entity-row/blob/master/CHANGELOG.md"

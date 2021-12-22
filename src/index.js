@@ -6,7 +6,7 @@ import { getEntityIds, hasConfigOrEntitiesChanged, hasGenericSecondaryInfo, hide
 import { style } from './styles';
 
 console.info(
-    '%c MULTIPLE-ENTITY-ROW %c 4.3.1 ',
+    '%c MULTIPLE-ENTITY-ROW %c 4.3.2 ',
     'color: cyan; background: black; font-weight: bold;',
     'color: darkblue; background: white; font-weight: bold;'
 );

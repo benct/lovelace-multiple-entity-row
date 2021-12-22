@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 4.3.2
+
+**Fixed:**
+- Incorrect triggering of `more-info` dialog on mobile devices (#217)
+
 ## 4.3.1
 
 **Fixed:**
