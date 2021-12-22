@@ -1,16 +1,8 @@
-const SECONDARY_INFO_VALUES = [
-    'entity-id',
-    'last-changed',
-    'last-updated',
-    'last-triggered',
-    'position',
-    'tilt-position',
-    'brightness',
-];
+import { SECONDARY_INFO_VALUES, UNAVAILABLE_STATES } from './lib/constants';
 
 export const isObject = (obj) => typeof obj === 'object' && !Array.isArray(obj) && !!obj;
 
-export const isUnavailable = (stateObj) => !stateObj || ['unknown', 'unavailable'].includes(stateObj.state);
+export const isUnavailable = (stateObj) => !stateObj || UNAVAILABLE_STATES.includes(stateObj.state);
 
 export const hideUnavailable = (stateObj, config) =>
     config.hide_unavailable &&

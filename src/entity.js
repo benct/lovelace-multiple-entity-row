@@ -1,4 +1,6 @@
-import { computeEntity, computeStateDisplay, formatNumber, secondsToDuration } from 'custom-card-helpers';
+import { secondsToDuration } from './lib/seconds_to_duration';
+import { formatNumber } from './lib/format_number';
+import { computeStateDisplay } from './lib/compute_state_display';
 import { isObject, isUnavailable } from './util';
 
 export const checkEntity = (config) => {
@@ -10,6 +12,8 @@ export const checkEntity = (config) => {
         throw new Error('Entity config must be a valid entity ID string or entity object.');
     }
 };
+
+export const computeEntity = (entityId) => entityId.substr(entityId.indexOf('.') + 1);
 
 export const entityName = (stateObj, config) => {
     if (config.name === false) return null;

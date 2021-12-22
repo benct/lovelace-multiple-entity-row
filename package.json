@@ -17,7 +17,8 @@
   "license": "MIT",
   "dependencies": {
     "custom-card-helpers": "^1.8.0",
-    "lit": "^2.0.2"
+    "lit": "^2.0.2",
+    "memoize-one": "^6.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.16.5",
