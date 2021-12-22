@@ -7,6 +7,11 @@ export const UNAVAILABLE = 'unavailable';
 export const UNKNOWN = 'unknown';
 export const UNAVAILABLE_STATES = [UNAVAILABLE, UNKNOWN];
 
+export const LAST_CHANGED = 'last-changed';
+export const LAST_UPDATED = 'last-updated';
+
+export const TIMESTAMP_FORMATS = ['relative', 'total', 'date', 'time', 'datetime'];
+
 export const SECONDARY_INFO_VALUES = [
     'entity-id',
     'last-changed',

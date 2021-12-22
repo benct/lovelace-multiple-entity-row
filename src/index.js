@@ -1,6 +1,7 @@
 import { css, html, LitElement } from 'lit';
 import { handleClick } from 'custom-card-helpers';
 
+import { LAST_CHANGED, LAST_UPDATED, TIMESTAMP_FORMATS } from './lib/constants';
 import { checkEntity, entityName, entityStateDisplay, entityStyles } from './entity';
 import { getEntityIds, hasConfigOrEntitiesChanged, hasGenericSecondaryInfo, hideUnavailable, isObject } from './util';
 import { style } from './styles';
@@ -119,7 +120,14 @@ class MultipleEntityRow extends LitElement {
         if (config.toggle === true) {
             return html`<ha-entity-toggle .stateObj="${stateObj}" .hass="${this._hass}"></ha-entity-toggle>`;
         }
-        if (config.format && ['relative', 'total', 'date', 'time', 'datetime'].includes(config.format)) {
+        if (config.attribute && [LAST_CHANGED, LAST_UPDATED].includes(config.attribute)) {
+            return html`<ha-relative-time
+                .hass=${this._hass}
+                .datetime=${stateObj[config.attribute?.replace('-', '_')]}
+                capitalize
+            ></ha-relative-time>`;
+        }
+        if (config.format && [TIMESTAMP_FORMATS].includes(config.format)) {
             const value = config.attribute ? stateObj.attributes[config.attribute] : stateObj.state;
             const timestamp = new Date(value);
             if (!(timestamp instanceof Date) || isNaN(timestamp.getTime())) {

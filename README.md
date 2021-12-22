@@ -87,6 +87,15 @@ attribute value instead of the state value. `icon` lets you display an icon inst
 
 Note that `hold_action` and `double_tap_action` are currently **not** supported on additional entities.
 
+#### Special attributes
+
+Some special data fields from HA can be displayed by setting the `attribute` field to the following values:
+
+| Value           | Description                                                        |
+| --------------- | ------------------------------------------------------------------ |
+| `last-changed`  | Renders the `last_changed` state of the entity if available        |
+| `last-updated`  | Renders the `last_updated` state of the entity if available        |
+
 ### Secondary Info
 
 The `secondary_info` field can either be _any string_ if you just want to display some text,
