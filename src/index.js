@@ -71,6 +71,7 @@ class MultipleEntityRow extends LitElement {
             .hass="${this._hass}"
             .config="${this.config}"
             .secondaryText="${this.renderSecondaryInfo()}"
+            .catchInteraction=${false}
         >
             <div class="${this.config.column ? 'entities-column' : 'entities-row'}">
                 ${this.entities.map((entity) => this.renderEntity(entity.stateObj, entity))}${this.renderMainEntity()}
@@ -150,10 +151,7 @@ class MultipleEntityRow extends LitElement {
     }
 
     clickHandler(entity, actionConfig) {
-        return (e) => {
-            e.stopPropagation();
-            handleClick(this, this._hass, { entity, tap_action: actionConfig }, false, false);
-        };
+        return () => handleClick(this, this._hass, { entity, tap_action: actionConfig }, false, false);
     }
 }
 
