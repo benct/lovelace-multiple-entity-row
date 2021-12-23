@@ -3,7 +3,7 @@ import { handleClick } from 'custom-card-helpers';
 
 import { LAST_CHANGED, LAST_UPDATED, TIMESTAMP_FORMATS } from './lib/constants';
 import { checkEntity, entityName, entityStateDisplay, entityStyles } from './entity';
-import { getEntityIds, hasConfigOrEntitiesChanged, hasGenericSecondaryInfo, hideUnavailable, isObject } from './util';
+import { getEntityIds, hasConfigOrEntitiesChanged, hasGenericSecondaryInfo, hideIf, isObject } from './util';
 import { style } from './styles';
 
 console.info(
@@ -84,7 +84,7 @@ class MultipleEntityRow extends LitElement {
         if (
             !this.config.secondary_info ||
             hasGenericSecondaryInfo(this.config.secondary_info) ||
-            hideUnavailable(this.info, this.config.secondary_info)
+            hideIf(this.info, this.config.secondary_info)
         ) {
             return null;
         }
@@ -106,7 +106,7 @@ class MultipleEntityRow extends LitElement {
     }
 
     renderEntity(stateObj, config) {
-        if (!stateObj || hideUnavailable(stateObj, config)) {
+        if (!stateObj || hideIf(stateObj, config)) {
             return null;
         }
         const onClick = this.clickHandler(stateObj.entity_id, config.tap_action);

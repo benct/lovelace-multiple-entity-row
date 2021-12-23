@@ -81,6 +81,7 @@ attribute value instead of the state value. `icon` lets you display an icon inst
 | icon             | string/bool | `false`                     | Display default or custom icon instead of state or attribute value |
 | state_color      | bool        | `false`                     | Enable colored icon when entity is active                          |
 | hide_unavailable | bool        | `false`                     | Hide entity if unavailable or not found                            |
+| hide_if          | object/any  | _[Hiding](#hiding)_         | Hide entity if its value matches specified value or criteria       |
 | styles           | object      |                             | Add custom CSS styles to the entity element                        |
 | format           | string      | _[Formatting](#formatting)_ | Format entity value                                                |
 | tap_action       | object      | _[Actions](#actions)_       | Custom entity tap action                                           |
@@ -109,6 +110,7 @@ an object containing configuration options listed below, or any of the default s
 | name             | string/bool | `friendly_name`             | Override entity friendly name (or `false` to hide)       |
 | unit             | string/bool | `unit_of_measurement`       | Override entity unit of measurement (or `false` to hide) |
 | hide_unavailable | bool        | `false`                     | Hide secondary info if unavailable or not found          |
+| hide_if          | object/any  | _[Hiding](#hiding)_         | Hide secondary info if value matches specified criteria  |
 | format           | string      | _[Formatting](#formatting)_ | Format secondary info value                              |
 
 ### Actions
@@ -145,6 +147,18 @@ The `format` option supports the following values:
 | kilo           | `number`    | Divide number value by 1000 (ex. `1500 W` -> `1.5 kW`)           |
 | position       | `number`    | Reverses a position percentage (ex. `70%` open -> `30%` closed)  |
 | precision<0-9> | `number`    | Set decimal precision of number value (`precision3` -> `18.123`) |
+
+### Hiding
+
+The `hide_if` option can be used to hide an entity if its state or attribute value matches the specified criteria.
+It can be used directly with a string, number or boolean value (i.e. `hide_if: 'off'`), as a list with several values,
+or as an object with one or more of the options listed below.
+
+| Name    | Type     | Description                                                     |
+| ------- | -------- | --------------------------------------------------------------- |
+| above   | number   | Hidden if entity _number_ value is above the specified value    |
+| below   | number   | Hidden if entity _number_ value is below the specified value    |
+| value   | list/any | Hidden if value matches specified value or any value in a list  |
 
 ## Examples
 
