@@ -55,9 +55,9 @@ export const entityStateDisplay = (hass, stateObj, config) => {
         } else if (config.format === 'kilo') {
             value = formatNumber(value / 1000, hass.locale, { maximumFractionDigits: 2 });
         } else if (config.format === 'invert') {
-            value = value - value * 2;
+            value = formatNumber(value - value * 2, hass.locale);
         } else if (config.format === 'position') {
-            value = 100 - value;
+            value = formatNumber(100 - value, hass.locale);
         }
         return `${value}${unit ? ` ${unit}` : ''}`;
     }
