@@ -1,7 +1,7 @@
 // Source: https://github.com/home-assistant/frontend/blob/dev/src/common/datetime/use_am_pm.ts
 
 import memoizeOne from 'memoize-one';
-import { TimeFormat } from './constants'
+import { TimeFormat } from './constants';
 
 export const useAmPm = memoizeOne((locale) => {
     if (locale.time_format === TimeFormat.language || locale.time_format === TimeFormat.system) {

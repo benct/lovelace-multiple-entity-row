@@ -1,7 +1,7 @@
 // Source: https://github.com/home-assistant/frontend/blob/dev/src/common/datetime/format_time.ts
 
 import memoizeOne from 'memoize-one';
-import { useAmPm } from "./use_am_pm";
+import { useAmPm } from './use_am_pm';
 
 export const formatTime = (dateObj, locale) => formatTimeMem(locale).format(dateObj);
 

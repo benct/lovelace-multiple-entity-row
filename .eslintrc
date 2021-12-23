@@ -13,6 +13,7 @@
     "history": true,
     "confirm": true,
     "console": true,
-    "customElements": true
+    "customElements": true,
+    "Intl": true
   }
 }

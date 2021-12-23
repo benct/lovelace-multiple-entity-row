@@ -1,6 +1,6 @@
 // Source: https://github.com/home-assistant/frontend/blob/dev/src/common/entity/compute_state_display.ts
 
-import { UNAVAILABLE, UNKNOWN } from "./constants";
+import { UNAVAILABLE, UNKNOWN } from './constants';
 import { formatDate } from './format_date';
 import { formatDateTime } from './format_date_time';
 import { formatTime } from './format_time';
