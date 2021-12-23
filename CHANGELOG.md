@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 4.4.1
+
+**Fixed:**
+- Incorrect usage of timestamp formats array (#219)
+- Missing number formatting on `position` and `invert` options (#220)
+
 ## 4.4.0
 
 **Added:**
