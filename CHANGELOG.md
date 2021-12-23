@@ -1,6 +1,19 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 4.4.0
+
+**Added:**
+- Support `last-changed` and `last-updated` states on additional entities (#101)
+- Support hiding entities based on specific value(s) or criteria (#218)
+- Formatting options `position`, `invert`, `kilo` and `duration-m` (#135, #151, #174)
+
+**Changed:**
+- Replace outdated functionality from `custom-cards` with updated equivalents
+
+**Fixed:**
+- Date/time inputs not respecting selected time format (#189)
+
 ## 4.3.2
 
 **Fixed:**
