@@ -80,6 +80,7 @@ attribute value instead of the state value. `icon` lets you display an icon inst
 | toggle           | bool        | `false`                     | Display a toggle if supported by domain                            |
 | icon             | string/bool | `false`                     | Display default or custom icon instead of state or attribute value |
 | state_color      | bool        | `false`                     | Enable colored icon when entity is active                          |
+| default          | string      |                             | Display this value if the entity does not exist or should not be shown |
 | hide_unavailable | bool        | `false`                     | Hide entity if unavailable or not found                            |
 | hide_if          | object/any  | _[Hiding](#hiding)_         | Hide entity if its value matches specified value or criteria       |
 | styles           | object      |                             | Add custom CSS styles to the entity element                        |
