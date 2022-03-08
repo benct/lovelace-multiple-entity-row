@@ -133,20 +133,22 @@ for more detailed descriptions and examples.
 
 The `format` option supports the following values:
 
-| Value          | Type        | Description                                                      |
-| -------------- | ----------- | ---------------------------------------------------------------- |
-| relative       | `timestamp` | Convert value to relative time (`5 minutes ago`)                 |
-| total          | `timestamp` | Convert value to relative time (`5 minutes`)                     |
-| date           | `timestamp` | Convert timestamp value to date                                  |
-| time           | `timestamp` | Convert timestamp value to time                                  |
-| datetime       | `timestamp` | Convert timestamp value to date and time                         |
-| brightness     | `number`    | Convert brightness value to percentage                           |
-| duration       | `number`    | Convert number of seconds to duration (`5:38:50`)                |
-| duration-m     | `number`    | Convert number of milliseconds to duration (`5:38:50`)           |
-| invert         | `number`    | Convert number from positive to negative or vice versa           |
-| kilo           | `number`    | Divide number value by 1000 (ex. `1500 W` -> `1.5 kW`)           |
-| position       | `number`    | Reverses a position percentage (ex. `70%` open -> `30%` closed)  |
-| precision<0-9> | `number`    | Set decimal precision of number value (`precision3` -> `18.123`) |
+| Value                 | Type        | Description                                                      |
+| --------------------- | ----------- | ---------------------------------------------------------------- |
+| relative              | `timestamp` | Convert value to relative time (`5 minutes ago`)                 |
+| total                 | `timestamp` | Convert value to relative time (`5 minutes`)                     |
+| date                  | `timestamp` | Convert timestamp value to date                                  |
+| time                  | `timestamp` | Convert timestamp value to time                                  |
+| datetime              | `timestamp` | Convert timestamp value to date and time                         |
+| brightness            | `number`    | Convert brightness value to percentage                           |
+| duration              | `number`    | Convert number of seconds to duration (`5:38:50`)                |
+| duration-m            | `number`    | Convert number of milliseconds to duration (`5:38:50`)           |
+| invert                | `number`    | Convert number from positive to negative or vice versa           |
+| kilo                  | `number`    | Divide number value by 1000 (ex. `1500 W` -> `1.5 kW`)           |
+| position              | `number`    | Reverses a position percentage (ex. `70%` open -> `30%` closed)  |
+| precision<0-9>        | `number`    | Set decimal precision of number value (`precision3` -> `18.123`) |
+| celsius_to_fahrenheit | `number`    | Converts a Celsius temperature to its Fahrenheit equivalent      |
+| fahrenheit_to_celsius | `number`    | Converts a Fahrenheit temperature to its Celsius equivalent      |
 
 ### Hiding
 
