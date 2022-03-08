@@ -58,6 +58,10 @@ export const entityStateDisplay = (hass, stateObj, config) => {
             value = formatNumber(value - value * 2, hass.locale);
         } else if (config.format === 'position') {
             value = formatNumber(100 - value, hass.locale);
+        } else if (config.format === 'celsius_to_fahrenheit') {
+            value = formatNumber(value * 1.8 + 32, hass.locale, { maximumFractionDigits: 0 });
+        } else if (config.format === 'fahrenheit_to_celsius') {
+            value = formatNumber((value - 32) * 5 / 9, hass.locale, { maximumFractionDigits: 1 }); 
         }
         return `${value}${unit ? ` ${unit}` : ''}`;
     }
