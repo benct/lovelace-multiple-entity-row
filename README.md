@@ -143,6 +143,7 @@ The `format` option supports the following values:
 | brightness     | `number`    | Convert brightness value to percentage                           |
 | duration       | `number`    | Convert number of seconds to duration (`5:38:50`)                |
 | duration-m     | `number`    | Convert number of milliseconds to duration (`5:38:50`)           |
+| duration-h     | `number`    | Convert number of hours to duration (`5:38:50`)           |
 | invert         | `number`    | Convert number from positive to negative or vice versa           |
 | kilo           | `number`    | Divide number value by 1000 (ex. `1500 W` -> `1.5 kW`)           |
 | position       | `number`    | Reverses a position percentage (ex. `70%` open -> `30%` closed)  |
