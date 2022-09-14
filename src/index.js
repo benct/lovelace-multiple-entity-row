@@ -128,7 +128,9 @@ class MultipleEntityRow extends LitElement {
             ></ha-relative-time>`;
         }
         if (config.format && TIMESTAMP_FORMATS.includes(config.format)) {
-            const value = config.attribute ? stateObj.attributes[config.attribute] : stateObj.state;
+            const value = config.attribute
+                ? stateObj.attributes[config.attribute] ?? stateObj[config.attribute]
+                : stateObj.state;
             const timestamp = new Date(value);
             if (!(timestamp instanceof Date) || isNaN(timestamp.getTime())) {
                 return value;

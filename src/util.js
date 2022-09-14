@@ -6,7 +6,10 @@ export const isUnavailable = (stateObj) => !stateObj || UNAVAILABLE_STATES.inclu
 
 export const hideUnavailable = (stateObj, config) =>
     config.hide_unavailable &&
-    (isUnavailable(stateObj) || (config.attribute && stateObj.attributes[config.attribute] === undefined));
+    (isUnavailable(stateObj) ||
+        (config.attribute &&
+            stateObj.attributes[config.attribute] === undefined &&
+            stateObj[config.attribute] === undefined));
 
 export const hideIf = (stateObj, config) => {
     if (hideUnavailable(stateObj, config)) {
