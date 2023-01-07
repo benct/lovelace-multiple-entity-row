@@ -53,3 +53,9 @@ export const hasConfigOrEntitiesChanged = (node, changedProps) => {
     }
     return false;
 };
+
+export const getHideIfStateObj = (hass, stateObj, config) => {
+    if (!hass || !config.hide_if || !config.hide_if.entity) return stateObj;
+    const hideObj = hass.states[config.hide_if.entity];
+    return hideObj ? hideObj : stateObj;
+};
