@@ -150,15 +150,17 @@ The `format` option supports the following values:
 
 ### Hiding
 
-The `hide_if` option can be used to hide an entity if its state or attribute value matches the specified criteria.
+The `hide_if` option can be used to hide an entity if an entity's state or attribute value matches the specified criteria.
 It can be used directly with a string, number or boolean value (i.e. `hide_if: 'off'`), as a list with several values,
 or as an object with one or more of the options listed below.
 
-| Name    | Type     | Description                                                     |
-| ------- | -------- | --------------------------------------------------------------- |
-| above   | number   | Hidden if entity _number_ value is above the specified value    |
-| below   | number   | Hidden if entity _number_ value is below the specified value    |
-| value   | list/any | Hidden if value matches specified value or any value in a list  |
+| Name      | Type     | Description                                                            |
+| --------- | -------- | ---------------------------------------------------------------------- |
+| above     | number   | Hidden if entity _number_ value is above the specified value           |
+| below     | number   | Hidden if entity _number_ value is below the specified value           |
+| value     | list/any | Hidden if value matches specified value or any value in a list         |
+| entity    | string   | Use this entity's state/attribute when evaluating criteria for hiding  |
+| attribute | string   | Use this attribute's value when evaluating criteria for hiding         |
 
 ## Examples
 
