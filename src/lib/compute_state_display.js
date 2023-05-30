@@ -10,7 +10,6 @@ export const computeStateDomain = (stateObj) => stateObj.entity_id.substr(0, sta
 
 export const computeStateDisplay = (localize, stateObj, locale, entities, state) => {
     const compareState = state !== undefined ? state : stateObj.state;
-    const entity = entities[stateObj.entity_id];
 
     if (compareState === UNKNOWN || compareState === UNAVAILABLE) {
         return localize(`state.default.${compareState}`);
@@ -103,6 +102,9 @@ export const computeStateDisplay = (localize, stateObj, locale, entities, state)
     if (domain === 'button' || (domain === 'sensor' && stateObj.attributes.device_class === 'timestamp')) {
         return formatDateTime(new Date(compareState), locale);
     }
+
+    // Get entity with translation_key (post 2023.4.x)
+    const entity = entities && entities[stateObj.entity_id];
 
     return (
         (entity?.translation_key &&
