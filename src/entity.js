@@ -43,8 +43,14 @@ export const entityStateDisplay = (hass, stateObj, config) => {
         } else if (config.format === 'brightness') {
             value = Math.round((value / 255) * 100);
             unit = '%';
-        } else if (config.format.startsWith('duration')) {
-            value = secondsToDuration(config.format === 'duration-m' ? value / 1000 : value);
+        } else if (config.format === 'duration') {
+            value = secondsToDuration(value);
+            unit = undefined;
+        } else if (config.format === 'duration-m') {
+            value = secondsToDuration(value / 1000);
+            unit = undefined;
+        } else if (config.format === 'duration-h') {
+            value = secondsToDuration(value * 3600);
             unit = undefined;
         } else if (config.format.startsWith('precision')) {
             const precision = parseInt(config.format.slice(-1), 10);
