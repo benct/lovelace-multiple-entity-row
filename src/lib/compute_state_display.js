@@ -8,8 +8,9 @@ import { formatNumber, isNumericState } from './format_number';
 
 export const computeStateDomain = (stateObj) => stateObj.entity_id.substr(0, stateObj.entity_id.indexOf('.'));
 
-export const computeStateDisplay = (localize, stateObj, locale, state) => {
+export const computeStateDisplay = (localize, stateObj, locale, entities, state) => {
     const compareState = state !== undefined ? state : stateObj.state;
+    const entity = entities[stateObj.entity_id];
 
     if (compareState === UNKNOWN || compareState === UNAVAILABLE) {
         return localize(`state.default.${compareState}`);
@@ -104,11 +105,17 @@ export const computeStateDisplay = (localize, stateObj, locale, state) => {
     }
 
     return (
+        (entity?.translation_key &&
+            localize(
+                `component.${entity.platform}.entity.${domain}.${entity.translation_key}.state.${compareState}`
+            )) ||
         // Return device class translation
         (stateObj.attributes.device_class &&
-            localize(`component.${domain}.state.${stateObj.attributes.device_class}.${compareState}`)) ||
+            localize(
+                `component.${domain}.entity_component.${stateObj.attributes.device_class}.state.${compareState}`
+            )) ||
         // Return default translation
-        localize(`component.${domain}.state._.${compareState}`) ||
+        localize(`component.${domain}.entity_component._.state.${compareState}`) ||
         // We don't know! Return the raw state.
         compareState
     );

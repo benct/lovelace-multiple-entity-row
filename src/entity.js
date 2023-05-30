@@ -68,7 +68,7 @@ export const entityStateDisplay = (hass, stateObj, config) => {
 
     const modifiedStateObj = { ...stateObj, attributes: { ...stateObj.attributes, unit_of_measurement: unit } };
 
-    return computeStateDisplay(hass.localize, modifiedStateObj, hass.locale);
+    return computeStateDisplay(hass.localize, modifiedStateObj, hass.locale, hass.entities);
 };
 
 export const entityStyles = (config) =>
