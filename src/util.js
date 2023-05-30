@@ -1,4 +1,4 @@
-import { SECONDARY_INFO_VALUES, UNAVAILABLE_STATES } from './lib/constants';
+import { LAST_CHANGED, LAST_UPDATED, SECONDARY_INFO_VALUES, UNAVAILABLE_STATES } from './lib/constants';
 
 export const isObject = (obj) => typeof obj === 'object' && !Array.isArray(obj) && !!obj;
 
@@ -6,7 +6,10 @@ export const isUnavailable = (stateObj) => !stateObj || UNAVAILABLE_STATES.inclu
 
 export const hideUnavailable = (stateObj, config) =>
     config.hide_unavailable &&
-    (isUnavailable(stateObj) || (config.attribute && stateObj.attributes[config.attribute] === undefined));
+    (isUnavailable(stateObj) ||
+        (config.attribute &&
+            ![LAST_CHANGED, LAST_UPDATED].includes(config.attribute) &&
+            stateObj.attributes[config.attribute] === undefined));
 
 export const hideIf = (stateObj, config) => {
     if (hideUnavailable(stateObj, config)) {
