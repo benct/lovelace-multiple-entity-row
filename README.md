@@ -18,7 +18,7 @@ to your `<config>/www/` folder and add the following to the `configuration.yaml`
 ```yaml
 lovelace:
   resources:
-    - url: /local/multiple-entity-row.js?v=4.4.1
+    - url: /local/multiple-entity-row.js?v=4.5.0
       type: module
 ```
 

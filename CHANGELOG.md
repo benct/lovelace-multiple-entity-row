@@ -1,6 +1,20 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 4.5.0
+
+**Added:**
+- Support default value for missing/hidden entity (#241)
+- Fahrenheit to celsius and celsius to fahrenheit formatter (#243)
+- Formatting option for duration as hours `duration-h` (#263)
+- Support state object attributes as formatting values (#267)
+
+**Changed:**
+- Support new translation_key for entity states (#289, #290, #293)
+
+**Fixed:**
+- Rendering of secondary info with last-changed/updated attributes (#222)
+
 ## 4.4.1
 
 **Fixed:**
