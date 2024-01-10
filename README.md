@@ -146,6 +146,7 @@ The `format` option supports the following values:
 | duration-h            | `number`    | Convert number of hours to duration (`5:38:50`)                  |
 | invert                | `number`    | Convert number from positive to negative or vice versa           |
 | kilo                  | `number`    | Divide number value by 1000 (ex. `1500 W` -> `1.5 kW`)           |
+| unkilo                | `number`    | Multiplies number value by 1000 (ex. `1.50 kW` -> `1500 W`)      |
 | position              | `number`    | Reverses a position percentage (ex. `70%` open -> `30%` closed)  |
 | precision<0-9>        | `number`    | Set decimal precision of number value (`precision3` -> `18.123`) |
 | celsius_to_fahrenheit | `number`    | Converts a Celsius temperature to its Fahrenheit equivalent      |
