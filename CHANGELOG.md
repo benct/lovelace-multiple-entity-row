@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 4.5.1
+
+**Fixed:**
+- Incorrect state icons for HA 2024.2+ (#330, #331)
+
 ## 4.5.0
 
 **Added:**
