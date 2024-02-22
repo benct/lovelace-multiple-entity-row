@@ -154,6 +154,7 @@ class MultipleEntityRow extends LitElement {
     renderIcon(stateObj, config) {
         return html`<state-badge
             class="icon-small"
+            .hass=${this._hass}
             .stateObj="${stateObj}"
             .overrideIcon="${config.icon === true ? stateObj.attributes.icon || null : config.icon}"
             .stateColor="${config.state_color}"
