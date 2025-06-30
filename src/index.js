@@ -116,6 +116,22 @@ class MultipleEntityRow extends LitElement {
             return null;
         }
         const onClick = this.clickHandler(stateObj.entity_id, config.tap_action);
+
+        if (config.icon === true) {
+            return html`<div class="entity" style="${entityStyles(config)}" @click="${onClick}">
+                <span>${entityName(stateObj, config)}</span>
+                <div>
+                    <state-badge
+                        class="icon-small"
+                        .hass=${this._hass}
+                        .stateObj="${stateObj}"
+                        .overrideIcon="${stateObj.attributes.icon || null}"
+                        .stateColor="${config.state_color}"
+                    ></state-badge>
+                </div>
+            </div>`;
+        }
+
         return html`<div class="entity" style="${entityStyles(config)}" @click="${onClick}">
             <span>${entityName(stateObj, config)}</span>
             <div>${config.icon ? this.renderIcon(stateObj, config) : this.renderValue(stateObj, config)}</div>
