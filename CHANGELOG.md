@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 4.5.2
+
+**Fixed:**
+- `name` override not applied on the main row in HA 2026.2+ until an entity state changed (#370, #371)
+
 ## 4.5.1
 
 **Fixed:**
