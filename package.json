@@ -1,7 +1,9 @@
 {
   "name": "multiple-entity-row",
-  "version": "4.5.1",
+  "version": "5.2.0",
   "description": "Show multiple entity states, attributes and icons on entity rows in Home Assistant's Lovelace UI",
+  "main": "dist/multiple-entity-row.js",
+  "type": "module",
   "keywords": [
     "home-assistant",
     "homeassistant",
@@ -11,29 +13,45 @@
     "entity",
     "row"
   ],
-  "module": "multiple-entity-row.js",
-  "repository": "https://github.com/benct/lovelace-multiple-entity-row.git",
+  "repository": "https://github.com/duczz/ha-multiple-entity-row.git",
   "author": "benct <ben@tomlin.no>",
   "license": "MIT",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "cross-env NODE_ENV=production rollup -c",
+    "dev": "rollup -c --watch",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write \"src/**/*.{ts,css}\""
+  },
   "dependencies": {
-    "custom-card-helpers": "1.8.0",
-    "lit": "^2.7.4",
-    "memoize-one": "^6.0.0"
+    "@mdi/js": "^7.4.47",
+    "lit": "^3.2.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.22.1",
-    "@babel/preset-env": "^7.22.4",
-    "babel-loader": "^9.1.2",
-    "eslint": "^8.41.0",
-    "eslint-config-prettier": "^8.8.0",
-    "eslint-plugin-prettier": "^4.2.1",
-    "prettier": "^2.8.8",
-    "webpack": "^5.84.1",
-    "webpack-cli": "^5.1.1"
+    "@rollup/plugin-commonjs": "^28.0.2",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^16.0.0",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^12.1.2",
+    "cross-env": "^7.0.3",
+    "postcss": "^8.4.49",
+    "postcss-preset-env": "^10.1.3",
+    "prettier": "^3.4.2",
+    "rollup": "^4.30.1",
+    "rollup-plugin-inject-process-env": "^1.3.1",
+    "rollup-plugin-postcss": "^4.0.2",
+    "rollup-plugin-postcss-lit": "^2.1.0",
+    "tslib": "^2.8.1",
+    "typescript": "^5.7.3"
   },
-  "scripts": {
-    "lint": "eslint src/**/*.js",
-    "dev": "webpack -c webpack.config.js",
-    "build": "yarn lint && webpack -c webpack.config.js"
+  "prettier": {
+    "printWidth": 100,
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "all",
+    "tabWidth": 2
   }
 }

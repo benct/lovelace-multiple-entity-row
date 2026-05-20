@@ -1,2 +1,5 @@
 node_modules/
-multiple-entity-row.js.LICENSE.txt
+
+# Local-only AI assistant notes (lives in PersonalOS brain too — regenerable)
+CLAUDE.md
+.claude/
