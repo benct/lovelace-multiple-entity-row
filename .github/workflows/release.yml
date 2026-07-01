@@ -18,7 +18,8 @@ jobs:
           cache: 'yarn'
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        # See build.yml for why --ignore-engines is needed here.
+        run: yarn install --frozen-lockfile --ignore-engines
 
       - name: Build the file
         run: yarn build

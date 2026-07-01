@@ -32,7 +32,12 @@ jobs:
           cache: 'yarn'
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        # custom-card-helpers declares engines.node >=24 for its own dev/test
+        # tooling, which yarn classic enforces strictly on install. We only
+        # consume its built dist output, not its dev toolchain, so this
+        # doesn't affect us — verified the full test+build suite passes
+        # unmodified on Node 20 in an isolated container before adding this.
+        run: yarn install --frozen-lockfile --ignore-engines
 
       - name: Test
         if: matrix.node-version != 22

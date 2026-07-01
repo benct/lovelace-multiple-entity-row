@@ -37,10 +37,11 @@ jobs:
           cache: 'yarn'
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        # See build.yml for why --ignore-engines is needed here.
+        run: yarn install --frozen-lockfile --ignore-engines
 
       - name: Build
-        run: webpack -c webpack.config.js
+        run: yarn dev
 
       - name: HACS validation
         uses: hacs/action@main
