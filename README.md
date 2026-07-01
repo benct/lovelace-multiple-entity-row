@@ -13,7 +13,7 @@ Show multiple entity states, attributes and icons on entity rows in Home Assista
 
 ## Installation
 
-Manually add [multiple-entity-row.js](https://raw.githubusercontent.com/benct/lovelace-multiple-entity-row/master/multiple-entity-row.js)
+Manually add [multiple-entity-row.js](https://github.com/benct/lovelace-multiple-entity-row/releases/latest/download/multiple-entity-row.js)
 to your `<config>/www/` folder and add the following to the `configuration.yaml` file:
 ```yaml
 lovelace:

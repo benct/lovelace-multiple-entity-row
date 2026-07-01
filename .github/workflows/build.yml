@@ -1,0 +1,59 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+
+# Cancel an older run of the same workflow on the same ref when a new push
+# arrives. Saves CI minutes on rapid force-pushes / quick fixups.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Test build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20, 22]
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v5
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'yarn'
+
+      - name: Install dependencies
+        # custom-card-helpers declares engines.node >=24 for its own dev/test
+        # tooling, which yarn classic enforces strictly on install. We only
+        # consume its built dist output, not its dev toolchain, so this
+        # doesn't affect us — verified the full test+build suite passes
+        # unmodified on Node 20 in an isolated container before adding this.
+        run: yarn install --frozen-lockfile --ignore-engines
+
+      - name: Test
+        if: matrix.node-version != 22
+        run: yarn test
+
+      - name: Test with coverage
+        if: matrix.node-version == 22
+        run: yarn coverage
+
+      - name: Upload coverage report
+        if: matrix.node-version == 22
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 14
+
+      - name: Build
+        run: yarn build
