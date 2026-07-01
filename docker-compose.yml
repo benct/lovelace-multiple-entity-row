@@ -1,0 +1,21 @@
+# Local Home Assistant testbed for lovelace-multiple-entity-row development.
+#
+# Bind-mounts the built multiple-entity-row.js read-only into HA's www
+# directory, so each `yarn build` is immediately available to the running
+# HA — hard-refresh the browser (Cmd-Shift-R) and you're testing the new
+# bundle. No file copying.
+#
+# First-time setup: see CONTRIBUTING section in README.md, or just run
+# `yarn ha:up`.
+
+services:
+  ha:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    container_name: mer-ha
+    restart: unless-stopped
+    ports:
+      - "8130:8123"
+    volumes:
+      - ./.dev/ha-config:/config
+      - ./multiple-entity-row.js:/config/www/community/multiple-entity-row/multiple-entity-row.js:ro
+      - /etc/localtime:/etc/localtime:ro

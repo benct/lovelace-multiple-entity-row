@@ -40,6 +40,11 @@
     "test:watch": "vitest",
     "coverage": "vitest run --coverage",
     "dev": "webpack -c webpack.config.js",
-    "build": "yarn lint && yarn test && webpack -c webpack.config.js"
+    "build": "yarn lint && yarn test && webpack -c webpack.config.js",
+    "ha:init": "mkdir -p .dev/ha-config && cp -n .dev/configuration.yaml.example .dev/ha-config/configuration.yaml || true",
+    "ha:up": "yarn ha:init && docker compose up -d && echo 'HA starting at http://localhost:8130 (first boot may take a minute)'",
+    "ha:down": "docker compose down",
+    "ha:logs": "docker compose logs -f ha",
+    "ha:reset": "docker compose down && rm -rf .dev/ha-config && echo 'HA config wiped. Run yarn ha:up for a fresh instance.'"
   }
 }

@@ -338,6 +338,25 @@ entities:
           text-align: left
 ```
 
+## Development
+
+```bash
+yarn install
+yarn build      # lint, run tests, then bundle multiple-entity-row.js
+yarn test       # run the unit test suite
+yarn coverage   # run tests with a coverage report
+```
+
+To test changes against a real Home Assistant instance, a disposable local testbed is available via Docker:
+
+```bash
+yarn ha:up      # first run also creates .dev/ha-config from the example
+# → HA boots at http://localhost:8130 (~1 min on first start)
+# → onboard a throwaway user, then add a card of type: custom:multiple-entity-row
+```
+
+After editing source and running `yarn build`, hard-refresh the browser to pick up the rebuilt bundle. See `yarn ha:down`, `yarn ha:logs`, and `yarn ha:reset` for managing the testbed.
+
 ## My cards
 
 [xiaomi-vacuum-card](https://github.com/benct/lovelace-xiaomi-vacuum-card) |

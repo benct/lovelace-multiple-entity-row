@@ -1,0 +1,20 @@
+# Minimal HA config for the lovelace-multiple-entity-row local testbed.
+# Copy this file to .dev/ha-config/configuration.yaml on first run, then
+# `docker compose up`. The .dev/ha-config/ directory is gitignored so HA's
+# database, secrets, and runtime state stay out of the repo.
+
+default_config:
+
+# Auto-load the card from the bind-mounted multiple-entity-row.js — no need
+# to add it as a Lovelace resource through the UI on each fresh start.
+frontend:
+  extra_module_url:
+    - /local/community/multiple-entity-row/multiple-entity-row.js
+
+# Demo platform populates fake entities (sun, weather, light, sensor, etc.)
+# so entity rows have something to bind to out of the box.
+demo:
+
+# Keep the recorder lean for a throwaway dev instance.
+recorder:
+  purge_keep_days: 2
