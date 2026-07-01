@@ -1,0 +1,48 @@
+name: HACS Action
+
+on:
+  push:
+    branches:
+      - master
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+# Note: pull_request trigger deliberately omitted. The HACS action queries
+# GitHub's API for the repo being validated, not the workspace — so for a
+# PR opened from a fork it tries to validate the fork's repo, which has
+# neither a committed multiple-entity-row.js (build artifacts aren't
+# tracked, see release.yml) nor any GitHub releases. The check fails on
+# every fork PR while the contributor's actual code is fine. Code-side
+# validation is covered by build.yml (lint + test + build matrix on
+# Node 20 + 22) which does run on PRs. HACS-spec compliance is caught here
+# on push-to-master and the daily cron.
+
+# Cancel an older run of the same workflow on the same ref when a new push
+# arrives. Saves CI minutes on rapid force-pushes / quick fixups.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build
+        run: webpack -c webpack.config.js
+
+      - name: HACS validation
+        uses: hacs/action@main
+        with:
+          category: plugin
