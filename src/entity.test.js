@@ -78,11 +78,19 @@ describe('entityStateDisplay', () => {
         expect(entityStateDisplay(hass, stateObj, { attribute: 'brightness', format: 'brightness' })).toBe('50 %');
     });
 
-    // See https://github.com/benct/lovelace-multiple-entity-row/issues/240 -
-    // duration format must not print "null" when there is nothing to show.
     it('applies the duration format', () => {
         const stateObj = { state: '90', attributes: {} };
         expect(entityStateDisplay(hass, stateObj, { format: 'duration' })).toBe('1:30');
+    });
+
+    // See https://github.com/benct/lovelace-multiple-entity-row/issues/240 -
+    // a zero duration must render as '0', not the literal string "null"
+    // (secondsToDuration returns null for zero seconds by design).
+    it('renders a zero duration as 0, not "null"', () => {
+        const stateObj = { state: '0', attributes: {} };
+        expect(entityStateDisplay(hass, stateObj, { format: 'duration' })).toBe('0');
+        expect(entityStateDisplay(hass, stateObj, { format: 'duration-m' })).toBe('0');
+        expect(entityStateDisplay(hass, stateObj, { format: 'duration-h' })).toBe('0');
     });
 
     it('applies the precision format with the requested digit count', () => {

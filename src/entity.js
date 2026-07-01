@@ -44,13 +44,15 @@ export const entityStateDisplay = (hass, stateObj, config) => {
             value = Math.round((value / 255) * 100);
             unit = '%';
         } else if (config.format === 'duration') {
-            value = secondsToDuration(value);
+            // secondsToDuration returns null for a zero duration; fall back to '0'
+            // so the template literal below doesn't render the literal string "null".
+            value = secondsToDuration(value) ?? '0';
             unit = undefined;
         } else if (config.format === 'duration-m') {
-            value = secondsToDuration(value / 1000);
+            value = secondsToDuration(value / 1000) ?? '0';
             unit = undefined;
         } else if (config.format === 'duration-h') {
-            value = secondsToDuration(value * 3600);
+            value = secondsToDuration(value * 3600) ?? '0';
             unit = undefined;
         } else if (config.format.startsWith('precision')) {
             const precision = parseInt(config.format.slice(-1), 10);
