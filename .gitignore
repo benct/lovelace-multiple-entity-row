@@ -1,2 +1,4 @@
 node_modules/
 multiple-entity-row.js.LICENSE.txt
+coverage/
+.dev/ha-config/
