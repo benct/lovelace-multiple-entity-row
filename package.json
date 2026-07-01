@@ -16,24 +16,30 @@
   "author": "benct <ben@tomlin.no>",
   "license": "MIT",
   "dependencies": {
-    "custom-card-helpers": "1.8.0",
-    "lit": "^2.7.4",
+    "custom-card-helpers": "2.0.0",
+    "lit": "^3.3.3",
     "memoize-one": "^6.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.22.1",
     "@babel/preset-env": "^7.22.4",
+    "@vitest/coverage-v8": "^4.1.9",
     "babel-loader": "^9.1.2",
     "eslint": "^8.41.0",
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-prettier": "^4.2.1",
+    "jsdom": "^29.1.1",
     "prettier": "^2.8.8",
+    "vitest": "^4.1.9",
     "webpack": "^5.84.1",
     "webpack-cli": "^5.1.1"
   },
   "scripts": {
     "lint": "eslint src/**/*.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "coverage": "vitest run --coverage",
     "dev": "webpack -c webpack.config.js",
-    "build": "yarn lint && webpack -c webpack.config.js"
+    "build": "yarn lint && yarn test && webpack -c webpack.config.js"
   }
 }
