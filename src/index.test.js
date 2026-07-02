@@ -52,6 +52,20 @@ describe('multiple-entity-row', () => {
         expect(el.config.name).toBe(' ');
     });
 
+    // See https://github.com/benct/lovelace-multiple-entity-row/issues/386 - HA 2026.7+'s
+    // entities-card row editor silently renames a custom row's `format` key to `time_format` on
+    // save. Fall back to `time_format` when `format` itself isn't set, so a row edited through
+    // HA's own UI editor keeps working.
+    it('falls back to time_format when format was migrated away by HA', () => {
+        el.setConfig({ entity: 'sensor.main', time_format: 'precision2' });
+        expect(el.config.format).toBe('precision2');
+    });
+
+    it('prefers format over time_format if both are somehow present', () => {
+        el.setConfig({ entity: 'sensor.main', format: 'precision1', time_format: 'precision2' });
+        expect(el.config.format).toBe('precision1');
+    });
+
     it('renders no row content before hass and config are both set', async () => {
         await flushRender(el);
         expect(el.shadowRoot.innerHTML).not.toContain('hui-generic-entity-row');

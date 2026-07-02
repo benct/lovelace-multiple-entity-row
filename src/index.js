@@ -7,7 +7,7 @@ import { getEntityIds, hasConfigOrEntitiesChanged, hasGenericSecondaryInfo, hide
 import { style } from './styles';
 
 console.info(
-    '%c MULTIPLE-ENTITY-ROW %c 4.6.0 ',
+    `%c MULTIPLE-ENTITY-ROW %c 4.6.0 (built ${process.env.BUILD_TIME}, ${process.env.BUILD_COMMIT}) `,
     'color: cyan; background: black; font-weight: bold;',
     'color: darkblue; background: white; font-weight: bold;'
 );
@@ -35,7 +35,16 @@ class MultipleEntityRow extends LitElement {
         this.entityIds = getEntityIds(config);
         this.onRowClick = this.clickHandler(config.entity, config.tap_action);
 
-        this.config = { ...config, name: config.name === false ? ' ' : config.name };
+        // HA 2026.7+'s entities-card row editor silently renames a row's `format` key to
+        // `time_format` on save, even for a custom row type with entirely different `format`
+        // semantics (see #386). That migration only touches the top-level row config, not our
+        // own nested `entities`/`secondary_info` config, so this fallback only needs to happen
+        // here. Prefer `format` if somehow both are present (e.g. a value hand-edited back in).
+        this.config = {
+            ...config,
+            name: config.name === false ? ' ' : config.name,
+            format: config.format ?? config.time_format,
+        };
     }
 
     shouldUpdate(changedProps) {
