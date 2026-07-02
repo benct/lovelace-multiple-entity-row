@@ -124,9 +124,14 @@ export const entityStateDisplay = (hass, stateObj, config) => {
     const modifiedStateObj = { ...stateObj, attributes: { ...stateObj.attributes, unit_of_measurement: unit } };
 
     if (config.attribute) {
-        return hasOfficialAttributeFormatter
-            ? hass.formatEntityAttributeValue(modifiedStateObj, config.attribute)
-            : `${isNaN(value) ? value : formatNumber(value, hass.locale)}${unit ? ` ${unit}` : ''}`;
+        if (hasOfficialAttributeFormatter) {
+            return hass.formatEntityAttributeValue(modifiedStateObj, config.attribute);
+        }
+        // A missing attribute is undefined, not a number or a real string - render an empty value
+        // rather than the literal string "undefined" (same class of bug as #225, in a code path
+        // that fix didn't cover since it only applies when a `format:` is configured).
+        const displayValue = value === undefined || value === null ? '' : isNaN(value) ? value : formatNumber(value, hass.locale);
+        return `${displayValue}${unit ? ` ${unit}` : ''}`;
     }
 
     return hasOfficialStateFormatter
