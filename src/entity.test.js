@@ -71,6 +71,15 @@ describe('entityStateDisplay', () => {
         expect(entityStateDisplay(hass, stateObj, { attribute: 'battery_level', unit: '%' })).toBe('42 %');
     });
 
+    // See https://github.com/benct/lovelace-multiple-entity-row/issues/225 and #352 - a missing
+    // attribute (no format: configured, no official formatter available) must render as an empty
+    // value, not the literal string "undefined".
+    it('renders a missing attribute as empty, not "undefined", with no format configured', () => {
+        const stateObj = { state: 'on', attributes: {} };
+        expect(entityStateDisplay(hass, stateObj, { attribute: 'battery_level' })).toBe('');
+        expect(entityStateDisplay(hass, stateObj, { attribute: 'battery_level', unit: '%' })).toBe(' %');
+    });
+
     // See https://github.com/benct/lovelace-multiple-entity-row/issues/335 -
     // brightness format converts 0-255 to a 0-100 percentage.
     it('applies the brightness format', () => {

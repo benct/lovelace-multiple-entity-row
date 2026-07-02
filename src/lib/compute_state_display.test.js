@@ -49,6 +49,22 @@ describe('computeStateDisplay', () => {
         expect(computeStateDisplay(localize, stateObj, locale)).toBe('$10.50');
     });
 
+    // See https://github.com/benct/lovelace-multiple-entity-row/issues/324 -
+    // a monetary sensor with a non-ISO-4217 unit (e.g. "c/kWh") must not attempt currency
+    // formatting at all, since Intl.NumberFormat always rejects it - that used to throw on every
+    // render (caught, but spamming the console) before falling back to the plain number + unit.
+    it('does not attempt currency formatting for a non-currency unit, and does not log an error', () => {
+        const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+        const stateObj = {
+            entity_id: 'sensor.price',
+            state: '5.2',
+            attributes: { unit_of_measurement: 'c/kWh', device_class: 'monetary', state_class: 'measurement' },
+        };
+        expect(computeStateDisplay(localize, stateObj, locale)).toBe('5.2 c/kWh');
+        expect(consoleError).not.toHaveBeenCalled();
+        consoleError.mockRestore();
+    });
+
     it('formats counter/number/input_number domains without a unit', () => {
         const stateObj = { entity_id: 'counter.errands', state: '3', attributes: {} };
         expect(computeStateDisplay(localize, stateObj, locale)).toBe('3');

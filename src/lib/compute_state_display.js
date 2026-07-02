@@ -17,7 +17,14 @@ export const computeStateDisplay = (localize, stateObj, locale, entities, state)
 
     // Entities with a `unit_of_measurement` or `state_class` are numeric values and should use `formatNumber`
     if (isNumericState(stateObj)) {
-        if (stateObj.attributes.device_class === 'monetary') {
+        // Some monetary sensors use a non-ISO-4217 unit (e.g. "c/kWh" for cents per kilowatt-hour)
+        // that Intl.NumberFormat rejects as an invalid currency code. Only attempt currency
+        // formatting for a unit that actually looks like one - otherwise every render would throw,
+        // get caught, and spam the console for something that will never succeed (see #324).
+        if (
+            stateObj.attributes.device_class === 'monetary' &&
+            /^[A-Za-z]{3}$/.test(stateObj.attributes.unit_of_measurement)
+        ) {
             try {
                 return formatNumber(compareState, locale, {
                     style: 'currency',
