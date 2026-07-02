@@ -25,8 +25,16 @@ export const entityName = (stateObj, config) => {
 };
 
 export const entityStateDisplay = (hass, stateObj, config) => {
+    // HA 2023.9+ exposes hass.formatEntityState/formatEntityAttributeValue, which apply the
+    // user's own locale/number-format/precision preferences the same way HA's own UI does.
+    // Prefer them over our own formatNumber/computeStateDisplay reimplementation when present.
+    const hasOfficialStateFormatter = typeof hass.formatEntityState === 'function';
+    const hasOfficialAttributeFormatter = typeof hass.formatEntityAttributeValue === 'function';
+
     if (isUnavailable(stateObj)) {
-        return hass.localize(`state.default.${stateObj.state}`);
+        return hasOfficialStateFormatter
+            ? hass.formatEntityState(stateObj)
+            : hass.localize(`state.default.${stateObj.state}`);
     }
 
     let value = config.attribute ? stateObj.attributes[config.attribute] : stateObj.state;
@@ -74,13 +82,17 @@ export const entityStateDisplay = (hass, stateObj, config) => {
         return `${value}${unit ? ` ${unit}` : ''}`;
     }
 
-    if (config.attribute) {
-        return `${isNaN(value) ? value : formatNumber(value, hass.locale)}${unit ? ` ${unit}` : ''}`;
-    }
-
     const modifiedStateObj = { ...stateObj, attributes: { ...stateObj.attributes, unit_of_measurement: unit } };
 
-    return computeStateDisplay(hass.localize, modifiedStateObj, hass.locale, hass.entities);
+    if (config.attribute) {
+        return hasOfficialAttributeFormatter
+            ? hass.formatEntityAttributeValue(modifiedStateObj, config.attribute)
+            : `${isNaN(value) ? value : formatNumber(value, hass.locale)}${unit ? ` ${unit}` : ''}`;
+    }
+
+    return hasOfficialStateFormatter
+        ? hass.formatEntityState(modifiedStateObj)
+        : computeStateDisplay(hass.localize, modifiedStateObj, hass.locale, hass.entities);
 };
 
 export const entityStyles = (config) =>
