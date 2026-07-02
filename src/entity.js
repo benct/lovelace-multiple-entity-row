@@ -46,6 +46,13 @@ export const entityStateDisplay = (hass, stateObj, config) => {
             : config.unit || stateObj.attributes.unit_of_measurement;
 
     if (config.format) {
+        // A missing attribute (e.g. brightness/color_temp on a light that's off) is undefined,
+        // not a number - treat it as 0 rather than letting it flow through to the final template
+        // literal below as the literal string "undefined" (see #225). A value that's some other
+        // non-numeric type (e.g. a genuine text attribute) is left untouched, same as before.
+        if (value === undefined || value === null) {
+            value = 0;
+        }
         if (isNaN(parseFloat(value)) || !isFinite(value)) {
             // do nothing if not a number
         } else if (config.format === 'brightness') {
