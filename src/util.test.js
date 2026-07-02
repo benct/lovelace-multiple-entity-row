@@ -142,20 +142,23 @@ describe('hasConfigOrEntitiesChanged', () => {
     });
 
     // See https://github.com/benct/lovelace-multiple-entity-row/issues/370 and
-    // https://github.com/benct/lovelace-multiple-entity-row/issues/371 - HA 2026.2+ installs a stub
-    // `formatEntityName` on initial connection and swaps in the real implementation asynchronously
-    // once translations load. A `name` override wouldn't take effect until some unrelated entity
-    // state changed forced a re-render, because this swap alone wasn't treated as a change.
-    it('is true when hass swaps in a new formatEntityName implementation', () => {
-        const sharedState = { state: 'on' };
-        const stubFormatEntityName = () => 'stub';
-        const realFormatEntityName = () => 'real';
-        const oldHass = { states: { 'sensor.a': sharedState }, formatEntityName: stubFormatEntityName };
-        const node = {
-            entityIds: ['sensor.a'],
-            _hass: { states: { 'sensor.a': sharedState }, formatEntityName: realFormatEntityName },
-        };
-        const changedProps = new Map([['_hass', oldHass]]);
-        expect(hasConfigOrEntitiesChanged(node, changedProps)).toBe(true);
-    });
+    // https://github.com/benct/lovelace-multiple-entity-row/issues/371 - HA 2026.2+ installs stub
+    // formatEntityName/formatEntityState/formatEntityAttributeValue functions on initial connection
+    // (returning raw, unformatted values) and swaps in the real implementations asynchronously once
+    // translations load. Without detecting that swap, a row can get stuck showing stale/raw output
+    // (e.g. a `name` override reverting, or a numeric state showing unformatted) until some
+    // unrelated entity state change happens to force a re-render.
+    it.each(['formatEntityName', 'formatEntityState', 'formatEntityAttributeValue'])(
+        'is true when hass swaps in a new %s implementation',
+        (key) => {
+            const sharedState = { state: 'on' };
+            const oldHass = { states: { 'sensor.a': sharedState }, [key]: () => 'stub' };
+            const node = {
+                entityIds: ['sensor.a'],
+                _hass: { states: { 'sensor.a': sharedState }, [key]: () => 'real' },
+            };
+            const changedProps = new Map([['_hass', oldHass]]);
+            expect(hasConfigOrEntitiesChanged(node, changedProps)).toBe(true);
+        }
+    );
 });

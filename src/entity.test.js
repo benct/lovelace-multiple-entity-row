@@ -117,6 +117,39 @@ describe('entityStateDisplay', () => {
         const stateObj = { entity_id: 'sensor.temp', state: '21', attributes: { unit_of_measurement: '°C' } };
         expect(entityStateDisplay(hass, stateObj, {})).toBe('21 °C');
     });
+
+    // See https://developers.home-assistant.io/docs/frontend/data#entity-state-formatting -
+    // HA 2023.9+ exposes hass.formatEntityState/formatEntityAttributeValue, which apply the user's
+    // own locale/precision preferences. Prefer these over our own reimplementation when present.
+    describe('with HA official formatting functions available', () => {
+        const officialHass = {
+            ...hass,
+            formatEntityState: vi.fn((stateObj) => `official-state:${stateObj.state}`),
+            formatEntityAttributeValue: vi.fn((stateObj, attribute) => `official-attr:${attribute}`),
+        };
+
+        it('delegates unavailable-state localization to formatEntityState', () => {
+            const stateObj = { state: 'unavailable', attributes: {} };
+            expect(entityStateDisplay(officialHass, stateObj, {})).toBe('official-state:unavailable');
+        });
+
+        it('delegates attribute display to formatEntityAttributeValue', () => {
+            const stateObj = { state: 'on', attributes: { battery_level: 42 } };
+            expect(entityStateDisplay(officialHass, stateObj, { attribute: 'battery_level' })).toBe(
+                'official-attr:battery_level'
+            );
+        });
+
+        it('delegates main state display to formatEntityState', () => {
+            const stateObj = { entity_id: 'sensor.temp', state: '21', attributes: {} };
+            expect(entityStateDisplay(officialHass, stateObj, {})).toBe('official-state:21');
+        });
+
+        it('still applies a custom format instead of the official formatters', () => {
+            const stateObj = { state: '90', attributes: {} };
+            expect(entityStateDisplay(officialHass, stateObj, { format: 'duration' })).toBe('1:30');
+        });
+    });
 });
 
 describe('entityStyles', () => {

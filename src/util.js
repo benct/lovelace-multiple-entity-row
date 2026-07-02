@@ -45,6 +45,13 @@ export const getEntityIds = (config) =>
         .concat(config.entities?.map((entity) => (typeof entity === 'string' ? entity : entity.entity)))
         .filter((entity) => entity);
 
+// HA installs stub formatEntityName/formatEntityState/formatEntityAttributeValue functions on
+// initial connection (returning raw, unformatted values) and replaces them asynchronously with
+// the real implementations once translations load. None of that swap is otherwise observable, so
+// without this check a row can get stuck showing stale/raw output until some unrelated entity
+// state change happens to force a re-render.
+const HASS_FORMATTER_KEYS = ['formatEntityName', 'formatEntityState', 'formatEntityAttributeValue'];
+
 export const hasConfigOrEntitiesChanged = (node, changedProps) => {
     if (changedProps.has('config')) {
         return true;
@@ -52,10 +59,7 @@ export const hasConfigOrEntitiesChanged = (node, changedProps) => {
 
     const oldHass = changedProps.get('_hass');
     if (oldHass) {
-        // HA installs a stub `formatEntityName` that ignores the name override on initial connection
-        // and replaces it asynchronously once translations load. Re-render when that swap happens so
-        // the `name` override actually takes effect on the main row.
-        if (oldHass.formatEntityName !== node._hass.formatEntityName) {
+        if (HASS_FORMATTER_KEYS.some((key) => oldHass[key] !== node._hass[key])) {
             return true;
         }
         return node.entityIds.some((entity) => oldHass.states[entity] !== node._hass.states[entity]);
