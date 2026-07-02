@@ -140,4 +140,22 @@ describe('hasConfigOrEntitiesChanged', () => {
         const changedProps = new Map([['_hass', oldHass]]);
         expect(hasConfigOrEntitiesChanged(node, changedProps)).toBe(false);
     });
+
+    // See https://github.com/benct/lovelace-multiple-entity-row/issues/370 and
+    // https://github.com/benct/lovelace-multiple-entity-row/issues/371 - HA 2026.2+ installs a stub
+    // `formatEntityName` on initial connection and swaps in the real implementation asynchronously
+    // once translations load. A `name` override wouldn't take effect until some unrelated entity
+    // state changed forced a re-render, because this swap alone wasn't treated as a change.
+    it('is true when hass swaps in a new formatEntityName implementation', () => {
+        const sharedState = { state: 'on' };
+        const stubFormatEntityName = () => 'stub';
+        const realFormatEntityName = () => 'real';
+        const oldHass = { states: { 'sensor.a': sharedState }, formatEntityName: stubFormatEntityName };
+        const node = {
+            entityIds: ['sensor.a'],
+            _hass: { states: { 'sensor.a': sharedState }, formatEntityName: realFormatEntityName },
+        };
+        const changedProps = new Map([['_hass', oldHass]]);
+        expect(hasConfigOrEntitiesChanged(node, changedProps)).toBe(true);
+    });
 });

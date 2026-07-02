@@ -52,6 +52,12 @@ export const hasConfigOrEntitiesChanged = (node, changedProps) => {
 
     const oldHass = changedProps.get('_hass');
     if (oldHass) {
+        // HA installs a stub `formatEntityName` that ignores the name override on initial connection
+        // and replaces it asynchronously once translations load. Re-render when that swap happens so
+        // the `name` override actually takes effect on the main row.
+        if (oldHass.formatEntityName !== node._hass.formatEntityName) {
+            return true;
+        }
         return node.entityIds.some((entity) => oldHass.states[entity] !== node._hass.states[entity]);
     }
     return false;
