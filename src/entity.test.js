@@ -108,6 +108,47 @@ describe('entityStateDisplay', () => {
         expect(entityStateDisplay(hass, stateObj, { format: 'position' })).toBe('70');
     });
 
+    // See https://github.com/benct/lovelace-multiple-entity-row/issues/304 -
+    // invert/position do arithmetic on the value before formatting, which coerces a string state
+    // to a number and loses formatNumber's "preserve the source string's decimal digits" handling.
+    // The formatted result must keep the same precision as the unformatted source value.
+    it('preserves source precision for the invert format', () => {
+        const stateObj = { state: '1.2345', attributes: {} };
+        expect(entityStateDisplay(hass, stateObj, { format: 'invert' })).toBe('-1.2345');
+    });
+
+    it('preserves source precision for the position format', () => {
+        const stateObj = { state: '30.5', attributes: {} };
+        expect(entityStateDisplay(hass, stateObj, { format: 'position' })).toBe('69.5');
+    });
+
+    it('applies the kilo format with the default 2-decimal cap', () => {
+        const stateObj = { state: '1500.256', attributes: {} };
+        expect(entityStateDisplay(hass, stateObj, { format: 'kilo' })).toBe('1.5');
+    });
+
+    it('applies the mega format with the default 2-decimal cap', () => {
+        const stateObj = { state: '2500000', attributes: {} };
+        expect(entityStateDisplay(hass, stateObj, { format: 'mega' })).toBe('2.5');
+    });
+
+    it('applies the milli format with the default 2-decimal cap', () => {
+        const stateObj = { state: '0.2', attributes: {} };
+        expect(entityStateDisplay(hass, stateObj, { format: 'milli' })).toBe('200');
+    });
+
+    // See https://github.com/benct/lovelace-multiple-entity-row/issues/304 -
+    // kilo<0-9>/mega<0-9>/milli<0-9> let the user request an explicit precision instead of the
+    // default 2-decimal cap. Also covers a regression in an earlier draft of this feature, which
+    // parsed the trailing digit with radix 5 instead of 10 - silently breaking digits 5-9.
+    it('applies kilo/mega/milli with an explicit requested precision, including digits 5-9', () => {
+        const stateObj = { state: '1500.256789', attributes: {} };
+        expect(entityStateDisplay(hass, stateObj, { format: 'kilo3' })).toBe('1.500');
+        expect(entityStateDisplay(hass, stateObj, { format: 'kilo7' })).toBe('1.5002568');
+        expect(entityStateDisplay(hass, stateObj, { format: 'mega9' })).toBe('0.001500257');
+        expect(entityStateDisplay(hass, stateObj, { format: 'milli0' })).toBe('1,500,257');
+    });
+
     it('leaves non-numeric values untouched when a format is configured', () => {
         const stateObj = { state: 'not-a-number', attributes: {} };
         expect(entityStateDisplay(hass, stateObj, { format: 'precision2' })).toBe('not-a-number');

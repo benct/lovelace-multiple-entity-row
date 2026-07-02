@@ -15,6 +15,24 @@ export const checkEntity = (config) => {
 
 export const computeEntity = (entityId) => entityId.substr(entityId.indexOf('.') + 1);
 
+// Decimal digit count of a raw string value (e.g. "1.2345" -> 4), or undefined if value isn't a
+// string with a decimal point. Used to preserve a source value's precision through a
+// scale/sign transform, since arithmetic (e.g. `value / 1000`) coerces the string to a number
+// before it reaches formatNumber, losing the "keep original decimal digits" behavior it would
+// otherwise apply (see #304).
+const decimalDigits = (value) => (typeof value === 'string' && value.includes('.') ? value.split('.')[1].length : undefined);
+
+// Shared implementation for the kilo/mega/milli formats: divides by the given factor, and applies
+// either the default 2-decimal cap (bare `kilo`/`mega`/`milli`, unchanged from prior behavior) or
+// an explicit user-requested precision (`kilo3`, `mega1`, `milli0`, ...).
+const scaledFormat = (value, divisor, digitSuffix, locale) => {
+    if (digitSuffix === '') {
+        return formatNumber(value / divisor, locale, { maximumFractionDigits: 2 });
+    }
+    const precision = parseInt(digitSuffix, 10);
+    return formatNumber(value / divisor, locale, { minimumFractionDigits: precision, maximumFractionDigits: precision });
+};
+
 export const entityName = (stateObj, config) => {
     if (config.name === false) return null;
     return (
@@ -75,12 +93,26 @@ export const entityStateDisplay = (hass, stateObj, config) => {
                 minimumFractionDigits: precision,
                 maximumFractionDigits: precision,
             });
-        } else if (config.format === 'kilo') {
-            value = formatNumber(value / 1000, hass.locale, { maximumFractionDigits: 2 });
+        } else if (config.format.startsWith('kilo')) {
+            value = scaledFormat(value, 1000, config.format.slice(4), hass.locale);
+        } else if (config.format.startsWith('mega')) {
+            value = scaledFormat(value, 1000000, config.format.slice(4), hass.locale);
+        } else if (config.format.startsWith('milli')) {
+            value = scaledFormat(value, 1 / 1000, config.format.slice(5), hass.locale);
         } else if (config.format === 'invert') {
-            value = formatNumber(value - value * 2, hass.locale);
+            const precision = decimalDigits(value);
+            value = formatNumber(
+                value - value * 2,
+                hass.locale,
+                precision !== undefined ? { minimumFractionDigits: precision, maximumFractionDigits: precision } : undefined
+            );
         } else if (config.format === 'position') {
-            value = formatNumber(100 - value, hass.locale);
+            const precision = decimalDigits(value);
+            value = formatNumber(
+                100 - value,
+                hass.locale,
+                precision !== undefined ? { minimumFractionDigits: precision, maximumFractionDigits: precision } : undefined
+            );
         } else if (config.format === 'celsius_to_fahrenheit') {
             value = formatNumber(value * 1.8 + 32, hass.locale, { maximumFractionDigits: 0 });
         } else if (config.format === 'fahrenheit_to_celsius') {

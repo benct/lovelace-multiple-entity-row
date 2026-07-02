@@ -145,11 +145,24 @@ The `format` option supports the following values:
 | duration-m            | `number`    | Convert number of milliseconds to duration (`5:38:50`)           |
 | duration-h            | `number`    | Convert number of hours to duration (`5:38:50`)                  |
 | invert                | `number`    | Convert number from positive to negative or vice versa           |
-| kilo                  | `number`    | Divide number value by 1000 (ex. `1500 W` -> `1.5 kW`)           |
+| kilo / kilo<0-9>      | `number`    | Divide number value by 1,000 (ex. `1500` -> `1.5`)               |
+| mega / mega<0-9>      | `number`    | Divide number value by 1,000,000 (ex. `2500000` -> `2.5`)        |
+| milli / milli<0-9>    | `number`    | Multiply number value by 1,000 (ex. `0.2` -> `200`)              |
 | position              | `number`    | Reverses a position percentage (ex. `70%` open -> `30%` closed)  |
 | precision<0-9>        | `number`    | Set decimal precision of number value (`precision3` -> `18.123`) |
 | celsius_to_fahrenheit | `number`    | Converts a Celsius temperature to its Fahrenheit equivalent      |
 | fahrenheit_to_celsius | `number`    | Converts a Fahrenheit temperature to its Celsius equivalent      |
+
+`kilo`/`mega`/`milli` on their own default to a maximum of 2 decimal places. Suffix a digit (`kilo3`, `mega1`, `milli0`, ...) to request an exact decimal precision instead, the same way `precision<0-9>` does.
+
+None of `kilo`/`mega`/`milli`/`invert`/`position` change the displayed unit — they only scale or transform the number. If you want the unit label to match (e.g. `W` -> `kW`), set `unit:` explicitly alongside the format:
+
+```yaml
+- entity: sensor.power_usage
+  type: custom:multiple-entity-row
+  format: kilo
+  unit: kW
+```
 
 ### Hiding
 
