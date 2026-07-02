@@ -1,6 +1,25 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 4.6.0
+
+**Added:**
+- `mega<0-9>` and `milli<0-9>` number formats, and `kilo<0-9>` for an explicit decimal precision override (`kilo` alone is unchanged) (#304)
+
+**Fixed:**
+- `name` override not applying on the main row on HA 2026.2+ until an unrelated entity update forced a re-render (#370, #371)
+- `format: duration`/`duration-m`/`duration-h` showing the literal string "null" for a zero-second value (#240)
+- Numeric formats (brightness, precision, kilo, invert, position, celsius/fahrenheit conversion) showing the literal string "undefined" for a missing attribute (#225)
+- `invert`/`position` formats losing decimal precision compared to the unformatted value (#304)
+- Decimal/currency/precision formatting now delegates to Home Assistant's own official formatting functions when available (HA 2023.9+), fixing a cluster of long-standing formatting bugs (#333, #308, #286, #220, #375, #363, #357, #320)
+- Console spammed with errors for monetary sensors using a non-currency unit like "c/kWh" (#324)
+- Missing-attribute display showing "undefined" on older HA versions without the official formatting functions
+
+**Changed:**
+- Internal: added a real test suite (100+ tests), CI, and automated release tooling - the built JS file is no longer manually committed per release
+- Internal: bumped `lit` (2->3) and `custom-card-helpers` (1.8->2.0), bundled into the built file, no action needed
+- Internal: fixed 57 known vulnerabilities (4 critical) in the dev/build toolchain
+
 ## 4.5.1
 
 **Fixed:**
