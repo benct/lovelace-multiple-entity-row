@@ -113,6 +113,15 @@ describe('entityStateDisplay', () => {
         expect(entityStateDisplay(hass, stateObj, { format: 'precision2' })).toBe('not-a-number');
     });
 
+    // See https://github.com/benct/lovelace-multiple-entity-row/issues/225 -
+    // a missing attribute (e.g. brightness/color_temp on a light that's off) must render as a
+    // sensible zero value, not the literal string "undefined".
+    it('treats a missing attribute as 0 for a numeric format, instead of "undefined"', () => {
+        const stateObj = { state: 'off', attributes: {} };
+        expect(entityStateDisplay(hass, stateObj, { attribute: 'brightness', format: 'brightness' })).toBe('0 %');
+        expect(entityStateDisplay(hass, stateObj, { attribute: 'color_temp', format: 'precision0' })).toBe('0');
+    });
+
     it('falls back to computeStateDisplay for the main state with no attribute or format', () => {
         const stateObj = { entity_id: 'sensor.temp', state: '21', attributes: { unit_of_measurement: '°C' } };
         expect(entityStateDisplay(hass, stateObj, {})).toBe('21 °C');
