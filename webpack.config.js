@@ -1,6 +1,7 @@
 const webpack = require('webpack');
 const path = require('path');
 const { execSync } = require('child_process');
+const { version } = require('./package.json');
 
 // Baked into the console banner so a running instance can be identified as a specific build -
 // e.g. to tell a stale cached bundle apart from a freshly rebuilt one during local/HA testbed
@@ -40,6 +41,7 @@ module.exports = {
             'process.env.NODE_ENV': JSON.stringify('production'),
             'process.env.BUILD_TIME': JSON.stringify(buildTime),
             'process.env.BUILD_COMMIT': JSON.stringify(buildCommit),
+            'process.env.PACKAGE_VERSION': JSON.stringify(version),
         }),
     ],
 };
