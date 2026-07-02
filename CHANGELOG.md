@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 4.6.1
+
+**Fixed:**
+- HA 2026.7+'s entities-card row editor silently renames a row's `format` key to `time_format` on save, breaking `format:` for the main entity - `multiple-entity-row` now falls back to `time_format` when `format` isn't set (#386)
+
+**Changed:**
+- Internal: console banner now includes a build timestamp and short git commit SHA, to make it easier to tell a stale cached bundle apart from a fresh one when debugging
+
 ## 4.6.0
 
 **Added:**
