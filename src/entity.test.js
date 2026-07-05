@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { checkEntity, computeEntity, entityName, entityStateDisplay, entityStyles } from './entity';
+import { checkEntity, computeEntity, entityName, entityStateDisplay, entityStyles, iconColorCss, stateIcon } from './entity';
 import { NumberFormat } from './lib/constants';
 
 const hass = {
@@ -90,6 +90,31 @@ describe('entityStateDisplay', () => {
     it('applies the duration format', () => {
         const stateObj = { state: '90', attributes: {} };
         expect(entityStateDisplay(hass, stateObj, { format: 'duration' })).toBe('1:30');
+    });
+
+    // See https://github.com/benct/lovelace-multiple-entity-row/issues/323
+    it('applies the percent format', () => {
+        const stateObj = { state: '0.253', attributes: {} };
+        expect(entityStateDisplay(hass, stateObj, { format: 'percent' })).toBe('25.3 %');
+    });
+
+    // See https://github.com/benct/lovelace-multiple-entity-row/issues/367
+    it('applies the string-transform formats', () => {
+        const stateObj = { state: 'partly cloudy', attributes: {} };
+        expect(entityStateDisplay(hass, stateObj, { format: 'upper' })).toBe('PARTLY CLOUDY');
+        expect(entityStateDisplay(hass, stateObj, { format: 'lower' })).toBe('partly cloudy');
+        expect(entityStateDisplay(hass, stateObj, { format: 'capitalize' })).toBe('Partly cloudy');
+        expect(entityStateDisplay(hass, stateObj, { format: 'title' })).toBe('Partly Cloudy');
+    });
+
+    it('title-cases words starting with non-ASCII letters', () => {
+        const stateObj = { state: 'über den berg', attributes: {} };
+        expect(entityStateDisplay(hass, stateObj, { format: 'title' })).toBe('Über Den Berg');
+    });
+
+    it('renders a missing attribute as empty for a string transform, not "undefined"', () => {
+        const stateObj = { state: 'on', attributes: {} };
+        expect(entityStateDisplay(hass, stateObj, { attribute: 'missing', format: 'upper' })).toBe('');
     });
 
     // See https://github.com/benct/lovelace-multiple-entity-row/issues/240 -
@@ -247,5 +272,33 @@ describe('entityStyles', () => {
     it('returns an empty string when there are no styles', () => {
         expect(entityStyles({})).toBe('');
         expect(entityStyles(undefined)).toBe('');
+    });
+});
+
+// See https://github.com/benct/lovelace-multiple-entity-row/issues/325
+describe('iconColorCss', () => {
+    it('sets all icon-color variables for a configured color', () => {
+        expect(iconColorCss('red')).toBe(
+            '--paper-item-icon-color: red; --mdc-icon-color: red; --state-icon-color: red;'
+        );
+    });
+
+    it('returns an empty string when no color is configured', () => {
+        expect(iconColorCss(undefined)).toBe('');
+    });
+});
+
+// See https://github.com/benct/lovelace-multiple-entity-row/issues/197
+describe('stateIcon', () => {
+    const config = { state_icon: { on: 'mdi:door-open', off: 'mdi:door-closed' } };
+
+    it('returns the mapped icon for the current state', () => {
+        expect(stateIcon({ state: 'on' }, config)).toBe('mdi:door-open');
+        expect(stateIcon({ state: 'off' }, config)).toBe('mdi:door-closed');
+    });
+
+    it('returns undefined for an unmapped state or no state_icon config', () => {
+        expect(stateIcon({ state: 'unknown' }, config)).toBeUndefined();
+        expect(stateIcon({ state: 'on' }, {})).toBeUndefined();
     });
 });

@@ -155,10 +155,18 @@ describe('getEntityIds', () => {
     it('collects hide_if.entity references', () => {
         const config = {
             entity: 'sensor.main',
+            hide_if: { entity: 'switch.main', value: 'off' },
             secondary_info: { entity: 'sensor.secondary', hide_if: { entity: 'switch.a', value: 'off' } },
             entities: [{ entity: 'sensor.b', hide_if: { entity: 'switch.b', value: 'off' } }],
         };
-        expect(getEntityIds(config)).toEqual(['sensor.main', 'sensor.secondary', 'switch.a', 'sensor.b', 'switch.b']);
+        expect(getEntityIds(config)).toEqual([
+            'sensor.main',
+            'switch.main',
+            'sensor.secondary',
+            'switch.a',
+            'sensor.b',
+            'switch.b',
+        ]);
     });
 });
 

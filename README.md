@@ -44,12 +44,17 @@ This card produces an `entity-row` and must therefore be configured as an entity
 | name              | string/bool   | `friendly_name`                     | Override entity friendly name                    |
 | unit              | string/bool   | `unit_of_measurement`               | Override entity unit of measurement              |
 | icon              | string        | `icon`                              | Override entity icon or image                    |
+| icon_color        | string        |                                     | CSS color for the entity icon                    |
+| state_icon        | object        |                                     | Map of state value → icon override               |
 | image             | string        |                                     | Show an image instead of icon                    |
 | toggle            | bool          | `false`                             | Display a toggle (if supported) instead of state |
 | show_state        | bool          | `true`                              | Set to `false` to hide the main entity           |
 | state_header      | string        |                                     | Show header text above the main entity state     |
 | state_color       | bool          | `false`                             | Enable colored icon when entity is active        |
 | column            | bool          | `false`                             | Show entities in a column instead of a row       |
+| default           | string        |                                     | Display this value when the state is hidden      |
+| hide_unavailable  | bool          | `false`                             | Hide the state value if unavailable              |
+| hide_if           | object/any    | _[Hiding](#hiding)_                 | Hide the state value if criteria match           |
 | styles            | object        |                                     | Add custom CSS styles to the state element       |
 | format            | string        | _[Formatting](#formatting)_         | Format main state/attribute value                |
 |                   |
@@ -79,6 +84,8 @@ attribute value instead of the state value. `icon` lets you display an icon inst
 | toggle            | bool        | `false`                     | Display a toggle if supported by domain                            |
 | icon              | string/bool | `false`                     | Display default or custom icon instead of state or attribute value |
 | state_color       | bool        | `false`                     | Enable colored icon when entity is active                          |
+| icon_color        | string      |                             | CSS color for the entity icon                                      |
+| state_icon        | object      |                             | Map of state value → icon override                                 |
 | default           | string      |                             | Display this value if the entity does not exist or is hidden       |
 | hide_unavailable  | bool        | `false`                     | Hide entity if it is unavailable or does not exist                 |
 | hide_if           | object/any  | _[Hiding](#hiding)_         | Hide entity if its value matches specified value or criteria       |
@@ -143,6 +150,7 @@ The `format` option supports the following values:
 | time                  | `timestamp` | Convert timestamp value to time                                  |
 | datetime              | `timestamp` | Convert timestamp value to date and time                         |
 | brightness            | `number`    | Convert brightness value to percentage                           |
+| percent               | `number`    | Multiply a fraction value by 100 and append `%` (`0.25` -> `25 %`) |
 | duration              | `number`    | Convert number of seconds to duration (`5:38:50`)                |
 | duration-m            | `number`    | Convert number of milliseconds to duration (`5:38:50`)           |
 | duration-h            | `number`    | Convert number of hours to duration (`5:38:50`)                  |
@@ -154,6 +162,10 @@ The `format` option supports the following values:
 | precision<0-9>        | `number`    | Set decimal precision of number value (`precision3` -> `18.123`) |
 | celsius_to_fahrenheit | `number`    | Converts a Celsius temperature to its Fahrenheit equivalent      |
 | fahrenheit_to_celsius | `number`    | Converts a Fahrenheit temperature to its Celsius equivalent      |
+| upper                 | `string`    | UPPERCASE the value                                              |
+| lower                 | `string`    | lowercase the value                                              |
+| capitalize            | `string`    | Capitalize the first letter of the value                         |
+| title                 | `string`    | Title Case Each Word Of The Value                                |
 
 `kilo`/`mega`/`milli` on their own default to a maximum of 2 decimal places. Suffix a digit (`kilo3`, `mega1`, `milli0`, ...) to request an exact decimal precision instead, the same way `precision<0-9>` does.
 
@@ -191,6 +203,25 @@ For example, only show the alarm exit-state sensor while the alarm is armed:
       hide_if:
         entity: switch.dsc_armed_away
         value: 'off'
+```
+
+`hide_if` and `hide_unavailable` at the top level hide the main entity's state value (the row itself stays visible); `default` is shown in its place when set.
+
+### Icon styling
+
+`icon_color` accepts any CSS color value (`red`, `#ff0000`, `var(--my-color)`) and applies it to the entity's icon. `state_icon` maps state values to icon overrides, taking precedence over `icon` when the current state matches:
+
+```yaml
+- entity: binary_sensor.front_door
+  type: custom:multiple-entity-row
+  icon_color: 'var(--accent-color)'
+  state_icon:
+    'on': mdi:door-open
+    'off': mdi:door-closed
+  entities:
+    - entity: binary_sensor.back_door
+      icon: true
+      icon_color: red
 ```
 
 ## Examples
