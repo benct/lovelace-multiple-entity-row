@@ -23,15 +23,33 @@ export const computeEntity = (entityId) => entityId.substr(entityId.indexOf('.')
 const decimalDigits = (value) => (typeof value === 'string' && value.includes('.') ? value.split('.')[1].length : undefined);
 
 // Shared implementation for the kilo/mega/milli formats: divides by the given factor, and applies
-// either the default 2-decimal cap (bare `kilo`/`mega`/`milli`, unchanged from prior behavior) or
-// an explicit user-requested precision (`kilo3`, `mega1`, `milli0`, ...).
-const scaledFormat = (value, divisor, digitSuffix, locale) => {
-    if (digitSuffix === '') {
+// either the default 2-decimal cap (bare `kilo`/`mega`/`milli`, digits === undefined) or an
+// explicit user-requested precision (`kilo3`, `mega1`, `milli0`, ...).
+const scaledFormat = (value, divisor, digits, locale) => {
+    if (digits === undefined) {
         return formatNumber(value / divisor, locale, { maximumFractionDigits: 2 });
     }
-    const precision = parseInt(digitSuffix, 10);
+    const precision = parseInt(digits, 10);
     return formatNumber(value / divisor, locale, { minimumFractionDigits: precision, maximumFractionDigits: precision });
 };
+
+// precision<N>/kilo<N>/mega<N>/milli<N> parse a trailing digit off the format string. `kilo`,
+// `mega` and `milli` alone are valid (their own documented 2-decimal default); `precision` alone
+// is not, since it has no bare-word default. Anything else with one of these prefixes - e.g.
+// "kiloX", or mid-typed in a config editor before the digit is added - doesn't match this pattern
+// at all. Rather than crash (Intl.NumberFormat throws for a NaN minimumFractionDigits) or guess at
+// a fallback precision, that's treated as an incomplete format for this render, falling through to
+// the same official-entity-formatter path used when no format is configured at all (see #387).
+const DIGIT_SUFFIX_PREFIXES = ['precision', 'kilo', 'mega', 'milli'];
+const DIGIT_SUFFIX_FORMAT = /^(precision|kilo|mega|milli)(\d+)?$/;
+
+// The match, or null if config.format isn't a complete precision/kilo/mega/milli format.
+const matchDigitSuffixFormat = (format) => {
+    const match = DIGIT_SUFFIX_FORMAT.exec(format);
+    return match && (match[1] !== 'precision' || match[2] !== undefined) ? match : null;
+};
+const isIncompleteDigitSuffixFormat = (format) =>
+    DIGIT_SUFFIX_PREFIXES.some((prefix) => format?.startsWith(prefix)) && !matchDigitSuffixFormat(format);
 
 export const entityName = (stateObj, config) => {
     if (config.name === false) return null;
@@ -63,7 +81,7 @@ export const entityStateDisplay = (hass, stateObj, config) => {
             ? config.unit
             : config.unit || stateObj.attributes.unit_of_measurement;
 
-    if (config.format) {
+    if (config.format && !isIncompleteDigitSuffixFormat(config.format)) {
         // A missing attribute (e.g. brightness/color_temp on a light that's off) is undefined,
         // not a number - treat it as 0 rather than letting it flow through to the final template
         // literal below as the literal string "undefined" (see #225). A value that's some other
@@ -87,18 +105,17 @@ export const entityStateDisplay = (hass, stateObj, config) => {
         } else if (config.format === 'duration-h') {
             value = secondsToDuration(value * 3600) ?? '0';
             unit = undefined;
-        } else if (config.format.startsWith('precision')) {
-            const precision = parseInt(config.format.slice(-1), 10);
-            value = formatNumber(parseFloat(value), hass.locale, {
-                minimumFractionDigits: precision,
-                maximumFractionDigits: precision,
-            });
-        } else if (config.format.startsWith('kilo')) {
-            value = scaledFormat(value, 1000, config.format.slice(4), hass.locale);
-        } else if (config.format.startsWith('mega')) {
-            value = scaledFormat(value, 1000000, config.format.slice(4), hass.locale);
-        } else if (config.format.startsWith('milli')) {
-            value = scaledFormat(value, 1 / 1000, config.format.slice(5), hass.locale);
+        } else if (matchDigitSuffixFormat(config.format)) {
+            const [, type, digits] = matchDigitSuffixFormat(config.format);
+            if (type === 'precision') {
+                const precision = parseInt(digits, 10);
+                value = formatNumber(parseFloat(value), hass.locale, {
+                    minimumFractionDigits: precision,
+                    maximumFractionDigits: precision,
+                });
+            } else {
+                value = scaledFormat(value, { kilo: 1000, mega: 1000000, milli: 1 / 1000 }[type], digits, hass.locale);
+            }
         } else if (config.format === 'invert') {
             const precision = decimalDigits(value);
             value = formatNumber(
