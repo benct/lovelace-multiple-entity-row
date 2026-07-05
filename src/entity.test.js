@@ -107,6 +107,15 @@ describe('entityStateDisplay', () => {
         expect(entityStateDisplay(hass, stateObj, { format: 'precision2' })).toBe('3.14');
     });
 
+    // A bare "precision" with no trailing digit (e.g. typed incrementally in a config editor
+    // before the digit is added) must not crash with an uncaught RangeError, regardless of
+    // whether the official formatter is available (see the officialHass block below for the
+    // precise fallback-value assertion).
+    it('does not throw for a bare "precision" format with no digit', () => {
+        const stateObj = { entity_id: 'sensor.temp', state: '3.14159', attributes: {} };
+        expect(() => entityStateDisplay(hass, stateObj, { format: 'precision' })).not.toThrow();
+    });
+
     it('applies the invert format', () => {
         const stateObj = { state: '5', attributes: {} };
         expect(entityStateDisplay(hass, stateObj, { format: 'invert' })).toBe('-5');
@@ -158,6 +167,15 @@ describe('entityStateDisplay', () => {
         expect(entityStateDisplay(hass, stateObj, { format: 'milli0' })).toBe('1,500,257');
     });
 
+    // Same class of crash as the bare "precision" case above - an invalid or missing digit
+    // suffix (e.g. mid-typed in a config editor) must fall back to the default, not crash.
+    it('does not throw for kilo/mega/milli with an invalid digit suffix', () => {
+        const stateObj = { entity_id: 'sensor.temp', state: '1500.256789', attributes: {} };
+        expect(() => entityStateDisplay(hass, stateObj, { format: 'kiloX' })).not.toThrow();
+        expect(() => entityStateDisplay(hass, stateObj, { format: 'megaX' })).not.toThrow();
+        expect(() => entityStateDisplay(hass, stateObj, { format: 'milliX' })).not.toThrow();
+    });
+
     it('leaves non-numeric values untouched when a format is configured', () => {
         const stateObj = { state: 'not-a-number', attributes: {} };
         expect(entityStateDisplay(hass, stateObj, { format: 'precision2' })).toBe('not-a-number');
@@ -202,6 +220,16 @@ describe('entityStateDisplay', () => {
         it('delegates main state display to formatEntityState', () => {
             const stateObj = { entity_id: 'sensor.temp', state: '21', attributes: {} };
             expect(entityStateDisplay(officialHass, stateObj, {})).toBe('official-state:21');
+        });
+
+        // See #387 - a bare "precision" (no default of its own) or an invalid digit suffix
+        // (e.g. mid-typed in a config editor) is treated as no format configured for this
+        // render, falling through to the official per-entity formatter rather than crashing or
+        // guessing at a fallback precision of our own.
+        it('falls through to the official formatter for an incomplete digit-suffix format', () => {
+            const stateObj = { entity_id: 'sensor.temp', state: '21', attributes: {} };
+            expect(entityStateDisplay(officialHass, stateObj, { format: 'precision' })).toBe('official-state:21');
+            expect(entityStateDisplay(officialHass, stateObj, { format: 'kiloX' })).toBe('official-state:21');
         });
 
         it('still applies a custom format instead of the official formatters', () => {
