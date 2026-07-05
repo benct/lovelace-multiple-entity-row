@@ -16,7 +16,6 @@
   "author": "benct <ben@tomlin.no>",
   "license": "MIT",
   "dependencies": {
-    "custom-card-helpers": "2.0.0",
     "lit": "^3.3.3",
     "memoize-one": "^6.0.0"
   },

@@ -2,6 +2,13 @@ import { LAST_CHANGED, LAST_UPDATED, SECONDARY_INFO_VALUES, UNAVAILABLE_STATES }
 
 export const isObject = (obj) => typeof obj === 'object' && !Array.isArray(obj) && !!obj;
 
+// bubbles + composed so the event crosses our shadow root up to HA's root-level listener.
+export const fireEvent = (node, type, detail) => {
+    const event = new Event(type, { bubbles: true, composed: true });
+    event.detail = detail;
+    node.dispatchEvent(event);
+};
+
 export const isUnavailable = (stateObj) => !stateObj || UNAVAILABLE_STATES.includes(stateObj.state);
 
 export const hideUnavailable = (stateObj, config) =>
