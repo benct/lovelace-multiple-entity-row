@@ -79,8 +79,8 @@ attribute value instead of the state value. `icon` lets you display an icon inst
 | toggle           | bool        | `false`                     | Display a toggle if supported by domain                            |
 | icon             | string/bool | `false`                     | Display default or custom icon instead of state or attribute value |
 | state_color      | bool        | `false`                     | Enable colored icon when entity is active                          |
-| default          | string      |                             | Display this value if the entity does not exist or should not be shown |
-| hide_unavailable | bool        | `false`                     | Hide entity if unavailable or not found                            |
+| default          | string      |                             | Display this value if the entity does not exist or should not be shown (hidden by using `hide_unavailable` or `hide_if`) |
+| hide_unavailable | bool        | `false`                     | Hide entity if it is unavailable or does not exist                 |
 | hide_if          | object/any  | _[Hiding](#hiding)_         | Hide entity if its value matches specified value or criteria       |
 | styles           | object      |                             | Add custom CSS styles to the entity element                        |
 | format           | string      | _[Formatting](#formatting)_ | Format entity value                                                |
@@ -109,8 +109,8 @@ an object containing configuration options listed below, or any of the default s
 | attribute        | string      |                             | A valid attribute key for the entity                     |
 | name             | string/bool | `friendly_name`             | Override entity friendly name (or `false` to hide)       |
 | unit             | string/bool | `unit_of_measurement`       | Override entity unit of measurement (or `false` to hide) |
-| hide_unavailable | bool        | `false`                     | Hide secondary info if unavailable or not found          |
-| hide_if          | object/any  | _[Hiding](#hiding)_         | Hide secondary info if value matches specified criteria  |
+| hide_unavailable | bool        | `false`                     | Hide secondary info if a corresponding entity is unavailable or does not exist |
+| hide_if          | object/any  | _[Hiding](#hiding)_         | Hide secondary info if a value of a corresponding entity matches specified criteria  |
 | format           | string      | _[Formatting](#formatting)_ | Format secondary info value                              |
 
 ### Actions
