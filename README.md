@@ -70,23 +70,25 @@ to display data from another entity than the main entity specified above. `attri
 attribute value instead of the state value. `icon` lets you display an icon instead of a state or attribute value
 (works well together with a custom `tap_action`).
 
-| Name             | Type        | Default                     | Description                                                        |
-| ---------------- | ----------- | --------------------------- | ------------------------------------------------------------------ |
-| entity           | string      |                             | A valid entity_id (or skip to use main entity)                     |
-| attribute        | string      |                             | A valid attribute key for the entity                               |
-| name             | string/bool | `friendly_name`             | Override entity friendly name (or `false` to hide)                 |
-| unit             | string/bool | `unit_of_measurement`       | Override entity unit of measurement (or `false` to hide)           |
-| toggle           | bool        | `false`                     | Display a toggle if supported by domain                            |
-| icon             | string/bool | `false`                     | Display default or custom icon instead of state or attribute value |
-| state_color      | bool        | `false`                     | Enable colored icon when entity is active                          |
-| default          | string      |                             | Display this value if the entity does not exist or should not be shown (hidden by using `hide_unavailable` or `hide_if`) |
-| hide_unavailable | bool        | `false`                     | Hide entity if it is unavailable or does not exist                 |
-| hide_if          | object/any  | _[Hiding](#hiding)_         | Hide entity if its value matches specified value or criteria       |
-| styles           | object      |                             | Add custom CSS styles to the entity element                        |
-| format           | string      | _[Formatting](#formatting)_ | Format entity value                                                |
-| tap_action       | object      | _[Actions](#actions)_       | Custom entity tap action                                           |
+| Name              | Type        | Default                     | Description                                                        |
+| ----------------- | ----------- | --------------------------- | ------------------------------------------------------------------ |
+| entity            | string      |                             | A valid entity_id (or skip to use main entity)                     |
+| attribute         | string      |                             | A valid attribute key for the entity                               |
+| name              | string/bool | `friendly_name`             | Override entity friendly name (or `false` to hide)                 |
+| unit              | string/bool | `unit_of_measurement`       | Override entity unit of measurement (or `false` to hide)           |
+| toggle            | bool        | `false`                     | Display a toggle if supported by domain                            |
+| icon              | string/bool | `false`                     | Display default or custom icon instead of state or attribute value |
+| state_color       | bool        | `false`                     | Enable colored icon when entity is active                          |
+| default           | string      |                             | Display this value if the entity does not exist or is hidden       |
+| hide_unavailable  | bool        | `false`                     | Hide entity if it is unavailable or does not exist                 |
+| hide_if           | object/any  | _[Hiding](#hiding)_         | Hide entity if its value matches specified value or criteria       |
+| styles            | object      |                             | Add custom CSS styles to the entity element                        |
+| format            | string      | _[Formatting](#formatting)_ | Format entity value                                                |
+| tap_action        | object      | _[Actions](#actions)_       | Custom entity tap action                                           |
+| hold_action       | object      | _[Actions](#actions)_       | Custom entity hold action                                          |
+| double_tap_action | object      | _[Actions](#actions)_       | Custom entity double-tap action                                    |
 
-Note that `hold_action` and `double_tap_action` are currently **not** supported on additional entities.
+`default` also shows when the entity is hidden by `hide_unavailable` or `hide_if`, not only when it is missing.
 
 #### Special attributes
 
@@ -109,8 +111,8 @@ an object containing configuration options listed below, or any of the default s
 | attribute        | string      |                             | A valid attribute key for the entity                     |
 | name             | string/bool | `friendly_name`             | Override entity friendly name (or `false` to hide)       |
 | unit             | string/bool | `unit_of_measurement`       | Override entity unit of measurement (or `false` to hide) |
-| hide_unavailable | bool        | `false`                     | Hide secondary info if a corresponding entity is unavailable or does not exist |
-| hide_if          | object/any  | _[Hiding](#hiding)_         | Hide secondary info if a value of a corresponding entity matches specified criteria  |
+| hide_unavailable | bool        | `false`                     | Hide secondary info if its entity is unavailable         |
+| hide_if          | object/any  | _[Hiding](#hiding)_         | Hide secondary info if its value matches given criteria  |
 | format           | string      | _[Formatting](#formatting)_ | Format secondary info value                              |
 
 ### Actions
@@ -349,6 +351,18 @@ entities:
         styles:
           width: 80px
           text-align: left
+```
+
+### Theming
+
+The color of entity headers (the small name above each value) can be overridden with the
+`--multiple-entity-row-header-color` CSS variable, either from a theme or per entity via `styles`:
+
+```yaml
+entities:
+  - entity: sensor.bedroom_max_temp
+    styles:
+      '--multiple-entity-row-header-color': red
 ```
 
 ## Development
