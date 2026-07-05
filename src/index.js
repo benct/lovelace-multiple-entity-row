@@ -113,7 +113,7 @@ class MultipleEntityRow extends LitElement {
         if (
             !this.config.secondary_info ||
             hasGenericSecondaryInfo(this.config.secondary_info) ||
-            hideIf(this.info, this.config.secondary_info)
+            hideIf(this.info, this.config.secondary_info, this._hass)
         ) {
             return null;
         }
@@ -148,7 +148,7 @@ class MultipleEntityRow extends LitElement {
     }
 
     renderEntity(stateObj, config, index) {
-        if (!stateObj || hideIf(stateObj, config)) {
+        if (!stateObj || hideIf(stateObj, config, this._hass)) {
             if (config.default) {
                 return html`<div class="entity" style="${entityStyles(config)}">
                     <span>${config.name}</span>

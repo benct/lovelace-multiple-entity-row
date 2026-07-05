@@ -87,6 +87,42 @@ describe('hideIf', () => {
         expect(hideIf({ state: '15' }, { hide_if: { above: 10 } })).toBe(true);
         expect(hideIf({ state: '10' }, { hide_if: { below: 10, above: 10 } })).toBe(false);
     });
+
+    // See https://github.com/benct/lovelace-multiple-entity-row/pull/280 - hide_if.entity
+    // evaluates the criteria against another entity's state instead of the entity's own.
+    describe('with hide_if.entity/attribute', () => {
+        const hass = {
+            states: {
+                'switch.armed': { state: 'off', attributes: { mode: 'home' } },
+            },
+        };
+
+        it('checks the referenced entity state instead of its own', () => {
+            expect(hideIf({ state: 'on' }, { hide_if: { entity: 'switch.armed', value: 'off' } }, hass)).toBe(true);
+            expect(hideIf({ state: 'off' }, { hide_if: { entity: 'switch.armed', value: 'on' } }, hass)).toBe(false);
+        });
+
+        it('supports thresholds against the referenced entity', () => {
+            const numHass = { states: { 'sensor.level': { state: '5', attributes: {} } } };
+            expect(hideIf({ state: 'on' }, { hide_if: { entity: 'sensor.level', below: 10 } }, numHass)).toBe(true);
+            expect(hideIf({ state: 'on' }, { hide_if: { entity: 'sensor.level', above: 10 } }, numHass)).toBe(false);
+        });
+
+        it('checks the referenced entity attribute when hide_if.attribute is set', () => {
+            expect(
+                hideIf({ state: 'on' }, { hide_if: { entity: 'switch.armed', attribute: 'mode', value: 'home' } }, hass)
+            ).toBe(true);
+        });
+
+        it('checks its own attribute when only hide_if.attribute is set', () => {
+            const stateObj = { state: 'on', attributes: { mode: 'away' } };
+            expect(hideIf(stateObj, { hide_if: { attribute: 'mode', value: 'away' } }, hass)).toBe(true);
+        });
+
+        it('stays visible when the referenced entity does not exist', () => {
+            expect(hideIf({ state: 'off' }, { hide_if: { entity: 'switch.missing', value: 'off' } }, hass)).toBe(false);
+        });
+    });
 });
 
 describe('hasGenericSecondaryInfo', () => {
@@ -112,6 +148,17 @@ describe('getEntityIds', () => {
 
     it('filters out missing entries', () => {
         expect(getEntityIds({ entities: [] })).toEqual([]);
+    });
+
+    // Referenced hide_if entities must be watched too, or the row would never re-render (and so
+    // never hide/unhide) when only the referenced entity changes.
+    it('collects hide_if.entity references', () => {
+        const config = {
+            entity: 'sensor.main',
+            secondary_info: { entity: 'sensor.secondary', hide_if: { entity: 'switch.a', value: 'off' } },
+            entities: [{ entity: 'sensor.b', hide_if: { entity: 'switch.b', value: 'off' } }],
+        };
+        expect(getEntityIds(config)).toEqual(['sensor.main', 'sensor.secondary', 'switch.a', 'sensor.b', 'switch.b']);
     });
 });
 

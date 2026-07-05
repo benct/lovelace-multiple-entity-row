@@ -11,7 +11,7 @@ export const hideUnavailable = (stateObj, config) =>
             ![LAST_CHANGED, LAST_UPDATED].includes(config.attribute) &&
             stateObj.attributes[config.attribute] === undefined));
 
-export const hideIf = (stateObj, config) => {
+export const hideIf = (stateObj, config, hass) => {
     if (hideUnavailable(stateObj, config)) {
         return true;
     }
@@ -19,7 +19,17 @@ export const hideIf = (stateObj, config) => {
         return false;
     }
 
-    const value = config.attribute ? stateObj.attributes[config.attribute] : stateObj.state;
+    let value;
+    if (isObject(config.hide_if) && (config.hide_if.entity || config.hide_if.attribute)) {
+        // Evaluate against another entity and/or attribute instead of the displayed value (see
+        // #280). A missing referenced entity yields undefined, so no criteria match and the
+        // entity stays visible - deliberately not falling back to the entity's own state, which
+        // would silently hide/show on the wrong value.
+        const sourceObj = config.hide_if.entity ? hass?.states[config.hide_if.entity] : stateObj;
+        value = config.hide_if.attribute ? sourceObj?.attributes[config.hide_if.attribute] : sourceObj?.state;
+    } else {
+        value = config.attribute ? stateObj.attributes[config.attribute] : stateObj.state;
+    }
     let hideValues = [];
 
     if (isObject(config.hide_if)) {
@@ -40,9 +50,15 @@ export const hideIf = (stateObj, config) => {
 
 export const hasGenericSecondaryInfo = (config) => typeof config === 'string' && SECONDARY_INFO_VALUES.includes(config);
 
+// hide_if.entity ids must be tracked too, or hasConfigOrEntitiesChanged would skip re-rendering
+// when only the referenced entity's state changes and the row would never hide/unhide.
 export const getEntityIds = (config) =>
-    [config.entity, config.secondary_info?.entity]
-        .concat(config.entities?.map((entity) => (typeof entity === 'string' ? entity : entity.entity)))
+    [config.entity, config.secondary_info?.entity, config.secondary_info?.hide_if?.entity]
+        .concat(
+            config.entities?.flatMap((entity) =>
+                typeof entity === 'string' ? entity : [entity.entity, entity.hide_if?.entity]
+            )
+        )
         .filter((entity) => entity);
 
 // HA installs stub formatEntityName/formatEntityState/formatEntityAttributeValue functions on
