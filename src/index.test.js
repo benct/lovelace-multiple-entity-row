@@ -97,6 +97,31 @@ describe('multiple-entity-row', () => {
         expect(el.entities[0].stateObj.entity_id).toBe('sensor.a');
     });
 
+    // See https://github.com/benct/lovelace-multiple-entity-row/issues/227 - top-level
+    // hide_if/hide_unavailable were silently ignored on the main entity.
+    describe('main-row hiding', () => {
+        it('hides the main state slot when top-level hide_if matches', async () => {
+            el.setConfig({ entity: 'sensor.main', hide_if: 'off' });
+            el.hass = buildHass({ 'sensor.main': { entity_id: 'sensor.main', state: 'off', attributes: {} } });
+            await flushRender(el);
+            expect(el.shadowRoot.querySelector('.state.entity')).toBeNull();
+        });
+
+        it('shows the main state slot when hide_if does not match', async () => {
+            el.setConfig({ entity: 'sensor.main', hide_if: 'off' });
+            el.hass = buildHass({ 'sensor.main': { entity_id: 'sensor.main', state: 'on', attributes: {} } });
+            await flushRender(el);
+            expect(el.shadowRoot.querySelector('.state.entity')).not.toBeNull();
+        });
+
+        it('renders the default value when the main state is hidden', async () => {
+            el.setConfig({ entity: 'sensor.main', hide_if: 'off', default: 'n/a' });
+            el.hass = buildHass({ 'sensor.main': { entity_id: 'sensor.main', state: 'off', attributes: {} } });
+            await flushRender(el);
+            expect(el.shadowRoot.querySelector('.state.entity').textContent).toContain('n/a');
+        });
+    });
+
     it('shouldUpdate returns false when neither config nor watched entities changed', () => {
         el.setConfig({ entity: 'sensor.main' });
         const sharedState = { entity_id: 'sensor.main', state: 'on', attributes: {} };

@@ -2,7 +2,7 @@ import { css, html, LitElement } from 'lit';
 
 import { LAST_CHANGED, LAST_UPDATED, TIMESTAMP_FORMATS } from './lib/constants';
 import { createGestureHandlers } from './lib/gesture_handler';
-import { checkEntity, entityName, entityStateDisplay, entityStyles } from './entity';
+import { checkEntity, entityName, entityStateDisplay, entityStyles, iconColorCss, stateIcon } from './entity';
 import {
     fireEvent,
     getEntityIds,
@@ -96,6 +96,11 @@ class MultipleEntityRow extends LitElement {
         if (!this._hass || !this.config) return html``;
         if (!this.stateObj) return this.renderWarning();
 
+        // A state_icon match overrides the main row's icon by injecting it into the config
+        // handed to hui-generic-entity-row, which owns the main icon rendering (see #197).
+        const mainStateIcon = stateIcon(this.stateObj, this.config);
+        const rowConfig = mainStateIcon ? { ...this.config, icon: mainStateIcon } : this.config;
+
         // catchInteraction: true tells hui-generic-entity-row not to attach its own tap/hold/
         // double-tap gesture detection to our slotted content. That detection is otherwise bound
         // to the whole slot and dispatches using only the row-level config (this.config), with no
@@ -104,8 +109,9 @@ class MultipleEntityRow extends LitElement {
         // entities gets its own tap/hold/double-tap handling in renderMainEntity/renderEntity
         // instead, correctly scoped to its own action config (see #338, #202).
         return html`<hui-generic-entity-row
+            style="${iconColorCss(this.config.icon_color)}"
             .hass="${this._hass}"
-            .config="${this.config}"
+            .config="${rowConfig}"
             .secondaryText="${this.renderSecondaryInfo()}"
             .catchInteraction=${true}
         >
@@ -132,6 +138,18 @@ class MultipleEntityRow extends LitElement {
 
     renderMainEntity() {
         if (this.config.show_state === false) {
+            return null;
+        }
+        // Top-level hide_if/hide_unavailable hide the main state slot, symmetrical to per-entity
+        // behavior - previously they were silently ignored on the main entity (see #227). The row
+        // itself (name, icon, sub-entities) stays visible.
+        if (hideIf(this.stateObj, this.config, this._hass)) {
+            if (this.config.default) {
+                return html`<div class="state entity" style="${entityStyles(this.config)}">
+                    ${this.config.state_header && html`<span>${this.config.state_header}</span>`}
+                    <div>${this.config.default}</div>
+                </div>`;
+            }
             return null;
         }
         const gesture = this.getGestureHandlers('main', this.config.entity, this.config);
@@ -178,7 +196,11 @@ class MultipleEntityRow extends LitElement {
             @contextmenu="${stopBubble}"
         >
             <span>${entityName(stateObj, config)}</span>
-            <div>${config.icon ? this.renderIcon(stateObj, config) : this.renderValue(stateObj, config)}</div>
+            <div>
+                ${config.icon || isObject(config.state_icon)
+                    ? this.renderIcon(stateObj, config)
+                    : this.renderValue(stateObj, config)}
+            </div>
         </div>`;
     }
 
@@ -212,11 +234,15 @@ class MultipleEntityRow extends LitElement {
     }
 
     renderIcon(stateObj, config) {
+        // Resolution order: state_icon[state] (see #197) → explicit icon → entity's own icon.
+        const overrideIcon =
+            stateIcon(stateObj, config) ?? (config.icon === true ? stateObj.attributes.icon || null : config.icon);
         return html`<state-badge
             class="icon-small"
+            style="${iconColorCss(config.icon_color)}"
             .hass=${this._hass}
             .stateObj="${stateObj}"
-            .overrideIcon="${config.icon === true ? stateObj.attributes.icon || null : config.icon}"
+            .overrideIcon="${overrideIcon}"
             .stateColor="${config.state_color}"
         ></state-badge>`;
     }

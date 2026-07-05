@@ -51,6 +51,36 @@ const matchDigitSuffixFormat = (format) => {
 const isIncompleteDigitSuffixFormat = (format) =>
     DIGIT_SUFFIX_PREFIXES.some((prefix) => format?.startsWith(prefix)) && !matchDigitSuffixFormat(format);
 
+// String-only transforms - operate on any value, including non-numeric text states (see #367).
+const STRING_FORMATS = ['upper', 'lower', 'capitalize', 'title'];
+const stringTransform = (format, value) => {
+    switch (format) {
+        case 'upper':
+            return value.toUpperCase();
+        case 'lower':
+            return value.toLowerCase();
+        case 'capitalize':
+            return value.charAt(0).toUpperCase() + value.slice(1);
+        case 'title':
+            // Split-and-capitalize rather than a \b\w or \p{L} regex: \b\w mishandles words
+            // starting with a non-ASCII letter ("über"), and \p{L} gets expanded by babel
+            // into a ~9KiB character class that bloats the bundle.
+            return value
+                .split(/(\s+)/)
+                .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                .join('');
+    }
+};
+
+// Sets all three icon-color variables so the override is robust across HA versions; cascades
+// from the styled element down into nested state-badges (see #325).
+export const iconColorCss = (color) =>
+    color ? `--paper-item-icon-color: ${color}; --mdc-icon-color: ${color}; --state-icon-color: ${color};` : '';
+
+// The state_icon map's icon for the current state, or undefined (see #197).
+export const stateIcon = (stateObj, config) =>
+    isObject(config.state_icon) ? config.state_icon[stateObj.state] : undefined;
+
 export const entityName = (stateObj, config) => {
     if (config.name === false) return null;
     return (
@@ -83,16 +113,24 @@ export const entityStateDisplay = (hass, stateObj, config) => {
 
     if (config.format && !isIncompleteDigitSuffixFormat(config.format)) {
         // A missing attribute (e.g. brightness/color_temp on a light that's off) is undefined,
-        // not a number - treat it as 0 rather than letting it flow through to the final template
-        // literal below as the literal string "undefined" (see #225). A value that's some other
-        // non-numeric type (e.g. a genuine text attribute) is left untouched, same as before.
+        // not a number - treat it as 0 (empty for the string transforms) rather than letting it
+        // flow through to the final template literal below as the literal string "undefined"
+        // (see #225). A value that's some other non-numeric type (e.g. a genuine text attribute)
+        // is left untouched, same as before.
         if (value === undefined || value === null) {
-            value = 0;
+            value = STRING_FORMATS.includes(config.format) ? '' : 0;
+        }
+        if (STRING_FORMATS.includes(config.format)) {
+            return `${stringTransform(config.format, String(value))}${unit ? ` ${unit}` : ''}`;
         }
         if (isNaN(parseFloat(value)) || !isFinite(value)) {
             // do nothing if not a number
         } else if (config.format === 'brightness') {
             value = Math.round((value / 255) * 100);
+            unit = '%';
+        } else if (config.format === 'percent') {
+            // value × 100 → x % - for fraction-valued sensors (see #323)
+            value = formatNumber(value * 100, hass.locale, { maximumFractionDigits: 2 });
             unit = '%';
         } else if (config.format === 'duration') {
             // secondsToDuration returns null for a zero duration; fall back to '0'

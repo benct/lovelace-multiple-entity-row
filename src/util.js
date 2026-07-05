@@ -60,7 +60,7 @@ export const hasGenericSecondaryInfo = (config) => typeof config === 'string' &&
 // hide_if.entity ids must be tracked too, or hasConfigOrEntitiesChanged would skip re-rendering
 // when only the referenced entity's state changes and the row would never hide/unhide.
 export const getEntityIds = (config) =>
-    [config.entity, config.secondary_info?.entity, config.secondary_info?.hide_if?.entity]
+    [config.entity, config.hide_if?.entity, config.secondary_info?.entity, config.secondary_info?.hide_if?.entity]
         .concat(
             config.entities?.flatMap((entity) =>
                 typeof entity === 'string' ? entity : [entity.entity, entity.hide_if?.entity]
