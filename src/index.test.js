@@ -1,5 +1,9 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+const { handleClick } = vi.hoisted(() => ({ handleClick: vi.fn() }));
+vi.mock('custom-card-helpers', () => ({ handleClick }));
+
 import './index';
 
 const flushRender = async (el) => {
@@ -18,6 +22,7 @@ describe('multiple-entity-row', () => {
     let el;
 
     beforeEach(() => {
+        handleClick.mockClear();
         el = document.createElement('multiple-entity-row');
         document.body.appendChild(el);
     });
@@ -102,5 +107,85 @@ describe('multiple-entity-row', () => {
         el.hass = buildHass({ 'sensor.main': sharedState });
         const changedProps = new Map([['_hass', el._hass]]);
         expect(el.shouldUpdate(changedProps)).toBe(false);
+    });
+
+    // See https://github.com/benct/lovelace-multiple-entity-row/issues/338 and
+    // https://github.com/benct/lovelace-multiple-entity-row/issues/202 - tap/hold/double-tap must
+    // be handled per rendered entity, scoped to that entity's own action config, not just the main
+    // row's. See https://github.com/benct/lovelace-multiple-entity-row/issues/188 and
+    // https://github.com/benct/lovelace-multiple-entity-row/issues/251 - previously, every click
+    // anywhere in the row (including on a sub-entity) also bubbled into hui-generic-entity-row's
+    // own row-level action handling, which only ever knew about the main entity's config.
+    describe('gesture handling', () => {
+        beforeEach(() => {
+            vi.useFakeTimers();
+            el.setConfig({
+                entity: 'sensor.main',
+                tap_action: { action: 'toggle' },
+                entities: [{ entity: 'sensor.a', tap_action: { action: 'more-info', entity: 'sensor.a' } }],
+            });
+            el.hass = buildHass({
+                'sensor.main': { entity_id: 'sensor.main', state: 'on', attributes: {} },
+                'sensor.a': { entity_id: 'sensor.a', state: 'off', attributes: {} },
+            });
+        });
+
+        afterEach(() => {
+            vi.useRealTimers();
+        });
+
+        it('gives the main entity and a sub-entity independently cached gesture handlers', () => {
+            const main = el.getGestureHandlers('main', 'sensor.main', el.config);
+            const sub = el.getGestureHandlers('sub-0', 'sensor.a', el.config.entities[0]);
+            expect(main).not.toBe(sub);
+            // Same key + same render pass returns the same cached handlers, not a fresh set -
+            // this is what lets an in-progress hold/double-tap survive an unrelated re-render.
+            expect(el.getGestureHandlers('main', 'sensor.main', el.config)).toBe(main);
+        });
+
+        it('dispatches using only that entity\'s own action config, not the main row\'s', () => {
+            const sub = el.getGestureHandlers('sub-0', 'sensor.a', el.config.entities[0]);
+            sub.onDown();
+            sub.onUp();
+            expect(handleClick).toHaveBeenCalledExactlyOnceWith(
+                el,
+                el._hass,
+                {
+                    entity: 'sensor.a',
+                    tap_action: { action: 'more-info', entity: 'sensor.a' },
+                    hold_action: undefined,
+                    double_tap_action: undefined,
+                },
+                false,
+                false
+            );
+        });
+
+        it('dispatches a hold to hold_action for a sub-entity', () => {
+            const subConfig = { entity: 'sensor.a', tap_action: { action: 'toggle' }, hold_action: { action: 'more-info' } };
+            const sub = el.getGestureHandlers('sub-0', 'sensor.a', subConfig);
+            sub.onDown();
+            vi.advanceTimersByTime(500);
+            sub.onUp();
+            expect(handleClick).toHaveBeenCalledExactlyOnceWith(el, el._hass, expect.objectContaining({ entity: 'sensor.a' }), true, false);
+        });
+
+        it('does not attach gesture handlers for a toggle-mode entity', () => {
+            expect(el.getGestureHandlers('sub-0', 'sensor.a', { entity: 'sensor.a', toggle: true })).toBeNull();
+        });
+
+        // hui-generic-entity-row binds its own mousedown/click/touchstart/touchend/touchcancel/
+        // contextmenu listeners to the whole row regardless of catchInteraction (see #338) - if a
+        // sub-entity's click bubbled up to it, it would double-dispatch using the main row's config.
+        it('stops native click and mousedown events from bubbling past a sub-entity', async () => {
+            await flushRender(el);
+            const bubbled = vi.fn();
+            el.shadowRoot.addEventListener('click', bubbled);
+            el.shadowRoot.addEventListener('mousedown', bubbled);
+            const subDiv = el.shadowRoot.querySelector('.entity:not(.state)');
+            subDiv.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, composed: true }));
+            subDiv.dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true }));
+            expect(bubbled).not.toHaveBeenCalled();
+        });
     });
 });
