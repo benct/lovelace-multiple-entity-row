@@ -172,11 +172,26 @@ The `hide_if` option can be used to hide an entity if its state or attribute val
 It can be used directly with a string, number or boolean value (i.e. `hide_if: 'off'`), as a list with several values,
 or as an object with one or more of the options listed below.
 
-| Name    | Type     | Description                                                     |
-| ------- | -------- | --------------------------------------------------------------- |
-| above   | number   | Hidden if entity _number_ value is above the specified value    |
-| below   | number   | Hidden if entity _number_ value is below the specified value    |
-| value   | list/any | Hidden if value matches specified value or any value in a list  |
+| Name      | Type     | Description                                                     |
+| --------- | -------- | --------------------------------------------------------------- |
+| above     | number   | Hidden if entity _number_ value is above the specified value    |
+| below     | number   | Hidden if entity _number_ value is below the specified value    |
+| value     | list/any | Hidden if value matches specified value or any value in a list  |
+| entity    | string   | Evaluate the criteria against this entity instead of its own    |
+| attribute | string   | Evaluate the criteria against this attribute's value            |
+
+For example, only show the alarm exit-state sensor while the alarm is armed:
+
+```yaml
+- type: custom:multiple-entity-row
+  entity: switch.dsc_armed_away
+  toggle: true
+  entities:
+    - entity: sensor.dsc_exit_state
+      hide_if:
+        entity: switch.dsc_armed_away
+        value: 'off'
+```
 
 ## Examples
 
