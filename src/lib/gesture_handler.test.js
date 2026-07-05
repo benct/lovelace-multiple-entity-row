@@ -11,7 +11,7 @@ afterEach(() => {
 describe('createGestureHandlers', () => {
     it('dispatches a tap immediately when no double-tap action is configured', () => {
         const dispatch = vi.fn();
-        const { onDown, onUp } = createGestureHandlers(dispatch, false);
+        const { onDown, onUp } = createGestureHandlers(dispatch, { hasHold: true, hasDoubleTap: false });
         onDown();
         onUp();
         expect(dispatch).toHaveBeenCalledExactlyOnceWith(false, false);
@@ -19,7 +19,7 @@ describe('createGestureHandlers', () => {
 
     it('dispatches a tap after the double-tap window elapses when no second tap follows', () => {
         const dispatch = vi.fn();
-        const { onDown, onUp } = createGestureHandlers(dispatch, true);
+        const { onDown, onUp } = createGestureHandlers(dispatch, { hasHold: true, hasDoubleTap: true });
         onDown();
         onUp();
         expect(dispatch).not.toHaveBeenCalled();
@@ -29,7 +29,7 @@ describe('createGestureHandlers', () => {
 
     it('dispatches a double-tap when a second tap arrives within the window', () => {
         const dispatch = vi.fn();
-        const { onDown, onUp } = createGestureHandlers(dispatch, true);
+        const { onDown, onUp } = createGestureHandlers(dispatch, { hasHold: true, hasDoubleTap: true });
         onDown();
         onUp();
         vi.advanceTimersByTime(DOUBLE_TAP_WINDOW_MS / 2);
@@ -40,16 +40,26 @@ describe('createGestureHandlers', () => {
 
     it('dispatches a hold when the pointer is held past the hold threshold', () => {
         const dispatch = vi.fn();
-        const { onDown, onUp } = createGestureHandlers(dispatch, false);
+        const { onDown, onUp } = createGestureHandlers(dispatch, { hasHold: true, hasDoubleTap: false });
         onDown();
         vi.advanceTimersByTime(HOLD_TIME_MS);
         onUp();
         expect(dispatch).toHaveBeenCalledExactlyOnceWith(true, false);
     });
 
+    // Matches HA's native rows: without a hold_action, a long-press is just a slow tap.
+    it('resolves a long-press as a tap when no hold action is configured', () => {
+        const dispatch = vi.fn();
+        const { onDown, onUp } = createGestureHandlers(dispatch, { hasHold: false, hasDoubleTap: false });
+        onDown();
+        vi.advanceTimersByTime(HOLD_TIME_MS * 2);
+        onUp();
+        expect(dispatch).toHaveBeenCalledExactlyOnceWith(false, false);
+    });
+
     it('does not dispatch a hold if released before the hold threshold', () => {
         const dispatch = vi.fn();
-        const { onDown, onUp } = createGestureHandlers(dispatch, false);
+        const { onDown, onUp } = createGestureHandlers(dispatch, { hasHold: true, hasDoubleTap: false });
         onDown();
         vi.advanceTimersByTime(HOLD_TIME_MS - 50);
         onUp();
@@ -58,7 +68,7 @@ describe('createGestureHandlers', () => {
 
     it('does not dispatch anything on cancel, and does not leave a stale hold pending', () => {
         const dispatch = vi.fn();
-        const { onDown, onCancel } = createGestureHandlers(dispatch, false);
+        const { onDown, onCancel } = createGestureHandlers(dispatch, { hasHold: true, hasDoubleTap: false });
         onDown();
         onCancel();
         vi.advanceTimersByTime(HOLD_TIME_MS + DOUBLE_TAP_WINDOW_MS);
@@ -67,7 +77,7 @@ describe('createGestureHandlers', () => {
 
     it('treats a hold on the second tap of what could have been a double-tap as a hold', () => {
         const dispatch = vi.fn();
-        const { onDown, onUp } = createGestureHandlers(dispatch, true);
+        const { onDown, onUp } = createGestureHandlers(dispatch, { hasHold: true, hasDoubleTap: true });
         onDown();
         onUp();
         vi.advanceTimersByTime(DOUBLE_TAP_WINDOW_MS / 2);

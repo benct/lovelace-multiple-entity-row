@@ -1,9 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { handleClick } = vi.hoisted(() => ({ handleClick: vi.fn() }));
-vi.mock('custom-card-helpers', () => ({ handleClick }));
-
 import './index';
 
 const flushRender = async (el) => {
@@ -22,7 +19,6 @@ describe('multiple-entity-row', () => {
     let el;
 
     beforeEach(() => {
-        handleClick.mockClear();
         el = document.createElement('multiple-entity-row');
         document.body.appendChild(el);
     });
@@ -117,8 +113,12 @@ describe('multiple-entity-row', () => {
     // anywhere in the row (including on a sub-entity) also bubbled into hui-generic-entity-row's
     // own row-level action handling, which only ever knew about the main entity's config.
     describe('gesture handling', () => {
+        let actions;
+
         beforeEach(() => {
             vi.useFakeTimers();
+            actions = [];
+            el.addEventListener('hass-action', (ev) => actions.push(ev.detail));
             el.setConfig({
                 entity: 'sensor.main',
                 tap_action: { action: 'toggle' },
@@ -147,27 +147,45 @@ describe('multiple-entity-row', () => {
             const sub = el.getGestureHandlers('sub-0', 'sensor.a', el.config.entities[0]);
             sub.onDown();
             sub.onUp();
-            expect(handleClick).toHaveBeenCalledExactlyOnceWith(
-                el,
-                el._hass,
+            expect(actions).toEqual([
                 {
-                    entity: 'sensor.a',
-                    tap_action: { action: 'more-info', entity: 'sensor.a' },
-                    hold_action: undefined,
-                    double_tap_action: undefined,
+                    config: { entity: 'sensor.a', tap_action: { action: 'more-info', entity: 'sensor.a' } },
+                    action: 'tap',
                 },
-                false,
-                false
-            );
+            ]);
         });
 
+        // Handlers are cached per key until the next setConfig, so these tests reset the config
+        // (clearing the cache) rather than passing an ad-hoc config for an already-cached key.
         it('dispatches a hold to hold_action for a sub-entity', () => {
             const subConfig = { entity: 'sensor.a', tap_action: { action: 'toggle' }, hold_action: { action: 'more-info' } };
+            el.setConfig({ entity: 'sensor.main', entities: [subConfig] });
             const sub = el.getGestureHandlers('sub-0', 'sensor.a', subConfig);
             sub.onDown();
             vi.advanceTimersByTime(500);
             sub.onUp();
-            expect(handleClick).toHaveBeenCalledExactlyOnceWith(el, el._hass, expect.objectContaining({ entity: 'sensor.a' }), true, false);
+            expect(actions).toEqual([
+                { config: { entity: 'sensor.a', hold_action: { action: 'more-info' } }, action: 'hold' },
+            ]);
+        });
+
+        it('defaults a tap with no tap_action to more-info', () => {
+            el.setConfig({ entity: 'sensor.main', entities: [{ entity: 'sensor.a' }] });
+            const sub = el.getGestureHandlers('sub-0', 'sensor.a', { entity: 'sensor.a' });
+            sub.onDown();
+            sub.onUp();
+            expect(actions).toEqual([
+                { config: { entity: 'sensor.a', tap_action: { action: 'more-info' } }, action: 'tap' },
+            ]);
+        });
+
+        it('does not dispatch when the action is none', () => {
+            const subConfig = { entity: 'sensor.a', tap_action: { action: 'none' } };
+            el.setConfig({ entity: 'sensor.main', entities: [subConfig] });
+            const sub = el.getGestureHandlers('sub-0', 'sensor.a', subConfig);
+            sub.onDown();
+            sub.onUp();
+            expect(actions).toEqual([]);
         });
 
         it('does not attach gesture handlers for a toggle-mode entity', () => {

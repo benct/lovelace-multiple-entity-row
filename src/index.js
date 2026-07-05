@@ -1,10 +1,16 @@
 import { css, html, LitElement } from 'lit';
-import { handleClick } from 'custom-card-helpers';
 
 import { LAST_CHANGED, LAST_UPDATED, TIMESTAMP_FORMATS } from './lib/constants';
 import { createGestureHandlers } from './lib/gesture_handler';
 import { checkEntity, entityName, entityStateDisplay, entityStyles } from './entity';
-import { getEntityIds, hasConfigOrEntitiesChanged, hasGenericSecondaryInfo, hideIf, isObject } from './util';
+import {
+    fireEvent,
+    getEntityIds,
+    hasConfigOrEntitiesChanged,
+    hasGenericSecondaryInfo,
+    hideIf,
+    isObject,
+} from './util';
 import { style } from './styles';
 
 // hui-generic-entity-row attaches its own tap/hold/double-tap detection to the outer row
@@ -234,28 +240,38 @@ class MultipleEntityRow extends LitElement {
         if (!this._actionHandlers.has(key)) {
             this._actionHandlers.set(
                 key,
-                createGestureHandlers(
-                    (hold, dblClick) => this.dispatchAction(entity, config, hold, dblClick),
-                    !!config.double_tap_action
-                )
+                createGestureHandlers((hold, dblClick) => this.dispatchAction(entity, config, hold, dblClick), {
+                    hasHold: !!config.hold_action,
+                    hasDoubleTap: !!config.double_tap_action,
+                })
             );
         }
         return this._actionHandlers.get(key);
     }
 
+    // Dispatch by firing HA's own hass-action event rather than performing the action ourselves
+    // (the old custom-card-helpers handleClick call). Letting HA core execute it keeps native
+    // confirmation dialogs and security-domain restrictions (lock/cover) in the loop, and
+    // supports newer action types (perform-action, assist) for free. Approach adopted from the
+    // duczz/ha-multiple-entity-row fork.
     dispatchAction(entity, config, hold, dblClick) {
-        handleClick(
-            this,
-            this._hass,
-            {
-                entity,
-                tap_action: config.tap_action,
-                hold_action: config.hold_action,
-                double_tap_action: config.double_tap_action,
+        const actionConfig = dblClick
+            ? config.double_tap_action
+            : hold
+              ? config.hold_action
+              : config.tap_action ?? { action: 'more-info' };
+        if (!actionConfig || actionConfig.action === 'none') {
+            return;
+        }
+        const actionType = dblClick ? 'double_tap' : hold ? 'hold' : 'tap';
+        fireEvent(this, 'hass-action', {
+            config: {
+                // actionConfig.entity overrides the more-info target (see #188)
+                entity: actionConfig.entity || entity,
+                [`${actionType}_action`]: actionConfig,
             },
-            hold,
-            dblClick
-        );
+            action: actionType,
+        });
     }
 }
 
