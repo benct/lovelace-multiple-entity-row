@@ -14,6 +14,8 @@
     "confirm": true,
     "console": true,
     "customElements": true,
-    "Intl": true
+    "Intl": true,
+    "setTimeout": true,
+    "clearTimeout": true
   }
 }

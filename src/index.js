@@ -2,9 +2,19 @@ import { css, html, LitElement } from 'lit';
 import { handleClick } from 'custom-card-helpers';
 
 import { LAST_CHANGED, LAST_UPDATED, TIMESTAMP_FORMATS } from './lib/constants';
+import { createGestureHandlers } from './lib/gesture_handler';
 import { checkEntity, entityName, entityStateDisplay, entityStyles } from './entity';
 import { getEntityIds, hasConfigOrEntitiesChanged, hasGenericSecondaryInfo, hideIf, isObject } from './util';
 import { style } from './styles';
+
+// hui-generic-entity-row attaches its own tap/hold/double-tap detection to the outer row
+// element unconditionally (see the catchInteraction comment in render() below) via mousedown/
+// click/touchstart/touchend/touchcancel/contextmenu listeners - a disjoint event set from the
+// pointerdown/pointerup/pointercancel we use for our own per-entity detection, so stopPropagation
+// on our own pointer events doesn't touch it. Stopping propagation of that exact event set at each
+// entity's own element keeps it from ever reaching the row's listener, so only our per-entity
+// dispatch fires (see #338, #202, #188, #251).
+const stopBubble = (event) => event.stopPropagation();
 
 console.info(
     `%c MULTIPLE-ENTITY-ROW %c ${process.env.PACKAGE_VERSION} (built ${process.env.BUILD_TIME}, ${process.env.BUILD_COMMIT}) `,
@@ -33,7 +43,10 @@ class MultipleEntityRow extends LitElement {
         }
 
         this.entityIds = getEntityIds(config);
-        this.onRowClick = this.clickHandler(config.entity, config.tap_action);
+        // Cached tap/hold/double-tap gesture state per rendered entity (see getGestureHandlers) -
+        // reset whenever config changes, since a config change can add/remove/reorder entities or
+        // their action configs.
+        this._actionHandlers = new Map();
 
         // HA 2026.7+'s entities-card row editor silently renames a row's `format` key to
         // `time_format` on save, even for a custom row type with entirely different `format`
@@ -77,14 +90,21 @@ class MultipleEntityRow extends LitElement {
         if (!this._hass || !this.config) return html``;
         if (!this.stateObj) return this.renderWarning();
 
+        // catchInteraction: true tells hui-generic-entity-row not to attach its own tap/hold/
+        // double-tap gesture detection to our slotted content. That detection is otherwise bound
+        // to the whole slot and dispatches using only the row-level config (this.config), with no
+        // awareness of which of our own rendered entities was actually interacted with - every
+        // sub-entity click also double-fired the main entity's own action config. Each of our
+        // entities gets its own tap/hold/double-tap handling in renderMainEntity/renderEntity
+        // instead, correctly scoped to its own action config (see #338, #202).
         return html`<hui-generic-entity-row
             .hass="${this._hass}"
             .config="${this.config}"
             .secondaryText="${this.renderSecondaryInfo()}"
-            .catchInteraction=${false}
+            .catchInteraction=${true}
         >
             <div class="${this.config.column ? 'entities-column' : 'entities-row'}">
-                ${this.entities.map((entity) => this.renderEntity(entity.stateObj, entity))}${this.renderMainEntity()}
+                ${this.entities.map((entity, index) => this.renderEntity(entity.stateObj, entity, index))}${this.renderMainEntity()}
             </div>
         </hui-generic-entity-row>`;
     }
@@ -108,13 +128,26 @@ class MultipleEntityRow extends LitElement {
         if (this.config.show_state === false) {
             return null;
         }
-        return html`<div class="state entity" style="${entityStyles(this.config)}" @click="${this.onRowClick}">
+        const gesture = this.getGestureHandlers('main', this.config.entity, this.config);
+        return html`<div
+            class="state entity"
+            style="${entityStyles(this.config)}"
+            @pointerdown="${gesture?.onDown}"
+            @pointerup="${gesture?.onUp}"
+            @pointercancel="${gesture?.onCancel}"
+            @mousedown="${stopBubble}"
+            @click="${stopBubble}"
+            @touchstart="${stopBubble}"
+            @touchend="${stopBubble}"
+            @touchcancel="${stopBubble}"
+            @contextmenu="${stopBubble}"
+        >
             ${this.config.state_header && html`<span>${this.config.state_header}</span>`}
             <div>${this.renderValue(this.stateObj, this.config)}</div>
         </div>`;
     }
 
-    renderEntity(stateObj, config) {
+    renderEntity(stateObj, config, index) {
         if (!stateObj || hideIf(stateObj, config)) {
             if (config.default) {
                 return html`<div class="entity" style="${entityStyles(config)}">
@@ -124,8 +157,20 @@ class MultipleEntityRow extends LitElement {
             }
             return null;
         }
-        const onClick = this.clickHandler(stateObj.entity_id, config.tap_action);
-        return html`<div class="entity" style="${entityStyles(config)}" @click="${onClick}">
+        const gesture = this.getGestureHandlers(`sub-${index}`, stateObj.entity_id, config);
+        return html`<div
+            class="entity"
+            style="${entityStyles(config)}"
+            @pointerdown="${gesture?.onDown}"
+            @pointerup="${gesture?.onUp}"
+            @pointercancel="${gesture?.onCancel}"
+            @mousedown="${stopBubble}"
+            @click="${stopBubble}"
+            @touchstart="${stopBubble}"
+            @touchend="${stopBubble}"
+            @touchcancel="${stopBubble}"
+            @contextmenu="${stopBubble}"
+        >
             <span>${entityName(stateObj, config)}</span>
             <div>${config.icon ? this.renderIcon(stateObj, config) : this.renderValue(stateObj, config)}</div>
         </div>`;
@@ -176,8 +221,41 @@ class MultipleEntityRow extends LitElement {
         </hui-warning>`;
     }
 
-    clickHandler(entity, actionConfig) {
-        return () => handleClick(this, this._hass, { entity, tap_action: actionConfig }, false, false);
+    // Tap/hold/double-tap gesture handlers for one rendered entity (the main entity, or one of
+    // this.entities by index), cached by key so an in-progress hold or double-tap window survives
+    // a re-render triggered by an unrelated state update mid-gesture (see setConfig). Toggle-mode
+    // entities render <ha-entity-toggle>, which handles its own tap directly - not wiring our own
+    // gesture handling on top avoids the two conflicting over the same interaction (see #265,
+    // which is about that toggle/action interaction specifically and is out of scope here).
+    getGestureHandlers(key, entity, config) {
+        if (config.toggle === true) {
+            return null;
+        }
+        if (!this._actionHandlers.has(key)) {
+            this._actionHandlers.set(
+                key,
+                createGestureHandlers(
+                    (hold, dblClick) => this.dispatchAction(entity, config, hold, dblClick),
+                    !!config.double_tap_action
+                )
+            );
+        }
+        return this._actionHandlers.get(key);
+    }
+
+    dispatchAction(entity, config, hold, dblClick) {
+        handleClick(
+            this,
+            this._hass,
+            {
+                entity,
+                tap_action: config.tap_action,
+                hold_action: config.hold_action,
+                double_tap_action: config.double_tap_action,
+            },
+            hold,
+            dblClick
+        );
     }
 }
 
