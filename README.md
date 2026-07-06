@@ -36,6 +36,8 @@ The above configuration can be managed in the Configuration -> Dashboards -> Res
 
 This card produces an `entity-row` and must therefore be configured as an entity in an [entities](https://www.home-assistant.io/lovelace/entities/) card.
 
+A **visual editor** is available: when editing a `custom:multiple-entity-row` row through the entities card's UI editor, the row opens a form-based editor with tabs for the main entity and each additional entity (add / reorder / copy / paste / delete), plus sections for secondary info, state-based icons, per-entity custom CSS, and tap/hold/double-tap actions. Everything below can still be configured in YAML; a few advanced options (`hide_if`, digit-suffixed formats like `precision5`) are YAML-only.
+
 | Name              | Type          | Default                             | Description                                      |
 | ----------------- | ------------- | ----------------------------------- | ------------------------------------------------ |
 | type              | string        | **Required**                        | `custom:multiple-entity-row`                     |
@@ -415,10 +417,12 @@ entities:
 
 ```bash
 yarn install
-yarn build      # lint, run tests, then bundle multiple-entity-row.js
+yarn build      # lint + type-check, run tests, then bundle multiple-entity-row.js
 yarn test       # run the unit test suite
 yarn coverage   # run tests with a coverage report
 ```
+
+The codebase is migrating incrementally from JavaScript to TypeScript: `.ts` and `.js` coexist (`allowJs`), Babel strips types during bundling, and `tsc --noEmit` type-checks as part of `yarn lint`. New code should be TypeScript; existing modules migrate opportunistically when touched.
 
 To test changes against a real Home Assistant instance, a disposable local testbed is available via Docker:
 
