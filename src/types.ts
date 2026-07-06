@@ -75,6 +75,7 @@ export interface MultipleEntityRowConfig extends EntityOptions {
     type: string;
     entity: string;
     show_state?: boolean;
+    show_state_first?: boolean;
     state_header?: string;
     image?: string;
     column?: boolean;

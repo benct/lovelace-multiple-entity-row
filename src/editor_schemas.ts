@@ -63,7 +63,13 @@ export const MAIN_TAB_SCHEMA = [
             { name: 'column', selector: { boolean: {} } },
         ],
     },
-    { name: 'hide_unavailable', selector: { boolean: {} } },
+    {
+        type: 'grid',
+        schema: [
+            { name: 'show_state_first', selector: { boolean: {} } },
+            { name: 'hide_unavailable', selector: { boolean: {} } },
+        ],
+    },
     { name: 'state_header', selector: { text: {} } },
     { name: 'image', selector: { text: {} } },
     { name: 'format', selector: { select: { mode: 'dropdown', options: FORMAT_OPTIONS } } },
@@ -119,6 +125,7 @@ export const LABELS: Record<string, string> = {
     image: 'Image URL',
     format: 'Format',
     show_state: 'Show main entity state',
+    show_state_first: 'State before entities',
     state_header: 'State header label',
     state_color: 'State color',
     column: 'Column layout',

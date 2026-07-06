@@ -51,6 +51,7 @@ A **visual editor** is available: when editing a `custom:multiple-entity-row` ro
 | image             | string        |                                     | Show an image instead of icon                    |
 | toggle            | bool          | `false`                             | Display a toggle (if supported) instead of state |
 | show_state        | bool          | `true`                              | Set to `false` to hide the main entity           |
+| show_state_first  | bool          | `false`                             | Show the main state before other entities        |
 | state_header      | string        |                                     | Show header text above the main entity state     |
 | state_color       | bool          | `false`                             | Enable colored icon when entity is active        |
 | column            | bool          | `false`                             | Show entities in a column instead of a row       |
