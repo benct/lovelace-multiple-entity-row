@@ -97,6 +97,31 @@ describe('multiple-entity-row', () => {
         expect(el.entities[0].stateObj.entity_id).toBe('sensor.a');
     });
 
+    // See https://github.com/benct/lovelace-multiple-entity-row/issues/384
+    it('renders the main state before sub-entities with show_state_first', async () => {
+        el.setConfig({ entity: 'sensor.main', show_state_first: true, entities: ['sensor.a'] });
+        el.hass = buildHass({
+            'sensor.main': { entity_id: 'sensor.main', state: 'on', attributes: {} },
+            'sensor.a': { entity_id: 'sensor.a', state: 'off', attributes: {} },
+        });
+        await flushRender(el);
+        const entities = [...el.shadowRoot.querySelectorAll('.entity')];
+        expect(entities).toHaveLength(2);
+        expect(entities[0].classList.contains('state')).toBe(true);
+    });
+
+    it('renders the main state last by default', async () => {
+        el.setConfig({ entity: 'sensor.main', entities: ['sensor.a'] });
+        el.hass = buildHass({
+            'sensor.main': { entity_id: 'sensor.main', state: 'on', attributes: {} },
+            'sensor.a': { entity_id: 'sensor.a', state: 'off', attributes: {} },
+        });
+        await flushRender(el);
+        const entities = [...el.shadowRoot.querySelectorAll('.entity')];
+        expect(entities).toHaveLength(2);
+        expect(entities[entities.length - 1].classList.contains('state')).toBe(true);
+    });
+
     // See https://github.com/benct/lovelace-multiple-entity-row/issues/227 - top-level
     // hide_if/hide_unavailable were silently ignored on the main entity.
     describe('main-row hiding', () => {

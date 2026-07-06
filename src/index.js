@@ -120,9 +120,13 @@ class MultipleEntityRow extends LitElement {
             .catchInteraction=${true}
         >
             <div class="${this.config.column ? 'entities-column' : 'entities-row'}">
-                ${this.entities.map((entity, index) =>
-                    this.renderEntity(entity.stateObj, entity, index)
-                )}${this.renderMainEntity()}
+                ${this.config.show_state_first
+                    ? html`${this.renderMainEntity()}${this.entities.map((entity, index) =>
+                          this.renderEntity(entity.stateObj, entity, index)
+                      )}`
+                    : html`${this.entities.map((entity, index) =>
+                          this.renderEntity(entity.stateObj, entity, index)
+                      )}${this.renderMainEntity()}`}
             </div>
         </hui-generic-entity-row>`;
     }
