@@ -181,6 +181,16 @@ None of `kilo`/`mega`/`milli`/`invert`/`position` change the displayed unit — 
   unit: kW
 ```
 
+Numeric formats can be **combined** comma-separated — the value flows through each in turn and is formatted once at the end. An explicit `precision<N>` controls the decimals wherever it appears; otherwise the last format's own default applies:
+
+```yaml
+format: invert, precision3   # -18.123
+format: kilo, precision1     # 1500 -> 1.5
+format: invert, kilo3        # 1500 -> -1.500
+```
+
+Only number-transforming formats compose (`brightness`, `percent`, `invert`, `position`, `kilo`/`mega`/`milli`, `precision`, temperature conversions) — durations, timestamps and text transforms cannot be combined. In the visual editor, pick **Custom…** in the Format dropdown to enter a combined format.
+
 ### Hiding
 
 The `hide_if` option can be used to hide an entity if its state or attribute value matches the specified criteria.

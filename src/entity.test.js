@@ -214,6 +214,57 @@ describe('entityStateDisplay', () => {
         expect(entityStateDisplay(hass, stateObj, { format: 'precision2' })).toBe('not-a-number');
     });
 
+    // See https://github.com/benct/lovelace-multiple-entity-row/issues/385 - numeric formats
+    // compose comma-separated, threading the raw number and formatting once at the end.
+    describe('format pipelines', () => {
+        it('combines invert with an explicit precision', () => {
+            const stateObj = { state: '18.123456', attributes: {} };
+            expect(entityStateDisplay(hass, stateObj, { format: 'invert, precision3' })).toBe('-18.123');
+        });
+
+        it('combines kilo with an explicit precision', () => {
+            const stateObj = { state: '1234.5', attributes: {} };
+            expect(entityStateDisplay(hass, stateObj, { format: 'kilo, precision1' })).toBe('1.2');
+        });
+
+        it('applies an explicit precision regardless of segment order', () => {
+            const stateObj = { state: '1234.5', attributes: {} };
+            expect(entityStateDisplay(hass, stateObj, { format: 'precision1, kilo' })).toBe('1.2');
+        });
+
+        it('uses the digit-suffix form inside a pipeline', () => {
+            const stateObj = { state: '1500', attributes: {} };
+            expect(entityStateDisplay(hass, stateObj, { format: 'invert, kilo3' })).toBe('-1.500');
+        });
+
+        it('applies the last bare segment default without an explicit precision', () => {
+            const stateObj = { state: '1234.5678', attributes: {} };
+            // bare kilo's 2-decimal cap applies, as if kilo were used alone
+            expect(entityStateDisplay(hass, stateObj, { format: 'invert, kilo' })).toBe('-1.23');
+        });
+
+        it('preserves source decimals for sign-only pipelines', () => {
+            const stateObj = { state: '5.60', attributes: {} };
+            expect(entityStateDisplay(hass, stateObj, { format: 'invert, position' })).toBe('105.60');
+        });
+
+        it('falls through when a segment is not a numeric transform', () => {
+            const stateObj = { state: '90', attributes: {} };
+            // duration cannot compose - the whole string is passed through untouched
+            expect(entityStateDisplay(hass, stateObj, { format: 'duration, precision1' })).toBe('90');
+        });
+
+        it('does not crash on a mid-typed pipeline segment', () => {
+            const stateObj = { state: '18.5', attributes: {} };
+            expect(() => entityStateDisplay(hass, stateObj, { format: 'invert, precision' })).not.toThrow();
+        });
+
+        it('leaves non-numeric values untouched in a pipeline', () => {
+            const stateObj = { state: 'on', attributes: {} };
+            expect(entityStateDisplay(hass, stateObj, { format: 'invert, precision2' })).toBe('on');
+        });
+    });
+
     // See https://github.com/benct/lovelace-multiple-entity-row/issues/225 -
     // a missing attribute (e.g. brightness/color_temp on a light that's off) must render as a
     // sensible zero value, not the literal string "undefined".
