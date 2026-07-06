@@ -1,5 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
-import { checkEntity, computeEntity, entityName, entityStateDisplay, entityStyles, iconColorCss, stateIcon } from './entity';
+import {
+    checkEntity,
+    computeEntity,
+    entityName,
+    entityStateDisplay,
+    entityStyles,
+    iconColorCss,
+    stateIcon,
+} from './entity';
 import { NumberFormat } from './lib/constants';
 
 const hass = {
