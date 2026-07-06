@@ -1,0 +1,22 @@
+{
+    "compilerOptions": {
+        "target": "ES2021",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "lib": ["ES2021", "DOM", "DOM.Iterable"],
+        "strict": true,
+        // .js and .ts coexist during the incremental migration; JS isn't type-checked yet.
+        "allowJs": true,
+        "checkJs": false,
+        // tsc is a type-checker only - babel does the actual compilation in webpack.
+        "noEmit": true,
+        // Lit reactive properties are declared via `declare` fields / static properties, not
+        // decorators; define-semantics class fields would shadow Lit's accessors, so keep the
+        // legacy behavior (this also matches what babel emits).
+        "useDefineForClassFields": false,
+        "skipLibCheck": true,
+        "isolatedModules": true,
+        "forceConsistentCasingInFileNames": true
+    },
+    "include": ["src/**/*"]
+}

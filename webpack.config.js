@@ -22,15 +22,25 @@ module.exports = {
         filename: 'multiple-entity-row.js',
         path: path.resolve(__dirname),
     },
+    resolve: {
+        extensions: ['.ts', '.js'],
+    },
     module: {
         rules: [
             {
-                test: /\.js$/,
+                test: /\.[jt]s$/,
                 exclude: /(node_modules)/,
                 use: {
                     loader: 'babel-loader',
                     options: {
-                        presets: ['@babel/preset-env'],
+                        // Babel only strips types; type CHECKING runs as 'tsc --noEmit' in the
+                        // lint step, so a type error fails the build there.
+                        presets: [
+                            '@babel/preset-env',
+                            // allowDeclareFields: `declare` fields type Lit reactive properties
+                            // without emitting real class fields that would shadow the accessors.
+                            ['@babel/preset-typescript', { allowDeclareFields: true }],
+                        ],
                     },
                 },
             },
