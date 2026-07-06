@@ -20,7 +20,8 @@ export const computeEntity = (entityId) => entityId.substr(entityId.indexOf('.')
 // scale/sign transform, since arithmetic (e.g. `value / 1000`) coerces the string to a number
 // before it reaches formatNumber, losing the "keep original decimal digits" behavior it would
 // otherwise apply (see #304).
-const decimalDigits = (value) => (typeof value === 'string' && value.includes('.') ? value.split('.')[1].length : undefined);
+const decimalDigits = (value) =>
+    typeof value === 'string' && value.includes('.') ? value.split('.')[1].length : undefined;
 
 // Shared implementation for the kilo/mega/milli formats: divides by the given factor, and applies
 // either the default 2-decimal cap (bare `kilo`/`mega`/`milli`, digits === undefined) or an
@@ -30,7 +31,10 @@ const scaledFormat = (value, divisor, digits, locale) => {
         return formatNumber(value / divisor, locale, { maximumFractionDigits: 2 });
     }
     const precision = parseInt(digits, 10);
-    return formatNumber(value / divisor, locale, { minimumFractionDigits: precision, maximumFractionDigits: precision });
+    return formatNumber(value / divisor, locale, {
+        minimumFractionDigits: precision,
+        maximumFractionDigits: precision,
+    });
 };
 
 // precision<N>/kilo<N>/mega<N>/milli<N> parse a trailing digit off the format string. `kilo`,
@@ -159,14 +163,18 @@ export const entityStateDisplay = (hass, stateObj, config) => {
             value = formatNumber(
                 value - value * 2,
                 hass.locale,
-                precision !== undefined ? { minimumFractionDigits: precision, maximumFractionDigits: precision } : undefined
+                precision !== undefined
+                    ? { minimumFractionDigits: precision, maximumFractionDigits: precision }
+                    : undefined
             );
         } else if (config.format === 'position') {
             const precision = decimalDigits(value);
             value = formatNumber(
                 100 - value,
                 hass.locale,
-                precision !== undefined ? { minimumFractionDigits: precision, maximumFractionDigits: precision } : undefined
+                precision !== undefined
+                    ? { minimumFractionDigits: precision, maximumFractionDigits: precision }
+                    : undefined
             );
         } else if (config.format === 'celsius_to_fahrenheit') {
             value = formatNumber(value * 1.8 + 32, hass.locale, { maximumFractionDigits: 0 });
@@ -185,7 +193,8 @@ export const entityStateDisplay = (hass, stateObj, config) => {
         // A missing attribute is undefined, not a number or a real string - render an empty value
         // rather than the literal string "undefined" (same class of bug as #225, in a code path
         // that fix didn't cover since it only applies when a `format:` is configured).
-        const displayValue = value === undefined || value === null ? '' : isNaN(value) ? value : formatNumber(value, hass.locale);
+        const displayValue =
+            value === undefined || value === null ? '' : isNaN(value) ? value : formatNumber(value, hass.locale);
         return `${displayValue}${unit ? ` ${unit}` : ''}`;
     }
 

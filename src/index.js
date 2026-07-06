@@ -3,15 +3,9 @@ import { css, html, LitElement } from 'lit';
 import { LAST_CHANGED, LAST_UPDATED, TIMESTAMP_FORMATS } from './lib/constants';
 import { createGestureHandlers } from './lib/gesture_handler';
 import { checkEntity, entityName, entityStateDisplay, entityStyles, iconColorCss, stateIcon } from './entity';
-import {
-    fireEvent,
-    getEntityIds,
-    hasConfigOrEntitiesChanged,
-    hasGenericSecondaryInfo,
-    hideIf,
-    isObject,
-} from './util';
+import { fireEvent, getEntityIds, hasConfigOrEntitiesChanged, hasGenericSecondaryInfo, hideIf, isObject } from './util';
 import { style } from './styles';
+import './editor';
 
 // hui-generic-entity-row attaches its own tap/hold/double-tap detection to the outer row
 // element unconditionally (see the catchInteraction comment in render() below) via mousedown/
@@ -29,6 +23,16 @@ console.info(
 );
 
 class MultipleEntityRow extends LitElement {
+    static getConfigElement() {
+        return document.createElement('multiple-entity-row-editor');
+    }
+
+    static getStubConfig(hass, entities) {
+        // Prefer a sensor for the stub so the row shows a value out of the box.
+        const entity = entities?.find((e) => e.startsWith('sensor.')) ?? entities?.[0] ?? '';
+        return { entity };
+    }
+
     static get properties() {
         return {
             _hass: Object,
@@ -116,7 +120,9 @@ class MultipleEntityRow extends LitElement {
             .catchInteraction=${true}
         >
             <div class="${this.config.column ? 'entities-column' : 'entities-row'}">
-                ${this.entities.map((entity, index) => this.renderEntity(entity.stateObj, entity, index))}${this.renderMainEntity()}
+                ${this.entities.map((entity, index) =>
+                    this.renderEntity(entity.stateObj, entity, index)
+                )}${this.renderMainEntity()}
             </div>
         </hui-generic-entity-row>`;
     }
@@ -284,8 +290,8 @@ class MultipleEntityRow extends LitElement {
         const actionConfig = dblClick
             ? config.double_tap_action
             : hold
-              ? config.hold_action
-              : config.tap_action ?? { action: 'more-info' };
+            ? config.hold_action
+            : config.tap_action ?? { action: 'more-info' };
         if (!actionConfig || actionConfig.action === 'none') {
             return;
         }
@@ -302,3 +308,11 @@ class MultipleEntityRow extends LitElement {
 }
 
 customElements.define('multiple-entity-row', MultipleEntityRow);
+
+// Registers the row with HA's card/row pickers so it's discoverable in the UI.
+window.customCards = window.customCards || [];
+window.customCards.push({
+    type: 'multiple-entity-row',
+    name: 'Multiple Entity Row',
+    description: 'Show multiple entity states and attributes on a single entity row',
+});

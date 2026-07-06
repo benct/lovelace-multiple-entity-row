@@ -168,7 +168,7 @@ describe('multiple-entity-row', () => {
             expect(el.getGestureHandlers('main', 'sensor.main', el.config)).toBe(main);
         });
 
-        it('dispatches using only that entity\'s own action config, not the main row\'s', () => {
+        it("dispatches using only that entity's own action config, not the main row's", () => {
             const sub = el.getGestureHandlers('sub-0', 'sensor.a', el.config.entities[0]);
             sub.onDown();
             sub.onUp();
@@ -183,7 +183,11 @@ describe('multiple-entity-row', () => {
         // Handlers are cached per key until the next setConfig, so these tests reset the config
         // (clearing the cache) rather than passing an ad-hoc config for an already-cached key.
         it('dispatches a hold to hold_action for a sub-entity', () => {
-            const subConfig = { entity: 'sensor.a', tap_action: { action: 'toggle' }, hold_action: { action: 'more-info' } };
+            const subConfig = {
+                entity: 'sensor.a',
+                tap_action: { action: 'toggle' },
+                hold_action: { action: 'more-info' },
+            };
             el.setConfig({ entity: 'sensor.main', entities: [subConfig] });
             const sub = el.getGestureHandlers('sub-0', 'sensor.a', subConfig);
             sub.onDown();
