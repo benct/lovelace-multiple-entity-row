@@ -10,7 +10,14 @@ import { keyed } from 'lit/directives/keyed.js';
 
 import { SECONDARY_INFO_VALUES } from './lib/constants';
 import { fireEvent, isObject } from './util';
-import { ADDITIONAL_TAB_SCHEMA, LABELS, MAIN_TAB_SCHEMA } from './editor_schemas';
+import {
+    ACTIONS_SCHEMA,
+    ADDITIONAL_TAB_SCHEMA,
+    CUSTOM_FORMAT,
+    KNOWN_FORMAT_VALUES,
+    LABELS,
+    MAIN_TAB_SCHEMA,
+} from './editor_schemas';
 import { EntityConfig, HASS, MultipleEntityRowConfig } from './types';
 
 type SecondaryMode = 'none' | 'text' | 'generic' | 'entity';
@@ -142,6 +149,7 @@ export class MultipleEntityRowEditor extends LitElement {
     declare _clipboardEntity?: EntityConfig;
     declare _stateIconRowsMain: StateIconRows;
     declare _stateIconRowsAdditional: Map<number, StateIconRows>;
+    declare _customFormatScopes: Set<string>;
 
     // Per-position stable keys for the entities tab list - lit needs these to swap tab contents
     // wholesale on reorder instead of mutating sibling tab contents in place.
@@ -159,6 +167,7 @@ export class MultipleEntityRowEditor extends LitElement {
             _clipboardEntity: { state: true },
             _stateIconRowsMain: { state: true },
             _stateIconRowsAdditional: { state: true },
+            _customFormatScopes: { state: true },
         };
     }
 
@@ -168,6 +177,7 @@ export class MultipleEntityRowEditor extends LitElement {
         this._entitiesExpanded = true;
         this._stateIconRowsMain = [];
         this._stateIconRowsAdditional = new Map();
+        this._customFormatScopes = new Set();
     }
 
     public setConfig(config: MultipleEntityRowConfig): void {
@@ -374,6 +384,63 @@ export class MultipleEntityRowEditor extends LitElement {
 
     private _computeLabel = (item: { name: string }): string => LABELS[item.name] ?? item.name;
 
+    // ── Custom format entry (see #385) ──────────────────────────────────
+    // The format dropdown ends with a "Custom…" sentinel. A scope is in custom mode when the
+    // user picked the sentinel, or when the config holds a format the dropdown doesn't know
+    // (comma pipelines like "invert, precision3", digit suffixes like "precision7") - without
+    // this, editing such a row through the form would silently clobber the YAML-only value.
+
+    private _isCustomFormat(scope: string, format?: string): boolean {
+        return this._customFormatScopes.has(scope) || (!!format && !KNOWN_FORMAT_VALUES.has(format));
+    }
+
+    private _setCustomFormatScope(scope: string, custom: boolean): void {
+        if (custom === this._customFormatScopes.has(scope)) return;
+        const next = new Set(this._customFormatScopes);
+        if (custom) next.add(scope);
+        else next.delete(scope);
+        this._customFormatScopes = next;
+    }
+
+    /** Swap a custom-mode format for the dropdown sentinel in the form's data. */
+    private _formatToForm<T extends { format?: string }>(scope: string, config: T): T {
+        return this._isCustomFormat(scope, config.format) ? { ...config, format: CUSTOM_FORMAT } : config;
+    }
+
+    /** Undo the sentinel on the way back out: picking "Custom…" must not overwrite the real
+     * format value - it only switches the scope into custom mode. */
+    private _formatFromForm<T extends { format?: string }>(scope: string, newConfig: T, oldFormat?: string): T {
+        if (newConfig.format === CUSTOM_FORMAT) {
+            this._setCustomFormatScope(scope, true);
+            const result = { ...newConfig };
+            if (oldFormat !== undefined) result.format = oldFormat;
+            else delete result.format;
+            return result;
+        }
+        this._setCustomFormatScope(scope, false);
+        return newConfig;
+    }
+
+    private _renderCustomFormatField(
+        scope: string,
+        format: string | undefined,
+        onChange: (format?: string) => void
+    ): TemplateResult | typeof nothing {
+        if (!this._isCustomFormat(scope, format)) return nothing;
+        return html`
+            <ha-form
+                .hass=${this.hass}
+                .data=${{ custom_format: format ?? '' }}
+                .schema=${[{ name: 'custom_format', selector: { text: {} } }]}
+                .computeLabel=${() => 'Custom format (e.g. invert, precision3)'}
+                @value-changed=${(ev: CustomEvent) => {
+                    const text = ((ev.detail.value as { custom_format?: string }).custom_format ?? '').trim();
+                    onChange(text || undefined);
+                }}
+            ></ha-form>
+        `;
+    }
+
     // ── Entities panel: Main (tab 0) + Additional (tabs 1+) ─────────────
 
     private _keyFor(index: number): string {
@@ -472,6 +539,17 @@ export class MultipleEntityRowEditor extends LitElement {
                     .hass=${this.hass}
                     .data=${this._mainFormData()}
                     .schema=${MAIN_TAB_SCHEMA}
+                    .computeLabel=${this._computeLabel}
+                    @value-changed=${this._mainValueChanged}
+                ></ha-form>
+                ${this._renderCustomFormatField('main', this._config?.format, (format) =>
+                    this._updateConfig({ format })
+                )}
+                <div class="section-label">Interactions</div>
+                <ha-form
+                    .hass=${this.hass}
+                    .data=${this._mainFormData()}
+                    .schema=${ACTIONS_SCHEMA}
                     .computeLabel=${this._computeLabel}
                     @value-changed=${this._mainValueChanged}
                 ></ha-form>
@@ -649,8 +727,19 @@ export class MultipleEntityRowEditor extends LitElement {
             <div class="child-editor">
                 <ha-form
                     .hass=${this.hass}
-                    .data=${unitToForm(entityConfig)}
+                    .data=${this._formatToForm(`sub-${additionalIndex}`, unitToForm(entityConfig))}
                     .schema=${ADDITIONAL_TAB_SCHEMA}
+                    .computeLabel=${this._computeLabel}
+                    @value-changed=${(ev: CustomEvent) => this._additionalValueChanged(ev, additionalIndex)}
+                ></ha-form>
+                ${this._renderCustomFormatField(`sub-${additionalIndex}`, entityConfig.format, (format) =>
+                    this._setAdditionalFormat(additionalIndex, format)
+                )}
+                <div class="section-label">Interactions</div>
+                <ha-form
+                    .hass=${this.hass}
+                    .data=${this._formatToForm(`sub-${additionalIndex}`, unitToForm(entityConfig))}
+                    .schema=${ACTIONS_SCHEMA}
                     .computeLabel=${this._computeLabel}
                     @value-changed=${(ev: CustomEvent) => this._additionalValueChanged(ev, additionalIndex)}
                 ></ha-form>
@@ -679,12 +768,13 @@ export class MultipleEntityRowEditor extends LitElement {
     /** Form data for the Main tab: seeds show_state's runtime default (ON) so the toggle reads
      * correctly for configs that don't set the key, and maps `unit: false` to its text form. */
     private _mainFormData(): MultipleEntityRowConfig {
-        return unitToForm({ show_state: true, ...this._config! });
+        return this._formatToForm('main', unitToForm({ show_state: true, ...this._config! }));
     }
 
     private _mainValueChanged = (ev: CustomEvent): void => {
         if (!this._config) return;
-        const newConfig = unitFromForm({ ...(ev.detail.value as MultipleEntityRowConfig) });
+        let newConfig = unitFromForm({ ...(ev.detail.value as MultipleEntityRowConfig) });
+        newConfig = this._formatFromForm('main', newConfig, this._config.format);
         // show_state: true is the seeded runtime default - strip the redundant key on the way
         // back out so it doesn't pollute the YAML.
         if (newConfig.show_state === true) delete newConfig.show_state;
@@ -694,9 +784,26 @@ export class MultipleEntityRowEditor extends LitElement {
     private _additionalValueChanged = (ev: CustomEvent, additionalIndex: number): void => {
         if (!this._config) return;
         const entities = [...(this._config.entities ?? [])];
-        entities[additionalIndex] = unitFromForm(ev.detail.value as EntityConfig);
+        const raw = entities[additionalIndex];
+        const oldFormat = isObject(raw) ? (raw as EntityConfig).format : undefined;
+        entities[additionalIndex] = this._formatFromForm(
+            `sub-${additionalIndex}`,
+            unitFromForm(ev.detail.value as EntityConfig),
+            oldFormat
+        );
         this._updateConfig({ entities });
     };
+
+    private _setAdditionalFormat(additionalIndex: number, format?: string): void {
+        if (!this._config) return;
+        const entities = [...(this._config.entities ?? [])];
+        const raw = entities[additionalIndex];
+        const conf: EntityConfig = typeof raw === 'string' ? { entity: raw } : { ...raw };
+        if (format) conf.format = format;
+        else delete conf.format;
+        entities[additionalIndex] = conf;
+        this._updateConfig({ entities });
+    }
 
     // ── Mutating handlers (Main is protected) ───────────────────────────
 
@@ -813,11 +920,16 @@ export class MultipleEntityRowEditor extends LitElement {
                     ? html`<div class="secondary-sub-form">
                           <ha-form
                               .hass=${this.hass}
-                              .data=${unitToForm(si as EntityConfig)}
+                              .data=${this._formatToForm('secondary', unitToForm(si as EntityConfig))}
                               .schema=${ADDITIONAL_TAB_SCHEMA}
                               .computeLabel=${this._computeLabel}
                               @value-changed=${this._secondaryEntityChanged}
                           ></ha-form>
+                          ${this._renderCustomFormatField('secondary', (si as EntityConfig).format, (format) =>
+                              this._updateConfig({
+                                  secondary_info: { ...(si as EntityConfig), format },
+                              })
+                          )}
                       </div>`
                     : nothing}
             </div>
@@ -855,7 +967,12 @@ export class MultipleEntityRowEditor extends LitElement {
     };
 
     private _secondaryEntityChanged = (ev: CustomEvent): void => {
-        this._updateConfig({ secondary_info: unitFromForm(ev.detail.value as EntityConfig) });
+        const oldFormat = isObject(this._config?.secondary_info)
+            ? (this._config!.secondary_info as EntityConfig).format
+            : undefined;
+        this._updateConfig({
+            secondary_info: this._formatFromForm('secondary', unitFromForm(ev.detail.value as EntityConfig), oldFormat),
+        });
     };
 
     // ── Helpers ─────────────────────────────────────────────────────────

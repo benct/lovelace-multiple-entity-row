@@ -1,5 +1,9 @@
 // ha-form schemas for the visual editor. Adapted from the duczz/ha-multiple-entity-row fork.
 
+// Sentinel dropdown value for "enter the format string by hand" - covers comma-separated
+// pipelines (invert, precision3) and rarely-used digit suffixes not worth dropdown entries.
+export const CUSTOM_FORMAT = '__custom__';
+
 const FORMAT_OPTIONS = [
     { value: '', label: 'No format' },
     { value: 'brightness', label: 'Brightness (0-255 → %)' },
@@ -29,7 +33,10 @@ const FORMAT_OPTIONS = [
     { value: 'date', label: 'Timestamp: date' },
     { value: 'time', label: 'Timestamp: time' },
     { value: 'datetime', label: 'Timestamp: date + time' },
+    { value: CUSTOM_FORMAT, label: 'Custom…' },
 ];
+
+export const KNOWN_FORMAT_VALUES = new Set(FORMAT_OPTIONS.map((o) => o.value).filter((v) => v && v !== CUSTOM_FORMAT));
 
 // Tab "1" - the main entity. Writes to TOP-LEVEL config keys (config.entity, config.name, ...).
 export const MAIN_TAB_SCHEMA = [
@@ -72,18 +79,23 @@ export const MAIN_TAB_SCHEMA = [
     },
     { name: 'state_header', selector: { text: {} } },
     { name: 'image', selector: { text: {} } },
+    // format must stay the LAST entry: the editor renders the custom-format text box directly
+    // after this form, so it appears right under the format dropdown; the action selectors
+    // render as a separate form below it.
     { name: 'format', selector: { select: { mode: 'dropdown', options: FORMAT_OPTIONS } } },
-    // Row-level actions live in the Main tab, in the same format as the per-entity ones -
-    // a separate "Interactions" panel on screen alongside a tab's action selectors read as
-    // two competing blocks.
+];
+
+// Row-level actions live in the Main tab, in the same format as the per-entity ones - a
+// separate "Interactions" panel on screen alongside a tab's action selectors read as two
+// competing blocks. Rendered as its own form so the custom-format box can sit between.
+export const ACTIONS_SCHEMA = [
     { name: 'tap_action', selector: { ui_action: { default_action: 'more-info' } } },
     { name: 'hold_action', selector: { ui_action: { default_action: 'none' } } },
     { name: 'double_tap_action', selector: { ui_action: { default_action: 'none' } } },
 ];
 
-// Tabs "2".."N" - additional entities. Writes to config.entities[i-1]. Also reused for the
-// secondary-info entity form, where the action selectors are inert (secondary info has no
-// pointer handlers) - harmless.
+// Additional-entity tabs. Writes to config.entities[i-1]. Also reused for the secondary-info
+// entity form (which gets no ACTIONS_SCHEMA - secondary info has no pointer handlers).
 export const ADDITIONAL_TAB_SCHEMA = [
     { name: 'entity', selector: { entity: {} } },
     {
@@ -109,10 +121,8 @@ export const ADDITIONAL_TAB_SCHEMA = [
         ],
     },
     { name: 'hide_unavailable', selector: { boolean: {} } },
+    // Last for the same reason as MAIN_TAB_SCHEMA - the custom-format box renders right after.
     { name: 'format', selector: { select: { mode: 'dropdown', options: FORMAT_OPTIONS } } },
-    { name: 'tap_action', selector: { ui_action: { default_action: 'more-info' } } },
-    { name: 'hold_action', selector: { ui_action: { default_action: 'none' } } },
-    { name: 'double_tap_action', selector: { ui_action: { default_action: 'none' } } },
 ];
 
 export const LABELS: Record<string, string> = {

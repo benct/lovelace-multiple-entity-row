@@ -55,6 +55,94 @@ const matchDigitSuffixFormat = (format) => {
 const isIncompleteDigitSuffixFormat = (format) =>
     DIGIT_SUFFIX_PREFIXES.some((prefix) => format?.startsWith(prefix)) && !matchDigitSuffixFormat(format);
 
+// Numeric formats can be combined comma-separated (`format: invert, precision3` - see #385).
+// Only value-transforming numeric segments compose: the raw number threads through every
+// segment and gets locale-formatted exactly once at the end, so a segment never re-parses
+// another segment's formatted output (which would break on locale separators like "1,234.5").
+// Duration, timestamp and string formats don't participate - they produce display strings, not
+// numbers, so anything else in a comma list falls through to the normal single-format handling.
+const PIPELINE_SEGMENT =
+    /^(brightness|percent|invert|position|celsius_to_fahrenheit|fahrenheit_to_celsius|kilo\d*|mega\d*|milli\d*|precision\d+)$/;
+
+const splitFormat = (format) =>
+    typeof format === 'string'
+        ? format
+              .split(',')
+              .map((segment) => segment.trim())
+              .filter(Boolean)
+        : [];
+
+const formatPipeline = (segments, rawValue, unit, locale) => {
+    let value = parseFloat(rawValue);
+    // Display precision: an explicit precisionN (or kilo3-style digit suffix) always wins;
+    // otherwise the last segment's own default applies (bare kilo's 2-decimal cap, etc.);
+    // with neither, the source value's decimal digits are preserved (see #304).
+    let digits = decimalDigits(rawValue);
+    let maxDigits;
+    let explicit = false;
+    const defaultCap = (cap) => {
+        if (!explicit) {
+            digits = undefined;
+            maxDigits = cap;
+        }
+    };
+
+    for (const segment of segments) {
+        const match = DIGIT_SUFFIX_FORMAT.exec(segment);
+        if (match && match[1] === 'precision') {
+            digits = parseInt(match[2], 10);
+            maxDigits = undefined;
+            explicit = true;
+            continue;
+        }
+        if (match) {
+            value = value / { kilo: 1000, mega: 1000000, milli: 1 / 1000 }[match[1]];
+            if (match[2] !== undefined) {
+                digits = parseInt(match[2], 10);
+                maxDigits = undefined;
+                explicit = true;
+            } else {
+                defaultCap(2);
+            }
+            continue;
+        }
+        switch (segment) {
+            case 'brightness':
+                value = Math.round((value / 255) * 100);
+                unit = '%';
+                defaultCap(0);
+                break;
+            case 'percent':
+                value = value * 100;
+                unit = '%';
+                defaultCap(2);
+                break;
+            case 'invert':
+                value = -value;
+                break;
+            case 'position':
+                value = 100 - value;
+                break;
+            case 'celsius_to_fahrenheit':
+                value = value * 1.8 + 32;
+                defaultCap(0);
+                break;
+            case 'fahrenheit_to_celsius':
+                value = ((value - 32) * 5) / 9;
+                defaultCap(1);
+                break;
+        }
+    }
+
+    const options =
+        digits !== undefined
+            ? { minimumFractionDigits: digits, maximumFractionDigits: digits }
+            : maxDigits !== undefined
+            ? { maximumFractionDigits: maxDigits }
+            : undefined;
+    return `${formatNumber(value, locale, options)}${unit ? ` ${unit}` : ''}`;
+};
+
 // String-only transforms - operate on any value, including non-numeric text states (see #367).
 const STRING_FORMATS = ['upper', 'lower', 'capitalize', 'title'];
 const stringTransform = (format, value) => {
@@ -114,6 +202,18 @@ export const entityStateDisplay = (hass, stateObj, config) => {
             : config.attribute !== undefined
             ? config.unit
             : config.unit || stateObj.attributes.unit_of_measurement;
+
+    // Comma-separated numeric formats compose as a pipeline (see #385). Only kicks in when
+    // every segment is a known numeric transform - otherwise the whole string falls through to
+    // the single-format handling below, same as any other unrecognized format.
+    const segments = splitFormat(config.format);
+    if (segments.length > 1 && segments.every((segment) => PIPELINE_SEGMENT.test(segment))) {
+        const pipelineValue = value === undefined || value === null ? 0 : value;
+        if (!isNaN(parseFloat(pipelineValue)) && isFinite(pipelineValue)) {
+            return formatPipeline(segments, pipelineValue, unit, hass.locale);
+        }
+        return `${pipelineValue}${unit ? ` ${unit}` : ''}`;
+    }
 
     if (config.format && !isIncompleteDigitSuffixFormat(config.format)) {
         // A missing attribute (e.g. brightness/color_temp on a light that's off) is undefined,

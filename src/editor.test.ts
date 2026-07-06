@@ -183,6 +183,50 @@ describe('multiple-entity-row-editor', () => {
         });
     });
 
+    // See https://github.com/benct/lovelace-multiple-entity-row/issues/385
+    describe('custom format', () => {
+        it('shows a pipeline format as Custom in the form data instead of clobbering it', () => {
+            setConfig({ entity: 'sensor.main', format: 'invert, precision3' });
+            expect((el as any)._mainFormData().format).toBe('__custom__');
+        });
+
+        it('keeps the real format when the form echoes the Custom sentinel back', () => {
+            setConfig({ entity: 'sensor.main', format: 'invert, precision3' });
+            (el as any)._mainValueChanged({
+                detail: { value: { entity: 'sensor.main', format: '__custom__' } },
+            });
+            expect(configs[0].format).toBe('invert, precision3');
+        });
+
+        it('picking Custom on a standard format preserves it and enters custom mode', () => {
+            setConfig({ entity: 'sensor.main', format: 'kilo' });
+            (el as any)._mainValueChanged({
+                detail: { value: { entity: 'sensor.main', format: '__custom__' } },
+            });
+            expect(configs[0].format).toBe('kilo');
+            expect((el as any)._isCustomFormat('main', 'kilo')).toBe(true);
+        });
+
+        it('picking a standard format leaves custom mode', () => {
+            setConfig({ entity: 'sensor.main', format: 'invert, precision3' });
+            (el as any)._mainValueChanged({
+                detail: { value: { entity: 'sensor.main', format: '__custom__' } },
+            });
+            (el as any)._mainValueChanged({
+                detail: { value: { entity: 'sensor.main', format: 'kilo' } },
+            });
+            const last = configs[configs.length - 1];
+            expect(last.format).toBe('kilo');
+            expect((el as any)._isCustomFormat('main', 'kilo')).toBe(false);
+        });
+
+        it('writes a per-entity custom format into that entity only', () => {
+            setConfig({ entity: 'sensor.main', entities: ['sensor.a'] });
+            (el as any)._setAdditionalFormat(0, 'invert, kilo3');
+            expect(configs[0].entities).toEqual([{ entity: 'sensor.a', format: 'invert, kilo3' }]);
+        });
+    });
+
     describe('custom CSS block', () => {
         it('parses key: value lines into the styles object', () => {
             setConfig({ entity: 'sensor.main' });
