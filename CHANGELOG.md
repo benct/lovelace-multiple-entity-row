@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file.
 
 ## 4.7.0-beta.1
 
+**Breaking:**
+- Minimum Home Assistant version is now **2024.4** (declared in `hacs.json`). The pre-2023.9 state/attribute formatting fallback chain was removed - the row now always delegates to `hass.formatEntityState`/`hass.formatEntityAttributeValue`, matching HA's own display formatting.
+
 **Added:**
 - Visual config editor - tabbed main/additional entities with add/reorder/copy/paste/delete, secondary info modes, state-based icons, per-entity custom CSS, and action selectors (#395)
 - `hold_action` and `double_tap_action` on additional entities; all actions resolve against the entity actually tapped (#338, #202, #188, #251)

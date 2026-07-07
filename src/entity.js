@@ -1,6 +1,5 @@
 import { secondsToDuration } from './lib/seconds_to_duration';
 import { formatNumber } from './lib/format_number';
-import { computeStateDisplay } from './lib/compute_state_display';
 import { isObject, isUnavailable } from './util';
 
 export const checkEntity = (config) => {
@@ -183,16 +182,12 @@ export const entityName = (stateObj, config) => {
 };
 
 export const entityStateDisplay = (hass, stateObj, config) => {
-    // HA 2023.9+ exposes hass.formatEntityState/formatEntityAttributeValue, which apply the
-    // user's own locale/number-format/precision preferences the same way HA's own UI does.
-    // Prefer them over our own formatNumber/computeStateDisplay reimplementation when present.
-    const hasOfficialStateFormatter = typeof hass.formatEntityState === 'function';
-    const hasOfficialAttributeFormatter = typeof hass.formatEntityAttributeValue === 'function';
-
+    // hass.formatEntityState/formatEntityAttributeValue apply the user's own locale/number-
+    // format/precision preferences the same way HA's own UI does. Requires HA 2024.4+ (declared
+    // in hacs.json) - the pre-2023.9 computeStateDisplay fallback chain was removed with that
+    // minimum.
     if (isUnavailable(stateObj)) {
-        return hasOfficialStateFormatter
-            ? hass.formatEntityState(stateObj)
-            : hass.localize(`state.default.${stateObj.state}`);
+        return hass.formatEntityState(stateObj);
     }
 
     let value = config.attribute ? stateObj.attributes[config.attribute] : stateObj.state;
@@ -287,20 +282,10 @@ export const entityStateDisplay = (hass, stateObj, config) => {
     const modifiedStateObj = { ...stateObj, attributes: { ...stateObj.attributes, unit_of_measurement: unit } };
 
     if (config.attribute) {
-        if (hasOfficialAttributeFormatter) {
-            return hass.formatEntityAttributeValue(modifiedStateObj, config.attribute);
-        }
-        // A missing attribute is undefined, not a number or a real string - render an empty value
-        // rather than the literal string "undefined" (same class of bug as #225, in a code path
-        // that fix didn't cover since it only applies when a `format:` is configured).
-        const displayValue =
-            value === undefined || value === null ? '' : isNaN(value) ? value : formatNumber(value, hass.locale);
-        return `${displayValue}${unit ? ` ${unit}` : ''}`;
+        return hass.formatEntityAttributeValue(modifiedStateObj, config.attribute);
     }
 
-    return hasOfficialStateFormatter
-        ? hass.formatEntityState(modifiedStateObj)
-        : computeStateDisplay(hass.localize, modifiedStateObj, hass.locale, hass.entities);
+    return hass.formatEntityState(modifiedStateObj);
 };
 
 export const entityStyles = (config) =>

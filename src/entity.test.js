@@ -10,10 +10,13 @@ import {
 } from './entity';
 import { NumberFormat } from './lib/constants';
 
+// The official formatters are always present on HA 2024.4+ (the declared minimum).
 const hass = {
     localize: vi.fn((key) => `localized:${key}`),
     locale: { number_format: NumberFormat.comma_decimal, language: 'en-US' },
     entities: {},
+    formatEntityState: vi.fn((stateObj) => `official-state:${stateObj.state}`),
+    formatEntityAttributeValue: vi.fn((stateObj, attribute) => `official-attr:${attribute}`),
 };
 
 describe('checkEntity', () => {
@@ -69,25 +72,6 @@ describe('entityName', () => {
 });
 
 describe('entityStateDisplay', () => {
-    it('localizes unavailable states', () => {
-        const stateObj = { state: 'unavailable', attributes: {} };
-        expect(entityStateDisplay(hass, stateObj, {})).toBe('localized:state.default.unavailable');
-    });
-
-    it('reads and formats an attribute value with a unit', () => {
-        const stateObj = { state: 'on', attributes: { battery_level: 42 } };
-        expect(entityStateDisplay(hass, stateObj, { attribute: 'battery_level', unit: '%' })).toBe('42 %');
-    });
-
-    // See https://github.com/benct/lovelace-multiple-entity-row/issues/225 and #352 - a missing
-    // attribute (no format: configured, no official formatter available) must render as an empty
-    // value, not the literal string "undefined".
-    it('renders a missing attribute as empty, not "undefined", with no format configured', () => {
-        const stateObj = { state: 'on', attributes: {} };
-        expect(entityStateDisplay(hass, stateObj, { attribute: 'battery_level' })).toBe('');
-        expect(entityStateDisplay(hass, stateObj, { attribute: 'battery_level', unit: '%' })).toBe(' %');
-    });
-
     // See https://github.com/benct/lovelace-multiple-entity-row/issues/335 -
     // brightness format converts 0-255 to a 0-100 percentage.
     it('applies the brightness format', () => {
@@ -274,20 +258,11 @@ describe('entityStateDisplay', () => {
         expect(entityStateDisplay(hass, stateObj, { attribute: 'color_temp', format: 'precision0' })).toBe('0');
     });
 
-    it('falls back to computeStateDisplay for the main state with no attribute or format', () => {
-        const stateObj = { entity_id: 'sensor.temp', state: '21', attributes: { unit_of_measurement: '°C' } };
-        expect(entityStateDisplay(hass, stateObj, {})).toBe('21 °C');
-    });
-
     // See https://developers.home-assistant.io/docs/frontend/data#entity-state-formatting -
     // HA 2023.9+ exposes hass.formatEntityState/formatEntityAttributeValue, which apply the user's
     // own locale/precision preferences. Prefer these over our own reimplementation when present.
-    describe('with HA official formatting functions available', () => {
-        const officialHass = {
-            ...hass,
-            formatEntityState: vi.fn((stateObj) => `official-state:${stateObj.state}`),
-            formatEntityAttributeValue: vi.fn((stateObj, attribute) => `official-attr:${attribute}`),
-        };
+    describe('official formatter delegation', () => {
+        const officialHass = hass;
 
         it('delegates unavailable-state localization to formatEntityState', () => {
             const stateObj = { state: 'unavailable', attributes: {} };
