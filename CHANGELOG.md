@@ -1,6 +1,34 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 4.7.0-beta.1
+
+**Breaking:**
+- Minimum Home Assistant version is now **2024.4** (declared in `hacs.json`). The pre-2023.9 state/attribute formatting fallback chain was removed - the row now always delegates to `hass.formatEntityState`/`hass.formatEntityAttributeValue`, matching HA's own display formatting.
+
+**Added:**
+- Visual config editor - tabbed main/additional entities with add/reorder/copy/paste/delete, secondary info modes, state-based icons, per-entity custom CSS, and action selectors (#395)
+- `hold_action` and `double_tap_action` on additional entities; all actions resolve against the entity actually tapped (#338, #202, #188, #251)
+- Combinable numeric formats: comma-separated pipelines like `format: invert, precision3`, with a Custom… entry in the editor (#385)
+- `hide_if.entity` / `hide_if.attribute` - evaluate hide criteria against another entity's state or attribute (#280, thanks @akomelj)
+- `icon_color` - any CSS color for entity icons (#325)
+- `state_icon` - map of state value to icon override (#197)
+- `show_state_first` - render the main state before the additional entities (#384)
+- `percent` format (#323) and `upper`/`lower`/`capitalize`/`title` string formats (#367)
+- `--multiple-entity-row-header-color` theme variable (#317, thanks @ildar170975)
+
+**Changed:**
+- Actions dispatch through HA core via the `hass-action` event: native confirmation dialogs and lock/cover security restrictions now apply; the unmaintained `custom-card-helpers` dependency is removed
+- A long-press without a `hold_action` acts as a plain tap, matching HA's native rows (previously opened more-info)
+- Sub-entity taps no longer also fire the main row's action
+- Top-level `hide_if` / `hide_unavailable` now hide the main state value (previously silently ignored) (#227)
+- Internal: incremental TypeScript migration begun; new code is TypeScript
+
+**Fixed:**
+- Uncaught `RangeError` when typing an incomplete `precision`/`kilo`/`mega`/`milli` format in the config editor (#387)
+
+Several features adapted from the [duczz/ha-multiple-entity-row](https://github.com/duczz/ha-multiple-entity-row) fork - thanks @duczz.
+
 ## 4.6.1
 
 **Fixed:**

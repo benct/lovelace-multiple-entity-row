@@ -13,6 +13,8 @@ const buildHass = (states = {}) => ({
     entities: {},
     locale: { number_format: 'comma_decimal', language: 'en-US' },
     localize: vi.fn((key) => `localized:${key}`),
+    formatEntityState: vi.fn((stateObj) => stateObj.state),
+    formatEntityAttributeValue: vi.fn((stateObj, attribute) => `${stateObj.attributes[attribute] ?? ''}`),
 });
 
 describe('multiple-entity-row', () => {
