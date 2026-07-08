@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## 4.7.0-beta.1
+## 4.7.0
 
 **Breaking:**
 - Minimum Home Assistant version is now **2024.4** (declared in `hacs.json`). The pre-2023.9 state/attribute formatting fallback chain was removed - the row now always delegates to `hass.formatEntityState`/`hass.formatEntityAttributeValue`, matching HA's own display formatting.
