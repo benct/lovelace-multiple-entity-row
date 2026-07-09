@@ -5,7 +5,6 @@ Show multiple entity states, attributes and icons on entity rows in Home Assista
 [![GH-release](https://img.shields.io/github/v/release/benct/lovelace-multiple-entity-row.svg?style=flat-square)](https://github.com/benct/lovelace-multiple-entity-row/releases)
 [![GH-downloads](https://img.shields.io/github/downloads/benct/lovelace-multiple-entity-row/total?style=flat-square)](https://github.com/benct/lovelace-multiple-entity-row/releases)
 [![GH-last-commit](https://img.shields.io/github/last-commit/benct/lovelace-multiple-entity-row.svg?style=flat-square)](https://github.com/benct/lovelace-multiple-entity-row/commits/master)
-[![GH-code-size](https://img.shields.io/github/languages/code-size/benct/lovelace-multiple-entity-row.svg?color=red&style=flat-square)](https://github.com/benct/lovelace-multiple-entity-row)
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=flat-square)](https://github.com/hacs)
 
 **NOTE:** This is not a standalone lovelace card, but a row element for the [entities](https://www.home-assistant.io/lovelace/entities/) card.
@@ -14,20 +13,24 @@ Requires Home Assistant **2024.4** or newer.
 
 ## Installation
 
-Manually add [multiple-entity-row.js](https://github.com/benct/lovelace-multiple-entity-row/releases/latest/download/multiple-entity-row.js)
-to your `<config>/www/` folder and add the following to the `configuration.yaml` file:
-```yaml
-lovelace:
-  resources:
-    - url: /local/multiple-entity-row.js?v=4.6.1
-      type: module
-```
+Install using [HACS](https://hacs.xyz/) (recommended):
 
-_OR_ install using [HACS](https://hacs.xyz/) and add this (if in YAML mode):
+[![Open your Home Assistant instance and open this repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=benct&repository=lovelace-multiple-entity-row&category=lovelace)
+
+If in YAML mode, also add:
 ```yaml
 lovelace:
   resources:
     - url: /hacsfiles/lovelace-multiple-entity-row/multiple-entity-row.js
+      type: module
+```
+
+_OR_ manually add [multiple-entity-row.js](https://github.com/benct/lovelace-multiple-entity-row/releases/latest/download/multiple-entity-row.js)
+to your `<config>/www/` folder and add the following to the `configuration.yaml` file:
+```yaml
+lovelace:
+  resources:
+    - url: /local/multiple-entity-row.js?v=4.7.0
       type: module
 ```
 
