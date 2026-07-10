@@ -79,6 +79,9 @@ export interface MultipleEntityRowConfig extends EntityOptions {
     state_header?: string;
     image?: string;
     column?: boolean;
+    // Spacing between the main icon and the row name. A CSS length string ('8px', '0.5em',
+    // 'var(--x)') or a number (treated as px). See nameGapCss / the updated() injection in index.js.
+    name_gap?: string | number;
     // HA 2026.7+'s row editor renames `format` to `time_format` on save (see #386).
     time_format?: string;
     entities?: (string | EntityConfig)[];

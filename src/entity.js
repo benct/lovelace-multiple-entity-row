@@ -168,6 +168,14 @@ const stringTransform = (format, value) => {
 export const iconColorCss = (color) =>
     color ? `--paper-item-icon-color: ${color}; --mdc-icon-color: ${color}; --state-icon-color: ${color};` : '';
 
+// A configured name_gap as the --multiple-entity-row-name-gap custom property, set on the
+// hui-generic-entity-row host so it cascades into that element's shadow, where index.js's injected
+// override reads it (core hardcodes the .info icon→name padding at 16px with no variable). A number
+// is treated as px; a string passes through ('8px', '0.5em', 'var(--x)'). `0` is a valid gap, so the
+// guard is `!= null` (and rejects only the empty string), not truthiness.
+export const nameGapCss = (gap) =>
+    gap != null && gap !== '' ? `--multiple-entity-row-name-gap: ${typeof gap === 'number' ? `${gap}px` : gap};` : '';
+
 // The state_icon map's icon for the current state, or undefined (see #197).
 export const stateIcon = (stateObj, config) =>
     isObject(config.state_icon) ? config.state_icon[stateObj.state] : undefined;

@@ -51,6 +51,7 @@ A **visual editor** is available: when editing a `custom:multiple-entity-row` ro
 | unit              | string/bool   | `unit_of_measurement`               | Override entity unit of measurement              |
 | icon              | string        | `icon`                              | Override entity icon or image                    |
 | icon_color        | string        |                                     | CSS color for the entity icon                    |
+| name_gap          | string/number | `16px`                              | Gap between the main icon and the name (see [Theming](#theming)) |
 | state_icon        | object        |                                     | Map of state value → icon override               |
 | image             | string        |                                     | Show an image instead of icon                    |
 | toggle            | bool          | `false`                             | Display a toggle (if supported) instead of state |
@@ -427,6 +428,21 @@ entities:
     styles:
       '--multiple-entity-row-header-color': red
 ```
+
+The gap between the main icon and the row name (HA core's default is `16px`) can be tightened or
+widened with `name_gap` — a CSS length or a number (px):
+
+```yaml
+type: custom:multiple-entity-row
+entity: light.living_room
+name_gap: 8px
+```
+
+This gap is core `hui-generic-entity-row`'s `.info` `padding-inline-start`, which lives inside that
+element's own shadow DOM and is otherwise unreachable (it's not a CSS variable, `padding` isn't
+inherited, and outside styles — including a theme or card-mod — can't cross the shadow boundary).
+Setting `name_gap` makes the card inject a scoped override into that shadow, driven by the
+`--multiple-entity-row-name-gap` variable; rows without `name_gap` are left completely untouched.
 
 ## Development
 

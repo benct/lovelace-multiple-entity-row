@@ -89,6 +89,41 @@ describe('multiple-entity-row', () => {
         expect(el.shadowRoot.innerHTML).toContain('hui-generic-entity-row');
     });
 
+    // name_gap sets a --multiple-entity-row-name-gap custom property on the hui-generic-entity-row
+    // host; the actual `.info` padding override is injected into that (real) element's shadow at
+    // runtime (see updated() in index.js), which the jsdom stub row can't exercise - so these cover
+    // the host-variable half, and the injection is verified live on the target dashboard.
+    describe('name_gap', () => {
+        const renderWith = async (config) => {
+            el.setConfig({ entity: 'sensor.main', ...config });
+            el.hass = buildHass({ 'sensor.main': { entity_id: 'sensor.main', state: 'on', attributes: {} } });
+            await flushRender(el);
+            return el.shadowRoot.querySelector('hui-generic-entity-row');
+        };
+
+        it('sets the variable in px when name_gap is a number', async () => {
+            expect((await renderWith({ name_gap: 8 })).getAttribute('style')).toContain(
+                '--multiple-entity-row-name-gap: 8px'
+            );
+        });
+
+        it('passes a string name_gap through unchanged', async () => {
+            expect((await renderWith({ name_gap: '0.5em' })).getAttribute('style')).toContain(
+                '--multiple-entity-row-name-gap: 0.5em'
+            );
+        });
+
+        it('honors a name_gap of 0', async () => {
+            expect((await renderWith({ name_gap: 0 })).getAttribute('style')).toContain(
+                '--multiple-entity-row-name-gap: 0px'
+            );
+        });
+
+        it('omits the variable when name_gap is not configured', async () => {
+            expect((await renderWith({})).getAttribute('style') ?? '').not.toContain('--multiple-entity-row-name-gap');
+        });
+    });
+
     it('populates per-row entities with their own state objects', async () => {
         el.setConfig({ entity: 'sensor.main', entities: ['sensor.a'] });
         el.hass = buildHass({
