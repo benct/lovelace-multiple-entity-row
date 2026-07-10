@@ -56,6 +56,7 @@ export const MAIN_TAB_SCHEMA = [
         ],
     },
     { name: 'icon_color', selector: { text: {} } },
+    { name: 'name_gap', selector: { text: {} } },
     {
         type: 'grid',
         schema: [
@@ -133,6 +134,7 @@ export const LABELS: Record<string, string> = {
     unit: 'Unit (or false to hide)',
     icon: 'Icon',
     icon_color: 'Icon color (CSS value, e.g. red, #ff0000, var(--my-color))',
+    name_gap: 'Icon → name gap (CSS length, e.g. 8px; default 16px)',
     image: 'Image URL',
     format: 'Format',
     show_state: 'Show main entity state',
