@@ -80,8 +80,15 @@ export const hasConfigOrEntitiesChanged = (node, changedProps) => {
         return true;
     }
 
-    const oldHass = changedProps.get('_hass');
-    if (oldHass) {
+    if (changedProps.has('_hass')) {
+        const oldHass = changedProps.get('_hass');
+        // First hass assignment: if setConfig rendered in an earlier update batch (empty - no
+        // hass yet), this is the update that must actually paint the row. Returning false here
+        // left the row permanently blank until an unrelated config change (see #400 diagnosis;
+        // likely the mechanism behind intermittent blank rows in #389).
+        if (!oldHass) {
+            return true;
+        }
         if (HASS_FORMATTER_KEYS.some((key) => oldHass[key] !== node._hass[key])) {
             return true;
         }
