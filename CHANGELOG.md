@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 4.7.1
+
+**Fixed:**
+- Row could stay permanently blank when the first `hass` assignment landed in a later update batch than `setConfig` - the first-hass update was swallowed by the re-render gate (found while diagnosing #400; likely the mechanism behind the intermittent blank rows in #389)
+
 ## 4.7.0
 
 **Breaking:**

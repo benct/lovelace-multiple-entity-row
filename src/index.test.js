@@ -82,6 +82,18 @@ describe('multiple-entity-row', () => {
         expect(el.shadowRoot.innerHTML).toContain('hui-warning');
     });
 
+    // setConfig and the first hass assignment can land in separate update batches (found via
+    // #400, likely behind the intermittent blank rows in #389): the config-only update renders
+    // empty, and the first-hass update must then actually paint the row rather than being
+    // swallowed by the shouldUpdate gate.
+    it('renders when hass arrives in a later update batch than setConfig', async () => {
+        el.setConfig({ entity: 'sensor.main' });
+        await flushRender(el); // config-only update completes first - renders empty
+        el.hass = buildHass({ 'sensor.main': { entity_id: 'sensor.main', state: 'on', attributes: {} } });
+        await flushRender(el);
+        expect(el.shadowRoot.innerHTML).toContain('hui-generic-entity-row');
+    });
+
     it('renders the entity row once hass has the configured entity state', async () => {
         el.setConfig({ entity: 'sensor.main' });
         el.hass = buildHass({ 'sensor.main': { entity_id: 'sensor.main', state: 'on', attributes: {} } });
