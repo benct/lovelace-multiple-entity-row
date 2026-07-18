@@ -181,6 +181,13 @@ export const entityName = (stateObj, config) => {
     );
 };
 
+// HA's formatter attaches % directly to the value in most locales ('87.0%'), making the whole
+// token unbreakable - in this card's dense multi-entity rows that fixes the row's minimum width
+// and clips narrow (mobile) cards instead of wrapping like every spaced unit does (see #403).
+// A zero-width space (\u200b) before the % keeps HA's visual convention but restores the break
+// point that a spaced unit ('87.0 %') naturally has.
+const breakablePercent = (value) => (typeof value === 'string' ? value.replace(/(\d)%/, '$1\u200b%') : value);
+
 export const entityStateDisplay = (hass, stateObj, config) => {
     // hass.formatEntityState/formatEntityAttributeValue apply the user's own locale/number-
     // format/precision preferences the same way HA's own UI does. Requires HA 2024.4+ (declared
@@ -282,10 +289,10 @@ export const entityStateDisplay = (hass, stateObj, config) => {
     const modifiedStateObj = { ...stateObj, attributes: { ...stateObj.attributes, unit_of_measurement: unit } };
 
     if (config.attribute) {
-        return hass.formatEntityAttributeValue(modifiedStateObj, config.attribute);
+        return breakablePercent(hass.formatEntityAttributeValue(modifiedStateObj, config.attribute));
     }
 
-    return hass.formatEntityState(modifiedStateObj);
+    return breakablePercent(hass.formatEntityState(modifiedStateObj));
 };
 
 export const entityStyles = (config) =>
