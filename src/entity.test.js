@@ -261,6 +261,21 @@ describe('entityStateDisplay', () => {
     // See https://developers.home-assistant.io/docs/frontend/data#entity-state-formatting -
     // HA 2023.9+ exposes hass.formatEntityState/formatEntityAttributeValue, which apply the user's
     // own locale/precision preferences. Prefer these over our own reimplementation when present.
+    // See https://github.com/benct/lovelace-multiple-entity-row/issues/403 - HA formats percent
+    // as one unbreakable token ('87.0%'), which clips dense rows on narrow screens instead of
+    // wrapping. A zero-width space before the % restores the break point invisibly.
+    it('inserts a zero-width break before a formatter-attached percent sign', () => {
+        const pctHass = { ...hass, formatEntityState: vi.fn(() => '87.0%') };
+        const stateObj = { state: '87.0', attributes: { unit_of_measurement: '%' } };
+        expect(entityStateDisplay(pctHass, stateObj, {})).toBe('87.0\u200b%');
+    });
+
+    it('leaves spaced units without a zero-width space', () => {
+        const unitHass = { ...hass, formatEntityState: vi.fn(() => '1013.2 hPa') };
+        const stateObj = { state: '1013.2', attributes: { unit_of_measurement: 'hPa' } };
+        expect(entityStateDisplay(unitHass, stateObj, {})).toBe('1013.2 hPa');
+    });
+
     describe('official formatter delegation', () => {
         const officialHass = hass;
 
