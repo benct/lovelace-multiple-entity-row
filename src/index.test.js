@@ -15,6 +15,7 @@ const buildHass = (states = {}) => ({
     localize: vi.fn((key) => `localized:${key}`),
     formatEntityState: vi.fn((stateObj) => stateObj.state),
     formatEntityAttributeValue: vi.fn((stateObj, attribute) => `${stateObj.attributes[attribute] ?? ''}`),
+    callService: vi.fn(),
 });
 
 describe('multiple-entity-row', () => {
@@ -109,6 +110,136 @@ describe('multiple-entity-row', () => {
         });
         expect(el.entities).toHaveLength(1);
         expect(el.entities[0].stateObj.entity_id).toBe('sensor.a');
+    });
+
+    // See https://github.com/benct/lovelace-multiple-entity-row/issues/221 and #305 - a timestamp
+    // format on the last-changed/last-updated pseudo-attributes was silently ignored in favor of
+    // the relative-time widget.
+    describe('last-changed formatting', () => {
+        const hassWith = (extra = {}) =>
+            buildHass({
+                'sensor.main': {
+                    entity_id: 'sensor.main',
+                    state: 'on',
+                    attributes: {},
+                    last_changed: '2026-07-17T14:30:00+00:00',
+                    ...extra,
+                },
+            });
+
+        it('renders relative time by default for attribute last-changed', async () => {
+            el.setConfig({ entity: 'sensor.main', entities: [{ entity: 'sensor.main', attribute: 'last-changed' }] });
+            el.hass = hassWith();
+            await flushRender(el);
+            expect(el.shadowRoot.innerHTML).toContain('ha-relative-time');
+        });
+
+        it('honors a timestamp format on attribute last-changed', async () => {
+            el.setConfig({
+                entity: 'sensor.main',
+                entities: [{ entity: 'sensor.main', attribute: 'last-changed', format: 'time' }],
+            });
+            el.hass = hassWith();
+            await flushRender(el);
+            expect(el.shadowRoot.innerHTML).toContain('hui-timestamp-display');
+            expect(el.shadowRoot.innerHTML).not.toContain('ha-relative-time');
+        });
+    });
+
+    // See https://github.com/benct/lovelace-multiple-entity-row/issues/302 - the default-value
+    // branch must resolve the header like a visible entity, not require an explicit name.
+    it('falls back to the friendly name for a hidden entity showing its default', async () => {
+        el.setConfig({
+            entity: 'sensor.main',
+            entities: [{ entity: 'sensor.a', hide_if: 'off', default: 'n/a' }],
+        });
+        el.hass = buildHass({
+            'sensor.main': { entity_id: 'sensor.main', state: 'on', attributes: {} },
+            'sensor.a': { entity_id: 'sensor.a', state: 'off', attributes: { friendly_name: 'Alpha' } },
+        });
+        await flushRender(el);
+        expect(el.shadowRoot.innerHTML).toContain('Alpha');
+        expect(el.shadowRoot.innerHTML).toContain('n/a');
+    });
+
+    // See https://github.com/benct/lovelace-multiple-entity-row/issues/265 - a confirmation on
+    // tap_action must gate the toggle instead of being bypassed by ha-entity-toggle.
+    describe('toggle confirmation', () => {
+        const toggleConfig = (tap_action) => ({
+            entity: 'sensor.main',
+            entities: [{ entity: 'switch.a', toggle: true, tap_action }],
+        });
+        const toggleHass = () =>
+            buildHass({
+                'sensor.main': { entity_id: 'sensor.main', state: 'on', attributes: {} },
+                'switch.a': { entity_id: 'switch.a', state: 'off', attributes: {} },
+            });
+
+        it('toggles via HA only after the user confirms', async () => {
+            vi.stubGlobal('confirm', vi.fn().mockReturnValue(true));
+            el.setConfig(toggleConfig({ action: 'toggle', confirmation: { text: 'Sure?' } }));
+            el.hass = toggleHass();
+            await flushRender(el);
+            el.shadowRoot.querySelector('ha-entity-toggle').parentElement.click();
+            expect(confirm).toHaveBeenCalledWith('Sure?');
+            expect(el._hass.callService).toHaveBeenCalledWith('homeassistant', 'toggle', { entity_id: 'switch.a' });
+            vi.unstubAllGlobals();
+        });
+
+        it('does not toggle when the user cancels', async () => {
+            vi.stubGlobal('confirm', vi.fn().mockReturnValue(false));
+            el.setConfig(toggleConfig({ action: 'toggle', confirmation: true }));
+            el.hass = toggleHass();
+            await flushRender(el);
+            el.shadowRoot.querySelector('ha-entity-toggle').parentElement.click();
+            expect(confirm).toHaveBeenCalled();
+            expect(el._hass.callService).not.toHaveBeenCalled();
+            vi.unstubAllGlobals();
+        });
+
+        it('renders a bare toggle when no confirmation is configured', async () => {
+            el.setConfig(toggleConfig({ action: 'toggle' }));
+            el.hass = toggleHass();
+            await flushRender(el);
+            expect(el.shadowRoot.querySelector('ha-entity-toggle').parentElement.tagName).not.toBe('SPAN');
+        });
+    });
+
+    // See https://github.com/benct/lovelace-multiple-entity-row/issues/281 - a name:false entity
+    // (and the header-less main state) reserves the header line so values align with headered
+    // siblings; an all-headerless row stays compact with no reserved line.
+    describe('header placeholder', () => {
+        const twoEntityHass = () =>
+            buildHass({
+                'sensor.main': { entity_id: 'sensor.main', state: 'on', attributes: {} },
+                'sensor.a': { entity_id: 'sensor.a', state: '1', attributes: { friendly_name: 'Alpha' } },
+                'sensor.b': { entity_id: 'sensor.b', state: '2', attributes: {} },
+            });
+
+        it('reserves the header line for name:false when a sibling has a header', async () => {
+            el.setConfig({
+                entity: 'sensor.main',
+                entities: [{ entity: 'sensor.a' }, { entity: 'sensor.b', name: false }],
+            });
+            el.hass = twoEntityHass();
+            await flushRender(el);
+            const spans = [...el.shadowRoot.querySelectorAll('.entity span')];
+            expect(spans.some((span) => span.textContent === '\u00a0')).toBe(true);
+        });
+
+        it('inserts no placeholder when nothing renders a header', async () => {
+            el.setConfig({
+                entity: 'sensor.main',
+                entities: [
+                    { entity: 'sensor.a', name: false },
+                    { entity: 'sensor.b', name: false },
+                ],
+            });
+            el.hass = twoEntityHass();
+            await flushRender(el);
+            const spans = [...el.shadowRoot.querySelectorAll('.entity span')];
+            expect(spans.some((span) => span.textContent === '\u00a0')).toBe(false);
+        });
     });
 
     // See https://github.com/benct/lovelace-multiple-entity-row/issues/384

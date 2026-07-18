@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 4.7.1-beta.3
+
+**Fixed:**
+- `format:` timestamp options (`time`, `datetime`, ...) were silently ignored on the `last-changed`/`last-updated` attributes (#221, #305)
+- `default:` on a hidden/missing entity now resolves its header like a visible entity (friendly-name fallback) instead of requiring an explicit `name:` (#302)
+- `confirmation:` on `tap_action` now gates `toggle: true` toggles instead of being bypassed (#265)
+- A `name: false` entity (and the header-less main state) now aligns its value with headered siblings instead of floating centered (#281)
+
 ## 4.7.1-beta.2
 
 **Fixed:**

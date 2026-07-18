@@ -156,7 +156,7 @@ class MultipleEntityRow extends LitElement {
         if (hideIf(this.stateObj, this.config, this._hass)) {
             if (this.config.default) {
                 return html`<div class="state entity" style="${entityStyles(this.config)}">
-                    ${this.config.state_header && html`<span>${this.config.state_header}</span>`}
+                    ${this.renderMainHeader()}
                     <div>${this.config.default}</div>
                 </div>`;
             }
@@ -176,7 +176,7 @@ class MultipleEntityRow extends LitElement {
             @touchcancel="${stopBubble}"
             @contextmenu="${stopBubble}"
         >
-            ${this.config.state_header && html`<span>${this.config.state_header}</span>`}
+            ${this.renderMainHeader()}
             <div>${this.renderValue(this.stateObj, this.config)}</div>
         </div>`;
     }
@@ -184,8 +184,11 @@ class MultipleEntityRow extends LitElement {
     renderEntity(stateObj, config, index) {
         if (!stateObj || hideIf(stateObj, config, this._hass)) {
             if (config.default) {
+                // Same header resolution as a visible entity (friendly-name fallback etc., see
+                // #302) - except when the entity is missing entirely, where only an explicit
+                // name can label it.
                 return html`<div class="entity" style="${entityStyles(config)}">
-                    <span>${config.name}</span>
+                    <span>${stateObj ? entityName(stateObj, config) : config.name}</span>
                     <div>${config.default}</div>
                 </div>`;
             }
@@ -205,7 +208,7 @@ class MultipleEntityRow extends LitElement {
             @touchcancel="${stopBubble}"
             @contextmenu="${stopBubble}"
         >
-            <span>${entityName(stateObj, config)}</span>
+            <span>${entityName(stateObj, config) ?? this.headerPlaceholder()}</span>
             <div>
                 ${config.icon || isObject(config.state_icon)
                     ? this.renderIcon(stateObj, config)
@@ -214,19 +217,37 @@ class MultipleEntityRow extends LitElement {
         </div>`;
     }
 
+    // Main-state counterpart of headerPlaceholder(): render the state_header, or reserve the
+    // header line when sub-entities render headers so the main value stays level with theirs.
+    renderMainHeader() {
+        const header = this.config.state_header ?? this.headerPlaceholder();
+        return header ? html`<span>${header}</span>` : null;
+    }
+
+    // An empty header span collapses to zero height, so a name:false entity's value floats
+    // vertically centered while its headered siblings' values sit below their headers (see
+    // #281). Reserve the header line with an nbsp - but only when some sibling actually renders
+    // a header, so all-headerless rows keep their compact centered layout.
+    headerPlaceholder() {
+        const anyHeader =
+            this.config.state_header !== undefined ||
+            this.entities.some((entity) => entity.name !== false && (entity.name || entity.entity));
+        return anyHeader ? '\u00a0' : null;
+    }
+
     renderValue(stateObj, config) {
         if (config.toggle === true) {
-            return html`<ha-entity-toggle .stateObj="${stateObj}" .hass="${this._hass}"></ha-entity-toggle>`;
+            return this.renderToggle(stateObj, config);
         }
-        if (config.attribute && [LAST_CHANGED, LAST_UPDATED].includes(config.attribute)) {
-            return html`<ha-relative-time
-                .hass=${this._hass}
-                .datetime=${stateObj[config.attribute?.replace('-', '_')]}
-                capitalize
-            ></ha-relative-time>`;
-        }
+        const isLastChangedAttr = config.attribute && [LAST_CHANGED, LAST_UPDATED].includes(config.attribute);
+        // A configured timestamp format wins over the default relative-time widget for the
+        // last-changed/last-updated pseudo-attributes - previously it was silently ignored
+        // (see #221, #305). Those live on the state object itself (with underscores), not in
+        // attributes, hence the mapped lookup.
         if (config.format && TIMESTAMP_FORMATS.includes(config.format)) {
-            const value = config.attribute
+            const value = isLastChangedAttr
+                ? stateObj[config.attribute.replace('-', '_')]
+                : config.attribute
                 ? stateObj.attributes[config.attribute] ?? stateObj[config.attribute]
                 : stateObj.state;
             const timestamp = new Date(value);
@@ -240,7 +261,44 @@ class MultipleEntityRow extends LitElement {
                 capitalize
             ></hui-timestamp-display>`;
         }
+        if (isLastChangedAttr) {
+            return html`<ha-relative-time
+                .hass=${this._hass}
+                .datetime=${stateObj[config.attribute.replace('-', '_')]}
+                capitalize
+            ></ha-relative-time>`;
+        }
         return entityStateDisplay(this._hass, stateObj, config);
+    }
+
+    // ha-entity-toggle performs the toggle on its own tap, bypassing our action dispatch - so a
+    // configured confirmation never ran (see #265). When tap_action carries a confirmation,
+    // intercept the interaction ahead of the toggle (capture phase), ask, and forward the toggle
+    // through HA ourselves only on OK.
+    renderToggle(stateObj, config) {
+        const confirmation = config.tap_action?.confirmation;
+        if (!confirmation) {
+            return html`<ha-entity-toggle .stateObj="${stateObj}" .hass="${this._hass}"></ha-entity-toggle>`;
+        }
+        const confirmToggle = {
+            handleEvent: (ev) => {
+                ev.stopPropagation();
+                ev.preventDefault();
+                const exempt =
+                    isObject(confirmation) &&
+                    confirmation.exemptions?.some((exemption) => exemption.user === this._hass.user?.id);
+                const text =
+                    (isObject(confirmation) && confirmation.text) ||
+                    `Are you sure you want to toggle ${entityName(stateObj, config) ?? stateObj.entity_id}?`;
+                if (exempt || confirm(text)) {
+                    this._hass.callService('homeassistant', 'toggle', { entity_id: stateObj.entity_id });
+                }
+            },
+            capture: true,
+        };
+        return html`<span @click=${confirmToggle}>
+            <ha-entity-toggle .stateObj="${stateObj}" .hass="${this._hass}"></ha-entity-toggle>
+        </span>`;
     }
 
     renderIcon(stateObj, config) {
