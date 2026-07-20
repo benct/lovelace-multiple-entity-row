@@ -2,7 +2,15 @@ import { css, html, LitElement } from 'lit';
 
 import { LAST_CHANGED, LAST_UPDATED, TIMESTAMP_FORMATS } from './lib/constants';
 import { createGestureHandlers } from './lib/gesture_handler';
-import { checkEntity, entityName, entityStateDisplay, entityStyles, iconColorCss, stateIcon } from './entity';
+import {
+    checkEntity,
+    entityName,
+    entityStateDisplay,
+    entityStyles,
+    iconColorCss,
+    nameGapCss,
+    stateIcon,
+} from './entity';
 import { fireEvent, getEntityIds, hasConfigOrEntitiesChanged, hasGenericSecondaryInfo, hideIf, isObject } from './util';
 import { style } from './styles';
 import './editor';
@@ -113,7 +121,7 @@ class MultipleEntityRow extends LitElement {
         // entities gets its own tap/hold/double-tap handling in renderMainEntity/renderEntity
         // instead, correctly scoped to its own action config (see #338, #202).
         return html`<hui-generic-entity-row
-            style="${iconColorCss(this.config.icon_color)}"
+            style="${iconColorCss(this.config.icon_color)}${nameGapCss(this.config.name_gap)}"
             .hass="${this._hass}"
             .config="${rowConfig}"
             .secondaryText="${this.renderSecondaryInfo()}"
@@ -129,6 +137,34 @@ class MultipleEntityRow extends LitElement {
                       )}${this.renderMainEntity()}`}
             </div>
         </hui-generic-entity-row>`;
+    }
+
+    // The icon→name gap is core hui-generic-entity-row's `.info` padding-inline-start - hardcoded
+    // 16px, with no CSS variable, inside *its* shadow DOM. `padding` isn't an inherited property and
+    // styles don't cross a shadow boundary (not even with !important), so neither our own styles nor
+    // a theme can reach it. When the user opts in via `name_gap`, inject a one-time override into that
+    // child's shadow that reads our --multiple-entity-row-name-gap variable (set on the host in
+    // render()), with a 16px fallback so the default is byte-for-byte unchanged. Gated on name_gap, so
+    // rows that don't use it get zero shadow modification. The injected rule is static (reads the
+    // variable), so a later name_gap change only updates the host variable via re-render - no re-inject.
+    async updated(changedProps) {
+        super.updated?.(changedProps);
+        if (this.config?.name_gap == null || this.config.name_gap === '') return;
+        const row = this.renderRoot?.querySelector('hui-generic-entity-row');
+        if (!row) return;
+        await row.updateComplete;
+        const root = row.shadowRoot;
+        if (!root || root.querySelector('style[data-mer-name-gap]')) return;
+        const style = document.createElement('style');
+        style.setAttribute('data-mer-name-gap', '');
+        // `:host .info` (specificity 0,2,0) is needed to beat core's own `.info` rule (0,1,0): Lit
+        // puts core's `static styles` in adoptedStyleSheets, which the cascade orders *after* a
+        // <style> appended to the shadow root, so an equal-specificity rule would lose. Higher
+        // specificity wins regardless of order, and without !important a user override still wins.
+        // Both logical and physical padding are set so it also applies in RTL.
+        style.textContent =
+            ':host .info{padding-inline-start:var(--multiple-entity-row-name-gap,16px);padding-left:var(--multiple-entity-row-name-gap,16px)}';
+        root.appendChild(style);
     }
 
     renderSecondaryInfo() {
