@@ -122,6 +122,22 @@ describe('hideIf', () => {
         it('stays visible when the referenced entity does not exist', () => {
             expect(hideIf({ state: 'off' }, { hide_if: { entity: 'switch.missing', value: 'off' } }, hass)).toBe(false);
         });
+
+        // See https://github.com/benct/lovelace-multiple-entity-row/issues/406 - unavailable and
+        // unknown are ordinary state strings for hide_if matching, and they're distinct: sensors
+        // alternate between them, so the list form is the way to cover both.
+        it('matches unavailable and unknown like any other state value', () => {
+            const unavailableHass = { states: { 'sensor.ref': { state: 'unavailable', attributes: {} } } };
+            const unknownHass = { states: { 'sensor.ref': { state: 'unknown', attributes: {} } } };
+            const config = { hide_if: { entity: 'sensor.ref', value: 'unavailable' } };
+            expect(hideIf({ state: '5' }, config, unavailableHass)).toBe(true);
+            // a single value does NOT match the other special state...
+            expect(hideIf({ state: '5' }, config, unknownHass)).toBe(false);
+            // ...but the list form covers both
+            const listConfig = { hide_if: { entity: 'sensor.ref', value: ['unavailable', 'unknown'] } };
+            expect(hideIf({ state: '5' }, listConfig, unavailableHass)).toBe(true);
+            expect(hideIf({ state: '5' }, listConfig, unknownHass)).toBe(true);
+        });
     });
 });
 
