@@ -276,6 +276,27 @@ describe('entityStateDisplay', () => {
         expect(entityStateDisplay(unitHass, stateObj, {})).toBe('1013.2 hPa');
     });
 
+    // See https://github.com/benct/lovelace-multiple-entity-row/issues/408 - the attribute
+    // formatter ignores entity-level unit_of_measurement, so explicit unit overrides must be
+    // formatted by the card itself.
+    describe('attribute unit overrides', () => {
+        const stateObj = { state: 'heat', attributes: { current_temperature: 22.5 } };
+
+        it('suppresses the unit with unit: false', () => {
+            expect(entityStateDisplay(hass, stateObj, { attribute: 'current_temperature', unit: false })).toBe('22.5');
+        });
+
+        it('applies a custom unit string', () => {
+            expect(entityStateDisplay(hass, stateObj, { attribute: 'current_temperature', unit: 'K' })).toBe('22.5 K');
+        });
+
+        it('still delegates to the attribute formatter without a unit override', () => {
+            expect(entityStateDisplay(hass, stateObj, { attribute: 'current_temperature' })).toBe(
+                'official-attr:current_temperature'
+            );
+        });
+    });
+
     describe('official formatter delegation', () => {
         const officialHass = hass;
 

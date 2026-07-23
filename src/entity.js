@@ -289,6 +289,15 @@ export const entityStateDisplay = (hass, stateObj, config) => {
     const modifiedStateObj = { ...stateObj, attributes: { ...stateObj.attributes, unit_of_measurement: unit } };
 
     if (config.attribute) {
+        // An explicit unit override (string or false) can't ride through
+        // formatEntityAttributeValue: unlike the state formatter, it ignores the entity's
+        // unit_of_measurement and derives the unit from HA's own attribute metadata (see #408).
+        // When the user configured unit:, format the value ourselves like pre-4.6.0 did.
+        if (config.unit !== undefined) {
+            const displayValue =
+                value === undefined || value === null ? '' : isNaN(value) ? value : formatNumber(value, hass.locale);
+            return `${displayValue}${unit ? ` ${unit}` : ''}`;
+        }
         return breakablePercent(hass.formatEntityAttributeValue(modifiedStateObj, config.attribute));
     }
 

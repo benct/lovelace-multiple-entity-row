@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 4.7.1-beta.4
+
+**Fixed:**
+- `unit:` overrides (including `unit: false`) were ignored when displaying an attribute - regression from the 4.6.0 switch to HA-native formatting (#408)
+
 ## 4.7.1-beta.3
 
 **Fixed:**
