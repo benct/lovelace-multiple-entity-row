@@ -1,24 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## 4.7.1-beta.4
+## 4.7.1
 
 **Fixed:**
-- `unit:` overrides (including `unit: false`) were ignored when displaying an attribute - regression from the 4.6.0 switch to HA-native formatting (#408)
-
-## 4.7.1-beta.3
-
-**Fixed:**
+- Row could stay permanently blank when the first `hass` update arrived in a later render batch than the config - the likely cause of long-standing intermittent blank rows (#389, #400 diagnosis)
+- Rows with `%` entities clipping on narrow/mobile screens instead of wrapping - regression from the 4.6.0 switch to HA-native formatting (#403)
+- `unit:` overrides (including `unit: false`) were ignored when displaying an attribute - same regression family (#408)
 - `format:` timestamp options (`time`, `datetime`, ...) were silently ignored on the `last-changed`/`last-updated` attributes (#221, #305)
 - `default:` on a hidden/missing entity now resolves its header like a visible entity (friendly-name fallback) instead of requiring an explicit `name:` (#302)
 - `confirmation:` on `tap_action` now gates `toggle: true` toggles instead of being bypassed (#265)
 - A `name: false` entity (and the header-less main state) now aligns its value with headered siblings instead of floating centered (#281)
-
-## 4.7.1-beta.2
-
-**Fixed:**
-- Rows with `%` entities clipping on narrow/mobile screens instead of wrapping - regression from the 4.6.0 switch to HA-native formatting (#403)
-- Row could stay permanently blank when the first `hass` assignment landed in a later update batch than `setConfig` - the first-hass update was swallowed by the re-render gate (found while diagnosing #400; likely the mechanism behind the intermittent blank rows in #389)
 
 ## 4.7.0
 
