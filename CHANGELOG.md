@@ -7,6 +7,9 @@ All notable changes to this project will be documented in this file.
 - Jinja templating, rendered server-side by Home Assistant and updated live as referenced entities change. Supported in `name`, `icon`, `icon_color`, `secondary_info` text, `hide_if` (string form or `hide_if.template`), and a new `template:` option that replaces the displayed value; each template gets an `entity` variable holding the owning entity id (#409, #35, #249, #278, #247, #254, #269, #270)
 - Templated configs open directly in the code editor - the visual editor can't round-trip Jinja safely
 
+**Fixed:**
+- `unit:` overrides (including `unit: false`) ignored on state values of entities whose integration ships translated units, e.g. Analytics Insights - the card now formats overridden values itself, keeping locale formatting and the display-precision setting (#413)
+
 ## 4.7.1
 
 **Fixed:**
