@@ -188,6 +188,8 @@ None of `kilo`/`mega`/`milli`/`invert`/`position` change the displayed unit — 
   unit: kW
 ```
 
+An explicit `unit:` (or `unit: false`) makes the card format the value itself instead of delegating to HA's state formatter — necessary because the formatter re-applies its own unit for integrations that translate units (e.g. Analytics Insights). HA's locale rules and the entity's display-precision setting still apply, but formatter renderings driven by the entity's own unit are lost: notably, `device_class: monetary` entities lose HA's currency styling (`$4.00`) under an override, so leave `unit` unset on currency entities.
+
 Numeric formats can be **combined** comma-separated — the value flows through each in turn and is formatted once at the end. An explicit `precision<N>` controls the decimals wherever it appears; otherwise the last format's own default applies:
 
 ```yaml

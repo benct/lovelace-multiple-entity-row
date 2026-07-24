@@ -288,6 +288,27 @@ export const entityStateDisplay = (hass, stateObj, config) => {
 
     const modifiedStateObj = { ...stateObj, attributes: { ...stateObj.attributes, unit_of_measurement: unit } };
 
+    // An explicit unit override can't reliably ride through formatEntityState either: when the
+    // entity registry entry has a translation_key and the integration ships a translated unit
+    // (e.g. analytics_insights), the formatter prefers that translation over the
+    // unit_of_measurement injected into modifiedStateObj (see #413). Format numeric values
+    // ourselves, replicating the formatter's own precision rule (registry display_precision,
+    // fixed decimals). Non-numeric values keep delegating - the formatter never appends a unit
+    // to those, so state translations are preserved and the override can't be beaten. Trade-off:
+    // device_class monetary entities lose HA's currency styling under an override (documented).
+    if (config.unit !== undefined && !config.attribute) {
+        if (!isNaN(parseFloat(value)) && isFinite(value)) {
+            const precision = hass.entities?.[stateObj.entity_id]?.display_precision;
+            const displayValue = formatNumber(
+                value,
+                hass.locale,
+                precision != null ? { minimumFractionDigits: precision, maximumFractionDigits: precision } : undefined
+            );
+            return `${displayValue}${unit ? ` ${unit}` : ''}`;
+        }
+        return `${hass.formatEntityState(stateObj)}${unit ? ` ${unit}` : ''}`;
+    }
+
     if (config.attribute) {
         // An explicit unit override (string or false) can't ride through
         // formatEntityAttributeValue: unlike the state formatter, it ignores the entity's

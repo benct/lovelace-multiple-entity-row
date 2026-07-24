@@ -297,6 +297,56 @@ describe('entityStateDisplay', () => {
         });
     });
 
+    // See https://github.com/benct/lovelace-multiple-entity-row/issues/413 - formatEntityState
+    // prefers an integration's translated unit (entity registry translation_key) over the
+    // unit_of_measurement injected into the cloned state object, so explicit unit overrides on
+    // the state value must be formatted by the card itself too. The mock reproduces the
+    // translated-unit behavior: it appends the integration unit regardless of the passed
+    // attributes.
+    describe('state unit overrides', () => {
+        const translatedHass = {
+            ...hass,
+            entities: {},
+            formatEntityState: vi.fn((stateObj) => `${stateObj.state} active installations`),
+        };
+        const stateObj = {
+            entity_id: 'sensor.analytics',
+            state: '4',
+            attributes: { unit_of_measurement: 'active installations', state_class: 'total' },
+        };
+
+        it('applies a custom unit string despite a translated unit', () => {
+            expect(entityStateDisplay(translatedHass, stateObj, { unit: 'installs' })).toBe('4 installs');
+        });
+
+        it('suppresses a translated unit with unit: false', () => {
+            expect(entityStateDisplay(translatedHass, stateObj, { unit: false })).toBe('4');
+        });
+
+        it('honors the registry display_precision setting', () => {
+            const precisionHass = {
+                ...translatedHass,
+                entities: { 'sensor.analytics': { display_precision: 2 } },
+            };
+            expect(entityStateDisplay(precisionHass, stateObj, { unit: 'installs' })).toBe('4.00 installs');
+        });
+
+        it('preserves source decimals when no display_precision is set', () => {
+            const decimalStateObj = { ...stateObj, state: '4.567' };
+            expect(entityStateDisplay(translatedHass, decimalStateObj, { unit: 'installs' })).toBe('4.567 installs');
+        });
+
+        it('delegates non-numeric values for state translation, then appends the unit', () => {
+            const textStateObj = { entity_id: 'sensor.mode', state: 'active', attributes: {} };
+            const textHass = { ...hass, formatEntityState: vi.fn(() => 'localized-active') };
+            expect(entityStateDisplay(textHass, textStateObj, { unit: 'mode' })).toBe('localized-active mode');
+        });
+
+        it('still delegates to formatEntityState without a unit override', () => {
+            expect(entityStateDisplay(translatedHass, stateObj, {})).toBe('4 active installations');
+        });
+    });
+
     describe('official formatter delegation', () => {
         const officialHass = hass;
 
