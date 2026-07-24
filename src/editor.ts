@@ -10,6 +10,7 @@ import { keyed } from 'lit/directives/keyed.js';
 
 import { SECONDARY_INFO_VALUES } from './lib/constants';
 import { fireEvent, isObject } from './util';
+import { configHasTemplates } from './templates';
 import {
     ACTIONS_SCHEMA,
     ADDITIONAL_TAB_SCHEMA,
@@ -181,6 +182,11 @@ export class MultipleEntityRowEditor extends LitElement {
     }
 
     public setConfig(config: MultipleEntityRowConfig): void {
+        // Templated configs are YAML-only: round-tripping Jinja strings through ha-form risks
+        // mangling them. Throwing here makes HA's element editor fall back to its code editor.
+        if (configHasTemplates(config)) {
+            throw new Error('This row uses templates - edit it in the code (YAML) editor.');
+        }
         this._config = config;
         const maxAdditionalTab = config.entities?.length ?? 0;
         if (this._selectedTab > maxAdditionalTab) {

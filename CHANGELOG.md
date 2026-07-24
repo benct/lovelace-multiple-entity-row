@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 4.8.0
+
+**Added:**
+- Jinja templating, rendered server-side by Home Assistant and updated live as referenced entities change. Supported in `name`, `icon`, `icon_color`, `secondary_info` text, `hide_if` (string form or `hide_if.template`), and a new `template:` option that replaces the displayed value; each template gets an `entity` variable holding the owning entity id (#409, #35, #249, #278, #247, #254, #269, #270)
+- Templated configs open directly in the code editor - the visual editor can't round-trip Jinja safely
+
 ## 4.7.1
 
 **Fixed:**

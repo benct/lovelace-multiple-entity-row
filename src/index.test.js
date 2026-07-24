@@ -405,4 +405,107 @@ describe('multiple-entity-row', () => {
             expect(bubbled).not.toHaveBeenCalled();
         });
     });
+
+    // 4.8.0 templating: supported config strings containing {{ }} render server-side via a
+    // render_template websocket subscription (see #409 and the module comment in templates.ts).
+    describe('templating', () => {
+        let connection;
+
+        const buildConnection = () => {
+            const subs = [];
+            return {
+                subs,
+                subscribeMessage: vi.fn((callback, message) => {
+                    const sub = { callback, message, unsub: vi.fn(() => Promise.resolve()) };
+                    subs.push(sub);
+                    return Promise.resolve(sub.unsub);
+                }),
+            };
+        };
+
+        const hassWith = (states) => ({ ...buildHass(states), connection });
+
+        const states = () => ({
+            'sensor.main': { entity_id: 'sensor.main', state: 'on', attributes: {} },
+            'sensor.a': { entity_id: 'sensor.a', state: '7', attributes: {} },
+        });
+
+        beforeEach(() => {
+            connection = buildConnection();
+        });
+
+        it('subscribes for templated fields and re-renders when a result is pushed', async () => {
+            el.setConfig({ entity: 'sensor.main', entities: [{ entity: 'sensor.a', name: '{{ x }}' }] });
+            el.hass = hassWith(states());
+            await flushRender(el);
+            expect(connection.subscribeMessage).toHaveBeenCalledTimes(1);
+            expect(connection.subs[0].message).toEqual({
+                type: 'render_template',
+                template: '{{ x }}',
+                variables: { entity: 'sensor.a' },
+                report_errors: true,
+            });
+            // Pending renders blank - never the raw Jinja source.
+            expect(el.shadowRoot.innerHTML).not.toContain('{{');
+
+            connection.subs[0].callback({ result: 'Wind' });
+            await flushRender(el);
+            const spans = [...el.shadowRoot.querySelectorAll('.entity span')];
+            expect(spans.some((span) => span.textContent === 'Wind')).toBe(true);
+        });
+
+        it('hides and unhides an entity as its hide_if template verdict changes', async () => {
+            el.setConfig({ entity: 'sensor.main', entities: [{ entity: 'sensor.a', hide_if: '{{ hide }}' }] });
+            el.hass = hassWith(states());
+            await flushRender(el);
+            // Pending verdict renders visible.
+            expect(el.shadowRoot.querySelectorAll('.entity:not(.state)')).toHaveLength(1);
+
+            connection.subs[0].callback({ result: true });
+            await flushRender(el);
+            expect(el.shadowRoot.querySelectorAll('.entity:not(.state)')).toHaveLength(0);
+
+            connection.subs[0].callback({ result: false });
+            await flushRender(el);
+            expect(el.shadowRoot.querySelectorAll('.entity:not(.state)')).toHaveLength(1);
+        });
+
+        it('renders a value template result verbatim with the configured unit', async () => {
+            el.setConfig({
+                entity: 'sensor.main',
+                entities: [{ entity: 'sensor.a', name: 'A', template: '{{ v }}', unit: 'km' }],
+            });
+            el.hass = hassWith(states());
+            connection.subs[0].callback({ result: 12.5 });
+            await flushRender(el);
+            const value = el.shadowRoot.querySelector('.entity:not(.state) div');
+            expect(value.textContent.trim()).toBe('12.5 km');
+        });
+
+        it('resolves a templated main name into the generic row config', async () => {
+            el.setConfig({ entity: 'sensor.main', name: '{{ n }}' });
+            el.hass = hassWith(states());
+            connection.subs[0].callback({ result: 'Row Name' });
+            await flushRender(el);
+            expect(el.shadowRoot.querySelector('hui-generic-entity-row').config.name).toBe('Row Name');
+        });
+
+        it('renders a templated secondary_info string', async () => {
+            el.setConfig({ entity: 'sensor.main', secondary_info: '{{ s }}' });
+            el.hass = hassWith(states());
+            connection.subs[0].callback({ result: '5 min left' });
+            await flushRender(el);
+            const row = el.shadowRoot.querySelector('hui-generic-entity-row');
+            expect(row.secondaryText.values).toContain('5 min left');
+        });
+
+        it('unsubscribes when the element is disconnected', async () => {
+            el.setConfig({ entity: 'sensor.main', name: '{{ n }}' });
+            el.hass = hassWith(states());
+            await flushRender(el);
+            el.remove();
+            await new Promise((resolve) => setTimeout(resolve, 0));
+            expect(connection.subs[0].unsub).toHaveBeenCalled();
+        });
+    });
 });

@@ -25,6 +25,12 @@ export const hideIf = (stateObj, config, hass) => {
     if (config.hide_if === undefined) {
         return false;
     }
+    // A templated hide_if arrives here already collapsed to its boolean verdict (see
+    // resolveTemplateFields in templates.ts). Plain booleans were never meaningful here before
+    // (they can't equal a state string), so this branch is backward-safe.
+    if (typeof config.hide_if === 'boolean') {
+        return config.hide_if;
+    }
 
     let value;
     if (isObject(config.hide_if) && (config.hide_if.entity || config.hide_if.attribute)) {
@@ -77,6 +83,12 @@ const HASS_FORMATTER_KEYS = ['formatEntityName', 'formatEntityState', 'formatEnt
 
 export const hasConfigOrEntitiesChanged = (node, changedProps) => {
     if (changedProps.has('config')) {
+        return true;
+    }
+
+    // Template results arrive via our own render_template subscription push, not through a hass
+    // assignment, so they need their own re-render trigger (see templates.ts).
+    if (changedProps.has('_templateResults')) {
         return true;
     }
 
