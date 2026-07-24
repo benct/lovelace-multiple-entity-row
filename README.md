@@ -40,7 +40,7 @@ The above configuration can be managed in the Configuration -> Dashboards -> Res
 
 This card produces an `entity-row` and must therefore be configured as an entity in an [entities](https://www.home-assistant.io/lovelace/entities/) card.
 
-A **visual editor** is available: when editing a `custom:multiple-entity-row` row through the entities card's UI editor, the row opens a form-based editor with tabs for the main entity and each additional entity (add / reorder / copy / paste / delete), plus sections for secondary info, state-based icons, per-entity custom CSS, and tap/hold/double-tap actions. Everything below can still be configured in YAML; a few advanced options (`hide_if`, digit-suffixed formats like `precision5`) are YAML-only.
+A **visual editor** is available: when editing a `custom:multiple-entity-row` row through the entities card's UI editor, the row opens a form-based editor with tabs for the main entity and each additional entity (add / reorder / copy / paste / delete), plus sections for secondary info, state-based icons, per-entity custom CSS, and tap/hold/double-tap actions. Everything below can still be configured in YAML; a few advanced options (`hide_if`, digit-suffixed formats like `precision5`, [templates](#templating)) are YAML-only — a config containing templates opens directly in the code editor.
 
 | Name              | Type          | Default                             | Description                                      |
 | ----------------- | ------------- | ----------------------------------- | ------------------------------------------------ |
@@ -64,6 +64,7 @@ A **visual editor** is available: when editing a `custom:multiple-entity-row` ro
 | hide_if           | object/any    | _[Hiding](#hiding)_                 | Hide the state value if criteria match           |
 | styles            | object        |                                     | Add custom CSS styles to the state element       |
 | format            | string        | _[Formatting](#formatting)_         | Format main state/attribute value                |
+| template          | string        | _[Templating](#templating)_         | Replace the state value with a template result   |
 |                   |
 | entities          | list          | _[Entity Objects](#entity-objects)_ | Additional entity IDs or entity object(s)        |
 | secondary_info    | string/object | _[Secondary Info](#secondary-info)_ | Custom `secondary_info` entity                   |
@@ -98,6 +99,7 @@ attribute value instead of the state value. `icon` lets you display an icon inst
 | hide_if           | object/any  | _[Hiding](#hiding)_         | Hide entity if its value matches specified value or criteria       |
 | styles            | object      |                             | Add custom CSS styles to the entity element                        |
 | format            | string      | _[Formatting](#formatting)_ | Format entity value                                                |
+| template          | string      | _[Templating](#templating)_ | Replace the entity value with a template result                    |
 | tap_action        | object      | _[Actions](#actions)_       | Custom entity tap action                                           |
 | hold_action       | object      | _[Actions](#actions)_       | Custom entity hold action                                          |
 | double_tap_action | object      | _[Actions](#actions)_       | Custom entity double-tap action                                    |
@@ -128,6 +130,7 @@ an object containing configuration options listed below, or any of the default s
 | hide_unavailable | bool        | `false`                     | Hide secondary info if its entity is unavailable         |
 | hide_if          | object/any  | _[Hiding](#hiding)_         | Hide secondary info if its value matches given criteria  |
 | format           | string      | _[Formatting](#formatting)_ | Format secondary info value                              |
+| template         | string      | _[Templating](#templating)_ | Replace the secondary info value with a template result  |
 
 ### Actions
 
@@ -208,6 +211,7 @@ or as an object with one or more of the options listed below.
 | value     | list/any | Hidden if value matches specified value or any value in a list  |
 | entity    | string   | Evaluate the criteria against this entity instead of its own    |
 | attribute | string   | Evaluate the criteria against this attribute's value            |
+| template  | string   | Hidden if the [template](#templating) renders true              |
 
 For example, only show the alarm exit-state sensor while the alarm is armed:
 
@@ -223,6 +227,36 @@ For example, only show the alarm exit-state sensor while the alarm is armed:
 ```
 
 `hide_if` and `hide_unavailable` at the top level hide the main entity's state value (the row itself stays visible); `default` is shown in its place when set.
+
+### Templating
+
+Display options accept Jinja **templates**, rendered by Home Assistant server-side and updated automatically whenever the entities they reference change. Any supported option whose value contains `{{ }}` or `{% %}` is treated as a template:
+
+- `name` (main row, additional entities, secondary info)
+- `secondary_info` as a plain string
+- `icon` and `icon_color`
+- `template` — replaces the displayed state value entirely
+- `hide_if` as a plain string, or `hide_if.template` — hides when the template renders `true`/`yes`/`on`/`1` (other `hide_if` criteria are ignored alongside a template)
+
+The variable `entity` holds the owning entity's id inside each template, so snippets stay portable across entities: `{{ states(entity) }}`.
+
+```yaml
+- type: custom:multiple-entity-row
+  entity: sensor.next_ferry
+  name: "Next ferry {{ state_attr(entity, 'time') }}"
+  icon_color: "{{ 'red' if states('sensor.travel_time') | float(0) > 30 else 'green' }}"
+  hide_if: "{{ is_state('binary_sensor.ferry_service', 'off') }}"
+  entities:
+    - entity: sensor.travel_time
+      name: Drive
+      template: "{{ states(entity) | round(0) }} min"
+```
+
+Notes:
+
+- A `template` result is displayed verbatim — do rounding and formatting in the template itself (`format` is ignored). An explicit `unit` is appended. Ignored for `toggle: true` entities.
+- While a template's first result loads, the field renders blank. A template error also renders blank and logs a warning to the browser console.
+- Templated rows are YAML-only: the visual editor switches to the code editor when the config contains templates.
 
 ### Icon styling
 

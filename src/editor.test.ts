@@ -36,6 +36,19 @@ describe('multiple-entity-row-editor', () => {
         expect(customElements.get('multiple-entity-row-editor')).toBeDefined();
     });
 
+    // Templated configs are YAML-only: setConfig throws so HA's element editor falls back to
+    // its code editor instead of letting ha-form mangle the Jinja strings.
+    it('throws on a templated config to force the YAML editor', () => {
+        expect(() => setConfig({ entity: 'sensor.main', name: '{{ x }}' })).toThrow(/code \(YAML\) editor/);
+        expect(() =>
+            setConfig({
+                entity: 'sensor.main',
+                entities: [{ entity: 'sensor.a', hide_if: { template: '{% if x %}true{% endif %}' } }],
+            })
+        ).toThrow();
+        expect(() => setConfig({ entity: 'sensor.main', name: 'plain' })).not.toThrow();
+    });
+
     it('clamps the selected tab when entities shrink below it', () => {
         setConfig({ entity: 'sensor.main', entities: ['sensor.a', 'sensor.b'] });
         (el as any)._selectedTab = 2;

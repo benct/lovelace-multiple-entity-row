@@ -11,6 +11,11 @@ export interface HassEntity {
     last_updated?: string;
 }
 
+export interface HassConnection {
+    subscribeMessage: <T>(callback: (message: T) => void, message: LooseObject) => Promise<() => Promise<void>>;
+    [key: string]: any;
+}
+
 export interface HASS {
     states: Record<string, HassEntity>;
     locale: { language: string; number_format?: string; time_format?: string; [key: string]: any };
@@ -20,6 +25,7 @@ export interface HASS {
     formatEntityAttributeValue?: (stateObj: HassEntity, attribute: string, value?: any) => string;
     formatEntityName?: (entityOrId: HassEntity | string, name?: string) => string;
     callService: (domain: string, service: string, data?: LooseObject) => Promise<any>;
+    connection?: HassConnection;
     [key: string]: any;
 }
 
@@ -46,10 +52,13 @@ export interface HideIfObject {
     value?: any | any[];
     entity?: string;
     attribute?: string;
+    template?: string;
 }
 
 interface EntityOptions {
     format?: string;
+    // Jinja template replacing the displayed state (rendered server-side; see templates.ts).
+    template?: string;
     attribute?: string;
     unit?: string | false;
     name?: string | false;

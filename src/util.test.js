@@ -74,6 +74,13 @@ describe('hideIf', () => {
         expect(hideIf({ state: 'idle' }, { hide_if: ['off', 'idle'] })).toBe(true);
     });
 
+    // A templated hide_if reaches hideIf already collapsed to its boolean verdict (see
+    // resolveTemplateFields in templates.ts).
+    it('treats a boolean hide_if as a pre-resolved template verdict', () => {
+        expect(hideIf({ state: 'on' }, { hide_if: true })).toBe(true);
+        expect(hideIf({ state: 'on' }, { hide_if: false })).toBe(false);
+    });
+
     // See https://github.com/benct/lovelace-multiple-entity-row/issues/227 -
     // hide_if must also work against an attribute value, not just the main state.
     it('checks against the configured attribute value', () => {

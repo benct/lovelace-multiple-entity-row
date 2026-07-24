@@ -4,6 +4,7 @@ import { LAST_CHANGED, LAST_UPDATED, TIMESTAMP_FORMATS } from './lib/constants';
 import { createGestureHandlers } from './lib/gesture_handler';
 import { checkEntity, entityName, entityStateDisplay, entityStyles, iconColorCss, stateIcon } from './entity';
 import { fireEvent, getEntityIds, hasConfigOrEntitiesChanged, hasGenericSecondaryInfo, hideIf, isObject } from './util';
+import { hasTemplate, resolveTemplateFields, templateDisplay, TemplateSubscriptions } from './templates';
 import { style } from './styles';
 import './editor';
 
@@ -38,7 +39,26 @@ class MultipleEntityRow extends LitElement {
             _hass: Object,
             config: Object,
             stateObj: Object,
+            _templateResults: Object,
         };
+    }
+
+    constructor() {
+        super();
+        this._templateResults = new Map();
+        this._templates = new TemplateSubscriptions((results) => {
+            this._templateResults = results;
+        });
+    }
+
+    connectedCallback() {
+        super.connectedCallback();
+        this._templates.connect();
+    }
+
+    disconnectedCallback() {
+        super.disconnectedCallback();
+        this._templates.disconnect();
     }
 
     setConfig(config) {
@@ -68,6 +88,7 @@ class MultipleEntityRow extends LitElement {
             name: config.name === false ? ' ' : config.name,
             format: config.format ?? config.time_format,
         };
+        this._templates.setConfig(this.config);
     }
 
     shouldUpdate(changedProps) {
@@ -76,6 +97,7 @@ class MultipleEntityRow extends LitElement {
 
     set hass(hass) {
         this._hass = hass;
+        this._templates.setHass(hass);
 
         if (hass && this.config) {
             this.stateObj = hass.states[this.config.entity];
@@ -96,14 +118,23 @@ class MultipleEntityRow extends LitElement {
         return style(css);
     }
 
+    // A copy of `config` (row-level, sub-entity or secondary_info object) with any templated
+    // fields swapped for their current subscription results - identity when nothing is
+    // templated. Resolution happens here at render time, so downstream display logic only ever
+    // sees plain values.
+    _resolved(config) {
+        return resolveTemplateFields(config, this._templateResults, config.entity ?? this.config.entity);
+    }
+
     render() {
         if (!this._hass || !this.config) return html``;
         if (!this.stateObj) return this.renderWarning();
 
+        const config = this._resolved(this.config);
         // A state_icon match overrides the main row's icon by injecting it into the config
         // handed to hui-generic-entity-row, which owns the main icon rendering (see #197).
-        const mainStateIcon = stateIcon(this.stateObj, this.config);
-        const rowConfig = mainStateIcon ? { ...this.config, icon: mainStateIcon } : this.config;
+        const mainStateIcon = stateIcon(this.stateObj, config);
+        const rowConfig = mainStateIcon ? { ...config, icon: mainStateIcon } : config;
 
         // catchInteraction: true tells hui-generic-entity-row not to attach its own tap/hold/
         // double-tap gesture detection to our slotted content. That detection is otherwise bound
@@ -113,7 +144,7 @@ class MultipleEntityRow extends LitElement {
         // entities gets its own tap/hold/double-tap handling in renderMainEntity/renderEntity
         // instead, correctly scoped to its own action config (see #338, #202).
         return html`<hui-generic-entity-row
-            style="${iconColorCss(this.config.icon_color)}"
+            style="${iconColorCss(config.icon_color)}"
             .hass="${this._hass}"
             .config="${rowConfig}"
             .secondaryText="${this.renderSecondaryInfo()}"
@@ -132,28 +163,32 @@ class MultipleEntityRow extends LitElement {
     }
 
     renderSecondaryInfo() {
-        if (
-            !this.config.secondary_info ||
-            hasGenericSecondaryInfo(this.config.secondary_info) ||
-            hideIf(this.info, this.config.secondary_info, this._hass)
-        ) {
+        const secondaryInfo = this.config.secondary_info;
+        if (!secondaryInfo || hasGenericSecondaryInfo(secondaryInfo)) {
             return null;
         }
-        if (typeof this.config.secondary_info === 'string') {
-            return html`${this.config.secondary_info}`;
+        if (typeof secondaryInfo === 'string') {
+            return html`${hasTemplate(secondaryInfo)
+                ? templateDisplay(this._templateResults, secondaryInfo, this.config.entity)
+                : secondaryInfo}`;
         }
-        const name = entityName(this.info, this.config.secondary_info);
-        return html`${name} ${this.renderValue(this.info, this.config.secondary_info)}`;
+        const config = this._resolved(secondaryInfo);
+        if (hideIf(this.info, config, this._hass)) {
+            return null;
+        }
+        const name = entityName(this.info, config);
+        return html`${name} ${this.renderValue(this.info, config)}`;
     }
 
     renderMainEntity() {
         if (this.config.show_state === false) {
             return null;
         }
+        const config = this._resolved(this.config);
         // Top-level hide_if/hide_unavailable hide the main state slot, symmetrical to per-entity
         // behavior - previously they were silently ignored on the main entity (see #227). The row
         // itself (name, icon, sub-entities) stays visible.
-        if (hideIf(this.stateObj, this.config, this._hass)) {
+        if (hideIf(this.stateObj, config, this._hass)) {
             if (this.config.default) {
                 return html`<div class="state entity" style="${entityStyles(this.config)}">
                     ${this.renderMainHeader()}
@@ -177,11 +212,12 @@ class MultipleEntityRow extends LitElement {
             @contextmenu="${stopBubble}"
         >
             ${this.renderMainHeader()}
-            <div>${this.renderValue(this.stateObj, this.config)}</div>
+            <div>${this.renderValue(this.stateObj, config)}</div>
         </div>`;
     }
 
     renderEntity(stateObj, config, index) {
+        config = this._resolved(config);
         if (!stateObj || hideIf(stateObj, config, this._hass)) {
             if (config.default) {
                 // Same header resolution as a visible entity (friendly-name fallback etc., see
@@ -238,6 +274,14 @@ class MultipleEntityRow extends LitElement {
     renderValue(stateObj, config) {
         if (config.toggle === true) {
             return this.renderToggle(stateObj, config);
+        }
+        // A value template replaces the displayed state entirely with its rendered result
+        // (already resolved by _resolved; a still-raw template renders blank rather than leaking
+        // Jinja source). Only an explicit unit is appended - format is deliberately skipped,
+        // since rounding/formatting belong in the template itself.
+        if (config.template !== undefined) {
+            const value = hasTemplate(config.template) ? '' : config.template;
+            return `${value}${config.unit ? ` ${config.unit}` : ''}`;
         }
         const isLastChangedAttr = config.attribute && [LAST_CHANGED, LAST_UPDATED].includes(config.attribute);
         // A configured timestamp format wins over the default relative-time widget for the
