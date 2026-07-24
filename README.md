@@ -230,6 +230,8 @@ For example, only show the alarm exit-state sensor while the alarm is armed:
 
 ### Templating
 
+> **Beta:** templating ships in [4.8.0-beta.1](https://github.com/benct/lovelace-multiple-entity-row/releases/tag/v4.8.0-beta.1) and is not yet in a stable release. In HACS, enable _Show beta versions_ when redownloading to try it.
+
 Display options accept Jinja **templates**, rendered by Home Assistant server-side and updated live whenever the entities they reference change. Any supported option whose value contains `{{ }}` or `{% %}` is treated as a template: `name`, `icon`, `icon_color`, `secondary_info` text, `hide_if`, and a `template` option that replaces the displayed value entirely. The `entity` variable holds the owning entity's id.
 
 ```yaml

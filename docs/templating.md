@@ -1,5 +1,7 @@
 # Templating
 
+> **Beta:** templating ships in [4.8.0-beta.1](https://github.com/benct/lovelace-multiple-entity-row/releases/tag/v4.8.0-beta.1) and is not yet in a stable release. In HACS, enable _Show beta versions_ when redownloading to try it.
+
 Since 4.8.0, display options accept Jinja **templates**. Templates are rendered by Home
 Assistant server-side — the same engine as automations and the Developer Tools template
 editor, with every HA template function and filter available — and results update live
