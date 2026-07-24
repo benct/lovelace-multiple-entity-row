@@ -1,52 +1,52 @@
 {
-  "name": "multiple-entity-row",
-  "version": "4.7.1",
-  "description": "Show multiple entity states, attributes and icons on entity rows in Home Assistant's Lovelace UI",
-  "keywords": [
-    "home-assistant",
-    "homeassistant",
-    "lovelace",
-    "custom-cards",
-    "multiple",
-    "entity",
-    "row"
-  ],
-  "module": "multiple-entity-row.js",
-  "repository": "https://github.com/benct/lovelace-multiple-entity-row.git",
-  "author": "benct <ben@tomlin.no>",
-  "license": "MIT",
-  "dependencies": {
-    "lit": "^3.3.3"
-  },
-  "devDependencies": {
-    "@babel/core": "^7.22.1",
-    "@babel/preset-env": "^7.22.4",
-    "@babel/preset-typescript": "^7.27.0",
-    "@typescript-eslint/eslint-plugin": "^8.62.1",
-    "@typescript-eslint/parser": "^8.62.1",
-    "@vitest/coverage-v8": "^4.1.9",
-    "babel-loader": "^9.1.2",
-    "eslint": "^8.41.0",
-    "eslint-config-prettier": "^8.8.0",
-    "eslint-plugin-prettier": "^4.2.1",
-    "jsdom": "^29.1.1",
-    "prettier": "^2.8.8",
-    "typescript": "^6.0.3",
-    "vitest": "^4.1.9",
-    "webpack": "^5.84.1",
-    "webpack-cli": "^5.1.1"
-  },
-  "scripts": {
-    "lint": "eslint 'src/**/*.{js,ts}' && tsc --noEmit",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "coverage": "vitest run --coverage",
-    "dev": "webpack -c webpack.config.js",
-    "build": "yarn lint && yarn test && webpack -c webpack.config.js",
-    "ha:init": "mkdir -p .dev/ha-config && cp -n .dev/configuration.yaml.example .dev/ha-config/configuration.yaml || true",
-    "ha:up": "yarn ha:init && docker compose up -d && echo 'HA starting at http://localhost:8130 (first boot may take a minute)'",
-    "ha:down": "docker compose down",
-    "ha:logs": "docker compose logs -f ha",
-    "ha:reset": "docker compose down && rm -rf .dev/ha-config && echo 'HA config wiped. Run yarn ha:up for a fresh instance.'"
-  }
+    "name": "multiple-entity-row",
+    "version": "4.8.0-beta.1",
+    "description": "Show multiple entity states, attributes and icons on entity rows in Home Assistant's Lovelace UI",
+    "keywords": [
+        "home-assistant",
+        "homeassistant",
+        "lovelace",
+        "custom-cards",
+        "multiple",
+        "entity",
+        "row"
+    ],
+    "module": "multiple-entity-row.js",
+    "repository": "https://github.com/benct/lovelace-multiple-entity-row.git",
+    "author": "benct <ben@tomlin.no>",
+    "license": "MIT",
+    "dependencies": {
+        "lit": "^3.3.3"
+    },
+    "devDependencies": {
+        "@babel/core": "^7.22.1",
+        "@babel/preset-env": "^7.22.4",
+        "@babel/preset-typescript": "^7.27.0",
+        "@typescript-eslint/eslint-plugin": "^8.62.1",
+        "@typescript-eslint/parser": "^8.62.1",
+        "@vitest/coverage-v8": "^4.1.9",
+        "babel-loader": "^9.1.2",
+        "eslint": "^8.41.0",
+        "eslint-config-prettier": "^8.8.0",
+        "eslint-plugin-prettier": "^4.2.1",
+        "jsdom": "^29.1.1",
+        "prettier": "^2.8.8",
+        "typescript": "^6.0.3",
+        "vitest": "^4.1.9",
+        "webpack": "^5.84.1",
+        "webpack-cli": "^5.1.1"
+    },
+    "scripts": {
+        "lint": "eslint 'src/**/*.{js,ts}' && tsc --noEmit",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "coverage": "vitest run --coverage",
+        "dev": "webpack -c webpack.config.js",
+        "build": "yarn lint && yarn test && webpack -c webpack.config.js",
+        "ha:init": "mkdir -p .dev/ha-config && cp -n .dev/configuration.yaml.example .dev/ha-config/configuration.yaml || true",
+        "ha:up": "yarn ha:init && docker compose up -d && echo 'HA starting at http://localhost:8130 (first boot may take a minute)'",
+        "ha:down": "docker compose down",
+        "ha:logs": "docker compose logs -f ha",
+        "ha:reset": "docker compose down && rm -rf .dev/ha-config && echo 'HA config wiped. Run yarn ha:up for a fresh instance.'"
+    }
 }
