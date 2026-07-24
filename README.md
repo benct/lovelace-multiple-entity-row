@@ -230,21 +230,12 @@ For example, only show the alarm exit-state sensor while the alarm is armed:
 
 ### Templating
 
-Display options accept Jinja **templates**, rendered by Home Assistant server-side and updated automatically whenever the entities they reference change. Any supported option whose value contains `{{ }}` or `{% %}` is treated as a template:
-
-- `name` (main row, additional entities, secondary info)
-- `secondary_info` as a plain string
-- `icon` and `icon_color`
-- `template` — replaces the displayed state value entirely
-- `hide_if` as a plain string, or `hide_if.template` — hides when the template renders `true`/`yes`/`on`/`1` (other `hide_if` criteria are ignored alongside a template)
-
-The variable `entity` holds the owning entity's id inside each template, so snippets stay portable across entities: `{{ states(entity) }}`.
+Display options accept Jinja **templates**, rendered by Home Assistant server-side and updated live whenever the entities they reference change. Any supported option whose value contains `{{ }}` or `{% %}` is treated as a template: `name`, `icon`, `icon_color`, `secondary_info` text, `hide_if`, and a `template` option that replaces the displayed value entirely. The `entity` variable holds the owning entity's id.
 
 ```yaml
 - type: custom:multiple-entity-row
   entity: sensor.next_ferry
   name: "Next ferry {{ state_attr(entity, 'time') }}"
-  icon_color: "{{ 'red' if states('sensor.travel_time') | float(0) > 30 else 'green' }}"
   hide_if: "{{ is_state('binary_sensor.ferry_service', 'off') }}"
   entities:
     - entity: sensor.travel_time
@@ -252,11 +243,7 @@ The variable `entity` holds the owning entity's id inside each template, so snip
       template: "{{ states(entity) | round(0) }} min"
 ```
 
-Notes:
-
-- A `template` result is displayed verbatim — do rounding and formatting in the template itself (`format` is ignored). An explicit `unit` is appended. Ignored for `toggle: true` entities.
-- While a template's first result loads, the field renders blank. A template error also renders blank and logs a warning to the browser console.
-- Templated rows are YAML-only: the visual editor switches to the code editor when the config contains templates.
+See **[docs/templating.md](docs/templating.md)** for the full documentation: supported options, value-template semantics, hide conditions, loading/error behavior, and more examples. Templated rows are YAML-only — the visual editor switches to the code editor when a config contains templates.
 
 ### Icon styling
 
