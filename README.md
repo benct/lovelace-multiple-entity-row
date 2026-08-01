@@ -59,6 +59,7 @@ A **visual editor** is available: when editing a `custom:multiple-entity-row` ro
 | state_header      | string        |                                     | Show header text above the main entity state     |
 | state_color       | bool          | `false`                             | Enable colored icon when entity is active        |
 | column            | bool          | `false`                             | Show entities in a column instead of a row       |
+| wrap              | bool          | `false`                             | Wrap onto multiple lines instead of overflowing  |
 | default           | string        |                                     | Display this value when the state is hidden      |
 | hide_unavailable  | bool          | `false`                             | Hide the state value if unavailable              |
 | hide_if           | object/any    | _[Hiding](#hiding)_                 | Hide the state value if criteria match           |

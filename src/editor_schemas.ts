@@ -75,6 +75,7 @@ export const MAIN_TAB_SCHEMA = [
         schema: [
             { name: 'show_state_first', selector: { boolean: {} } },
             { name: 'hide_unavailable', selector: { boolean: {} } },
+            { name: 'wrap', selector: { boolean: {} } },
         ],
     },
     { name: 'state_header', selector: { text: {} } },
@@ -139,6 +140,7 @@ export const LABELS: Record<string, string> = {
     state_header: 'State header label',
     state_color: 'State color',
     column: 'Column layout',
+    wrap: 'Wrap instead of overflowing',
     toggle: 'Show as toggle',
     hide_unavailable: 'Hide if unavailable',
     tap_action: 'Tap action',

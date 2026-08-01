@@ -22,6 +22,14 @@ export const style = (css) => css`
     .entities-row .entity:last-of-type {
         margin-right: 0;
     }
+    /* Opt-in, because it trades a taller row for not overflowing: nothing between HA's .row and
+       our entities can shrink, so a row needing more width than the card has just spills past
+       the edge (worst on narrow phone screens - see #411). Wrapping reflows instead. */
+    .entities-row.wrap {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        row-gap: 4px;
+    }
     .entities-column {
         flex-direction: column;
         display: flex;
