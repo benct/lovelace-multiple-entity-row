@@ -136,21 +136,29 @@ class MultipleEntityRow extends LitElement {
         const mainStateIcon = stateIcon(this.stateObj, config);
         const rowConfig = mainStateIcon ? { ...config, icon: mainStateIcon } : config;
 
-        // catchInteraction: true tells hui-generic-entity-row not to attach its own tap/hold/
-        // double-tap gesture detection to our slotted content. That detection is otherwise bound
-        // to the whole slot and dispatches using only the row-level config (this.config), with no
-        // awareness of which of our own rendered entities was actually interacted with - every
-        // sub-entity click also double-fired the main entity's own action config. Each of our
-        // entities gets its own tap/hold/double-tap handling in renderMainEntity/renderEntity
-        // instead, correctly scoped to its own action config (see #338, #202).
+        // catchInteraction must stay false: despite the name it does NOT control whether
+        // hui-generic-entity-row handles interaction (its actionHandler is bound to the .row
+        // wrapper unconditionally - that was the #338 root cause, and what actually protects us
+        // is stopBubble on each entity element). All it selects is the markup around our slot:
+        // false yields a bare <slot>, true wraps it in `.text-content.value > .state`. Those two
+        // extra boxes are shrink-to-fit, so they pin our row to its own content width and break
+        // any `width: 100%` / justify-content styling users apply to .entities-row - it spread
+        // across the row up to 4.6.1 and stopped in 4.7.0 when this was flipped to true (see
+        // #411). Keeping the bare slot also keeps .entities-row as the flex item, which is the
+        // only reason our own CSS (wrap, shrinking) can affect overflow at all.
         return html`<hui-generic-entity-row
             style="${iconColorCss(config.icon_color)}"
             .hass="${this._hass}"
             .config="${rowConfig}"
             .secondaryText="${this.renderSecondaryInfo()}"
-            .catchInteraction=${true}
+            .catchInteraction=${false}
         >
-            <div class="${this.config.column ? 'entities-column' : 'entities-row'}">
+            <div
+                class="${this.config.column ? 'entities-column' : 'entities-row'}${!this.config.column &&
+                this.config.wrap
+                    ? ' wrap'
+                    : ''}"
+            >
                 ${this.config.show_state_first
                     ? html`${this.renderMainEntity()}${this.entities.map((entity, index) =>
                           this.renderEntity(entity.stateObj, entity, index)
@@ -321,26 +329,34 @@ class MultipleEntityRow extends LitElement {
     // through HA ourselves only on OK.
     renderToggle(stateObj, config) {
         const confirmation = config.tap_action?.confirmation;
-        if (!confirmation) {
-            return html`<ha-entity-toggle .stateObj="${stateObj}" .hass="${this._hass}"></ha-entity-toggle>`;
-        }
-        const confirmToggle = {
-            handleEvent: (ev) => {
-                ev.stopPropagation();
-                ev.preventDefault();
-                const exempt =
-                    isObject(confirmation) &&
-                    confirmation.exemptions?.some((exemption) => exemption.user === this._hass.user?.id);
-                const text =
-                    (isObject(confirmation) && confirmation.text) ||
-                    `Are you sure you want to toggle ${entityName(stateObj, config) ?? stateObj.entity_id}?`;
-                if (exempt || confirm(text)) {
-                    this._hass.callService('homeassistant', 'toggle', { entity_id: stateObj.entity_id });
-                }
-            },
-            capture: true,
-        };
-        return html`<span @click=${confirmToggle}>
+        const confirmToggle = confirmation
+            ? {
+                  handleEvent: (ev) => {
+                      ev.stopPropagation();
+                      ev.preventDefault();
+                      const exempt =
+                          isObject(confirmation) &&
+                          confirmation.exemptions?.some((exemption) => exemption.user === this._hass.user?.id);
+                      const text =
+                          (isObject(confirmation) && confirmation.text) ||
+                          `Are you sure you want to toggle ${entityName(stateObj, config) ?? stateObj.entity_id}?`;
+                      if (exempt || confirm(text)) {
+                          this._hass.callService('homeassistant', 'toggle', { entity_id: stateObj.entity_id });
+                      }
+                  },
+                  capture: true,
+              }
+            : undefined;
+        // ha-entity-toggle stops its own click, but our gesture handlers on the entity container
+        // listen for pointerdown/pointerup - a disjoint event family it does not stop - so a tap
+        // on the switch would toggle and dispatch the tap action. Stop the pointer family here
+        // instead, which keeps the rest of the entity (header, name, value) clickable (see #415).
+        return html`<span
+            @pointerdown=${stopBubble}
+            @pointerup=${stopBubble}
+            @pointercancel=${stopBubble}
+            @click=${confirmToggle}
+        >
             <ha-entity-toggle .stateObj="${stateObj}" .hass="${this._hass}"></ha-entity-toggle>
         </span>`;
     }
@@ -367,14 +383,12 @@ class MultipleEntityRow extends LitElement {
 
     // Tap/hold/double-tap gesture handlers for one rendered entity (the main entity, or one of
     // this.entities by index), cached by key so an in-progress hold or double-tap window survives
-    // a re-render triggered by an unrelated state update mid-gesture (see setConfig). Toggle-mode
-    // entities render <ha-entity-toggle>, which handles its own tap directly - not wiring our own
-    // gesture handling on top avoids the two conflicting over the same interaction (see #265,
-    // which is about that toggle/action interaction specifically and is out of scope here).
+    // a re-render triggered by an unrelated state update mid-gesture (see setConfig).
+    //
+    // Toggle-mode entities get handlers too: they occupy a whole entity slot (header, name, and
+    // the switch), and skipping them left everything but the switch itself dead to clicks (see
+    // #415). renderToggle stops the pointer family at the switch so only the toggle acts there.
     getGestureHandlers(key, entity, config) {
-        if (config.toggle === true) {
-            return null;
-        }
         if (!this._actionHandlers.has(key)) {
             this._actionHandlers.set(
                 key,

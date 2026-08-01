@@ -197,11 +197,18 @@ describe('multiple-entity-row', () => {
             vi.unstubAllGlobals();
         });
 
-        it('renders a bare toggle when no confirmation is configured', async () => {
+        // The toggle is always wrapped now (the wrapper stops pointer events reaching our gesture
+        // handlers, see #415), so what matters here is that without a confirmation the wrapper
+        // stays out of the way and lets ha-entity-toggle handle the tap itself.
+        it('does not intercept the toggle when no confirmation is configured', async () => {
+            vi.stubGlobal('confirm', vi.fn());
             el.setConfig(toggleConfig({ action: 'toggle' }));
             el.hass = toggleHass();
             await flushRender(el);
-            expect(el.shadowRoot.querySelector('ha-entity-toggle').parentElement.tagName).not.toBe('SPAN');
+            el.shadowRoot.querySelector('ha-entity-toggle').parentElement.click();
+            expect(confirm).not.toHaveBeenCalled();
+            expect(el._hass.callService).not.toHaveBeenCalled();
+            vi.unstubAllGlobals();
         });
     });
 
@@ -387,8 +394,34 @@ describe('multiple-entity-row', () => {
             expect(actions).toEqual([]);
         });
 
-        it('does not attach gesture handlers for a toggle-mode entity', () => {
-            expect(el.getGestureHandlers('sub-0', 'sensor.a', { entity: 'sensor.a', toggle: true })).toBeNull();
+        // See https://github.com/benct/lovelace-multiple-entity-row/issues/415 - a toggle entity
+        // still owns its header/name area, so it needs gesture handlers like any other entity.
+        // Skipping them (4.7.0-4.8.0-beta.2) left everything except the switch dead to clicks.
+        it('attaches gesture handlers for a toggle-mode entity', () => {
+            const subConfig = { entity: 'sensor.a', toggle: true, tap_action: { action: 'more-info' } };
+            el.setConfig({ entity: 'sensor.main', entities: [subConfig] });
+            const sub = el.getGestureHandlers('sub-0', 'sensor.a', subConfig);
+            expect(sub).not.toBeNull();
+            sub.onDown();
+            sub.onUp();
+            expect(actions).toEqual([
+                { config: { entity: 'sensor.a', tap_action: { action: 'more-info' } }, action: 'tap' },
+            ]);
+        });
+
+        // ha-entity-toggle stops click but not the pointer family, so without stopping pointer
+        // events at the switch a tap there would both toggle and dispatch the tap action.
+        it('does not dispatch when the pointer interaction happens on the toggle itself', async () => {
+            el.setConfig({ entity: 'sensor.main', entities: [{ entity: 'sensor.a', toggle: true }] });
+            el.hass = buildHass({
+                'sensor.main': { entity_id: 'sensor.main', state: 'on', attributes: {} },
+                'sensor.a': { entity_id: 'sensor.a', state: 'on', attributes: {} },
+            });
+            await flushRender(el);
+            const toggleWrapper = el.shadowRoot.querySelector('.entity:not(.state) ha-entity-toggle').parentElement;
+            toggleWrapper.dispatchEvent(new Event('pointerdown', { bubbles: true, composed: true }));
+            toggleWrapper.dispatchEvent(new Event('pointerup', { bubbles: true, composed: true }));
+            expect(actions).toEqual([]);
         });
 
         // hui-generic-entity-row binds its own mousedown/click/touchstart/touchend/touchcancel/
@@ -506,6 +539,45 @@ describe('multiple-entity-row', () => {
             el.remove();
             await new Promise((resolve) => setTimeout(resolve, 0));
             expect(connection.subs[0].unsub).toHaveBeenCalled();
+        });
+    });
+
+    describe('row layout', () => {
+        beforeEach(() => {
+            el.setConfig({ entity: 'sensor.main', entities: ['sensor.a'] });
+            el.hass = buildHass({
+                'sensor.main': { entity_id: 'sensor.main', state: '1', attributes: {} },
+                'sensor.a': { entity_id: 'sensor.a', state: '2', attributes: {} },
+            });
+        });
+
+        // See https://github.com/benct/lovelace-multiple-entity-row/issues/411 - catchInteraction
+        // true makes hui-generic-entity-row wrap our slot in shrink-to-fit boxes
+        // (.text-content.value > .state), which pins the row to its content width and breaks
+        // user width/justify-content styling. It never gated HA's own interaction handling (that
+        // is stopBubble's job, see #338), so it must stay false.
+        it('leaves catchInteraction false so HA does not wrap the slot', async () => {
+            await flushRender(el);
+            expect(el.shadowRoot.querySelector('hui-generic-entity-row').catchInteraction).toBe(false);
+        });
+
+        it('does not wrap the entities row by default', async () => {
+            await flushRender(el);
+            expect(el.shadowRoot.querySelector('.entities-row').classList.contains('wrap')).toBe(false);
+        });
+
+        it('adds the wrap class when wrap is configured', async () => {
+            el.setConfig({ entity: 'sensor.main', entities: ['sensor.a'], wrap: true });
+            await flushRender(el);
+            expect(el.shadowRoot.querySelector('.entities-row').classList.contains('wrap')).toBe(true);
+        });
+
+        // wrap only means anything for the horizontal layout - a column already stacks.
+        it('ignores wrap in column layout', async () => {
+            el.setConfig({ entity: 'sensor.main', entities: ['sensor.a'], column: true, wrap: true });
+            await flushRender(el);
+            const row = el.shadowRoot.querySelector('.entities-column');
+            expect(row.classList.contains('wrap')).toBe(false);
         });
     });
 });

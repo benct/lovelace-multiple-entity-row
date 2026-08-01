@@ -88,6 +88,7 @@ export interface MultipleEntityRowConfig extends EntityOptions {
     state_header?: string;
     image?: string;
     column?: boolean;
+    wrap?: boolean;
     // HA 2026.7+'s row editor renames `format` to `time_format` on save (see #386).
     time_format?: string;
     entities?: (string | EntityConfig)[];
