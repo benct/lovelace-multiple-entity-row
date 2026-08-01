@@ -1,0 +1,87 @@
+// Support for HA's `color` option (frontend PR #53151, HA 2026.8), which replaced the boolean
+// `state_color` with "state" | "none" | a theme color name | any CSS color.
+//
+// The card supports HA back to 2024.4, where state-badge's `color` property meant something else
+// entirely - a raw CSS color applied unconditionally, with no notion of "state"/"none". Rather
+// than sniff hass.config.version, resolveColor() maps a config value onto the state-badge
+// properties that behave correctly on BOTH sides. See applyColor() for that mapping.
+
+// Mirrors THEME_COLORS + YAML_ONLY_THEMES_COLORS in HA's src/common/color/compute-color.ts.
+const THEME_COLORS = new Set([
+    'primary',
+    'accent',
+    'red',
+    'pink',
+    'purple',
+    'deep-purple',
+    'indigo',
+    'blue',
+    'light-blue',
+    'cyan',
+    'teal',
+    'green',
+    'light-green',
+    'lime',
+    'yellow',
+    'amber',
+    'orange',
+    'deep-orange',
+    'brown',
+    'light-grey',
+    'grey',
+    'dark-grey',
+    'blue-grey',
+    'black',
+    'white',
+    'primary-text',
+    'secondary-text',
+    'disabled',
+]);
+
+// A theme color name becomes its CSS variable; anything else is passed through as a CSS color.
+// Equivalent to HA's computeCssColor, reimplemented because it is not exported to custom cards.
+export const computeCssColor = (color: string): string => (THEME_COLORS.has(color) ? `var(--${color}-color)` : color);
+
+export type ResolvedColor = { stateColor: boolean } | { cssColor: string };
+
+/**
+ * Resolve a config's effective icon color into a form that can be handed to state-badge.
+ *
+ * `color` wins, then the deprecated `state_color`. With neither set the default is "state" (HA
+ * 2026.8 colors entity rows by default) - EXCEPT when `icon_color` is configured, because that
+ * option paints the icon through CSS variables and an inline state color would beat it, silently
+ * dropping the user's color whenever the entity is active.
+ */
+export const resolveColor = (config: { color?: string; state_color?: boolean; icon_color?: string }): ResolvedColor => {
+    const color =
+        config.color ?? (config.state_color === undefined ? undefined : config.state_color ? 'state' : 'none');
+    if (color === undefined) {
+        return config.icon_color ? { stateColor: false } : { stateColor: true };
+    }
+    if (color === 'state') return { stateColor: true };
+    if (color === 'none') return { stateColor: false };
+    return { cssColor: computeCssColor(color) };
+};
+
+/**
+ * Properties to spread onto a state-badge for a resolved color.
+ *
+ * "state"/"none" are expressed as the legacy boolean `stateColor`, which HA 2026.8 maps back onto
+ * the new API internally - passing the literal string "state" as `color` would be rendered as raw
+ * CSS by pre-2026.8 state-badges and silently produce no color at all.
+ *
+ * A custom color is passed already computed, so it lands as a valid CSS color on both: older
+ * versions apply it unconditionally, 2026.8+ applies it while the entity is active.
+ */
+export const badgeColorProps = (resolved: ResolvedColor): { stateColor?: boolean; color?: string } =>
+    'cssColor' in resolved ? { color: resolved.cssColor } : { stateColor: resolved.stateColor };
+
+/**
+ * The same mapping in config form, for the config object handed to hui-generic-entity-row (which
+ * owns the main row's icon and forwards these to its own state-badge).
+ *
+ * A custom color only reaches the main icon on HA 2026.8+, since older hui-generic-entity-row
+ * versions do not forward `color` at all - `icon_color` remains the way to paint it there.
+ */
+export const rowColorConfig = (resolved: ResolvedColor): { state_color?: boolean; color?: string } =>
+    'cssColor' in resolved ? { color: resolved.cssColor } : { state_color: resolved.stateColor };

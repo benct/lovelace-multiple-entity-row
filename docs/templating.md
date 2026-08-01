@@ -16,6 +16,7 @@ there is no separate `*_template` key.
 | `secondary_info` | as a plain string                        | Result replaces the secondary text                    |
 | `icon`           | main row, additional entities            | Result is used as the icon (`mdi:...`)                |
 | `icon_color`     | main row, additional entities            | Result is used as the CSS color                       |
+| `color`          | main row, additional entities            | `state`, `none`, a theme color or a CSS color         |
 | `template`       | main row, additional entities, secondary | Result replaces the displayed state value entirely    |
 | `hide_if`        | as a plain string, or `hide_if.template` | Hides when the result renders true                    |
 

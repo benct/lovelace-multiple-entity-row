@@ -68,6 +68,7 @@ export const collectTemplates = (config: LooseObject): TemplateRequest[] => {
         add(entry.name, owner);
         add(entry.icon, owner);
         add(entry.icon_color, owner);
+        add(entry.color, owner);
         add(entry.template, owner);
         add(hideIfTemplate(entry), owner);
     };
@@ -112,6 +113,12 @@ export const resolveTemplateFields = <T extends LooseObject>(
     if (hasTemplate(config.icon_color)) {
         const result = get(config.icon_color);
         patch('icon_color', typeof result === 'string' ? result : '');
+    }
+    if (hasTemplate(config.color)) {
+        // A pending/failed color template must not resolve to the "state"/"none" default, so fall
+        // back to 'none' rather than dropping the key and re-triggering default state coloring.
+        const result = get(config.color);
+        patch('color', typeof result === 'string' && result !== '' ? result : 'none');
     }
     if (hasTemplate(config.template)) {
         patch('template', displayResult(get(config.template)));

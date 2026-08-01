@@ -578,6 +578,54 @@ describe('multiple-entity-row', () => {
         });
     });
 
+    // See https://github.com/benct/lovelace-multiple-entity-row/issues/416 - the resolution rules
+    // themselves are covered in color.test.ts; these pin how the result reaches HA's elements.
+    describe('icon color', () => {
+        const states = () => ({
+            'sensor.main': { entity_id: 'sensor.main', state: 'on', attributes: {} },
+            'sensor.a': { entity_id: 'sensor.a', state: 'on', attributes: { icon: 'mdi:foo' } },
+        });
+        const rowConfig = async (config) => {
+            el.setConfig({ entity: 'sensor.main', ...config });
+            el.hass = buildHass(states());
+            await flushRender(el);
+            return el.shadowRoot.querySelector('hui-generic-entity-row').config;
+        };
+
+        it('colors the main row by state by default', async () => {
+            expect(await rowConfig({})).toMatchObject({ state_color: true });
+        });
+
+        it('passes color: none through as state_color false', async () => {
+            expect(await rowConfig({ color: 'none' })).toMatchObject({ state_color: false });
+        });
+
+        // A theme name must arrive as a CSS variable, and must NOT travel as state_color - the
+        // literal string "state" would be invalid CSS on pre-2026.8 state-badges.
+        it('passes a theme color as a computed CSS color', async () => {
+            const config = await rowConfig({ color: 'red' });
+            expect(config.color).toBe('var(--red-color)');
+            expect(config.state_color).toBeUndefined();
+        });
+
+        it('keeps icon_color working by not defaulting to state coloring', async () => {
+            expect(await rowConfig({ icon_color: 'red' })).toMatchObject({ state_color: false });
+        });
+
+        it('accepts the deprecated state_color', async () => {
+            expect(await rowConfig({ state_color: false })).toMatchObject({ state_color: false });
+        });
+
+        it('applies the resolved color to a sub-entity icon badge', async () => {
+            el.setConfig({ entity: 'sensor.main', entities: [{ entity: 'sensor.a', icon: true, color: 'blue' }] });
+            el.hass = buildHass(states());
+            await flushRender(el);
+            const badge = el.shadowRoot.querySelector('.entity:not(.state) state-badge');
+            expect(badge.color).toBe('var(--blue-color)');
+            expect(badge.stateColor).toBeUndefined();
+        });
+    });
+
     describe('row layout', () => {
         beforeEach(() => {
             el.setConfig({ entity: 'sensor.main', entities: ['sensor.a'] });
