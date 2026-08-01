@@ -10,7 +10,9 @@
 
 services:
   ha:
-    image: ghcr.io/home-assistant/home-assistant:stable
+    # Override to test against another HA release, e.g. HA_VERSION=beta (next month's release,
+    # useful for verifying frontend changes before they land) or a pinned tag like 2026.7.4.
+    image: ghcr.io/home-assistant/home-assistant:${HA_VERSION:-stable}
     container_name: mer-ha
     restart: unless-stopped
     ports:
