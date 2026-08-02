@@ -247,6 +247,42 @@ describe('multiple-entity-row', () => {
             const spans = [...el.shadowRoot.querySelectorAll('.entity span')];
             expect(spans.some((span) => span.textContent === '\u00a0')).toBe(false);
         });
+
+        // See https://github.com/benct/lovelace-multiple-entity-row/issues/418 - `name: ' '` is
+        // the idiom for a blank-but-present header. A literal space collapses to zero height, so
+        // that entity ended up a line shorter than the main state, whose #281 placeholder is a
+        // non-collapsing nbsp - the toggle/value misalignment reported against 4.7.1-beta.3.
+        it('reserves the header line for a whitespace-only name', async () => {
+            el.setConfig({ entity: 'sensor.main', entities: [{ entity: 'sensor.a', name: ' ' }] });
+            el.hass = twoEntityHass();
+            await flushRender(el);
+            const spans = [...el.shadowRoot.querySelectorAll('.entity span')];
+            // both the sub-entity's blank header and the main state's placeholder reserve a line
+            expect(spans.filter((span) => span.textContent === '\u00a0')).toHaveLength(2);
+            expect(spans.some((span) => span.textContent === ' ')).toBe(false);
+        });
+
+        it('reserves the header line for a whitespace-only state_header', async () => {
+            el.setConfig({ entity: 'sensor.main', state_header: ' ', entities: [{ entity: 'sensor.a' }] });
+            el.hass = twoEntityHass();
+            await flushRender(el);
+            const spans = [...el.shadowRoot.querySelectorAll('.entity span')];
+            expect(spans.some((span) => span.textContent === '\u00a0')).toBe(true);
+            expect(spans.some((span) => span.textContent === ' ')).toBe(false);
+        });
+
+        // The default-value branch renders its own header span (see #302).
+        it('reserves the header line for a whitespace-only name on a hidden entity', async () => {
+            el.setConfig({
+                entity: 'sensor.main',
+                entities: [{ entity: 'sensor.a', name: ' ', hide_if: '1', default: 'n/a' }],
+            });
+            el.hass = twoEntityHass();
+            await flushRender(el);
+            const spans = [...el.shadowRoot.querySelectorAll('.entity span')];
+            expect(spans.some((span) => span.textContent === '\u00a0')).toBe(true);
+            expect(spans.some((span) => span.textContent === ' ')).toBe(false);
+        });
     });
 
     // See https://github.com/benct/lovelace-multiple-entity-row/issues/384

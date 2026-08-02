@@ -17,6 +17,15 @@ import './editor';
 // dispatch fires (see #338, #202, #188, #251).
 const stopBubble = (event) => event.stopPropagation();
 
+const NBSP = '\u00a0';
+
+// `name: ' '` is the long-standing idiom for "blank header, but keep the line". HTML collapses
+// that space, so the span ends up zero-height and the entity renders one line shorter than its
+// headered siblings - which since #281 includes the main state, whose placeholder is an nbsp and
+// does not collapse. Render any blank header as that same nbsp so both sides reserve a line and
+// stay level (see #418).
+const headerText = (text) => (typeof text === 'string' && text.trim() === '' ? NBSP : text);
+
 console.info(
     `%c MULTIPLE-ENTITY-ROW %c ${process.env.PACKAGE_VERSION} (built ${process.env.BUILD_TIME}, ${process.env.BUILD_COMMIT}) `,
     'color: cyan; background: black; font-weight: bold;',
@@ -232,7 +241,7 @@ class MultipleEntityRow extends LitElement {
                 // #302) - except when the entity is missing entirely, where only an explicit
                 // name can label it.
                 return html`<div class="entity" style="${entityStyles(config)}">
-                    <span>${stateObj ? entityName(stateObj, config) : config.name}</span>
+                    <span>${headerText(stateObj ? entityName(stateObj, config) : config.name)}</span>
                     <div>${config.default}</div>
                 </div>`;
             }
@@ -252,7 +261,7 @@ class MultipleEntityRow extends LitElement {
             @touchcancel="${stopBubble}"
             @contextmenu="${stopBubble}"
         >
-            <span>${entityName(stateObj, config) ?? this.headerPlaceholder()}</span>
+            <span>${headerText(entityName(stateObj, config)) ?? this.headerPlaceholder()}</span>
             <div>
                 ${config.icon || isObject(config.state_icon)
                     ? this.renderIcon(stateObj, config)
@@ -264,7 +273,7 @@ class MultipleEntityRow extends LitElement {
     // Main-state counterpart of headerPlaceholder(): render the state_header, or reserve the
     // header line when sub-entities render headers so the main value stays level with theirs.
     renderMainHeader() {
-        const header = this.config.state_header ?? this.headerPlaceholder();
+        const header = headerText(this.config.state_header) ?? this.headerPlaceholder();
         return header ? html`<span>${header}</span>` : null;
     }
 
@@ -276,7 +285,7 @@ class MultipleEntityRow extends LitElement {
         const anyHeader =
             this.config.state_header !== undefined ||
             this.entities.some((entity) => entity.name !== false && (entity.name || entity.entity));
-        return anyHeader ? '\u00a0' : null;
+        return anyHeader ? NBSP : null;
     }
 
     renderValue(stateObj, config) {
