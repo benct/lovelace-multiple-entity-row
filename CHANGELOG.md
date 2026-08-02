@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 - `unit:` overrides (including `unit: false`) ignored on state values of entities whose integration ships translated units, e.g. Analytics Insights - the card now formats overridden values itself, keeping locale formatting and the display-precision setting (#413)
 - Custom `width`/`justify-content` styling of `.entities-row` had no effect since 4.7.0: HA wrapped the row in shrink-to-fit boxes because the #338 fix set `catchInteraction`, which pinned the row to its content width (#411)
 - Clicking the name or header of a `toggle: true` entity did nothing since 4.7.0 - toggle entities were skipped when wiring gesture handling, leaving everything but the switch dead (#415)
+- Entities using `name: ' '` sat a line higher than their siblings since 4.7.1: the blank header collapsed to zero height while the main state reserved its line, misaligning toggles and values (#418)
 
 **Added:**
 - `wrap` option - reflow entities onto multiple lines instead of overflowing the card on narrow screens (#411)
