@@ -2,6 +2,7 @@ import { css, html, LitElement } from 'lit';
 
 import { LAST_CHANGED, LAST_UPDATED, TIMESTAMP_FORMATS } from './lib/constants';
 import { createGestureHandlers } from './lib/gesture_handler';
+import { badgeColorProps, resolveColor, rowColorConfig } from './color';
 import { checkEntity, entityName, entityStateDisplay, entityStyles, iconColorCss, stateIcon } from './entity';
 import { fireEvent, getEntityIds, hasConfigOrEntitiesChanged, hasGenericSecondaryInfo, hideIf, isObject } from './util';
 import { hasTemplate, resolveTemplateFields, templateDisplay, TemplateSubscriptions } from './templates';
@@ -143,7 +144,11 @@ class MultipleEntityRow extends LitElement {
         // A state_icon match overrides the main row's icon by injecting it into the config
         // handed to hui-generic-entity-row, which owns the main icon rendering (see #197).
         const mainStateIcon = stateIcon(this.stateObj, config);
-        const rowConfig = mainStateIcon ? { ...config, icon: mainStateIcon } : config;
+        const rowConfig = {
+            ...config,
+            ...(mainStateIcon ? { icon: mainStateIcon } : {}),
+            ...rowColorConfig(resolveColor(config)),
+        };
 
         // catchInteraction must stay false: despite the name it does NOT control whether
         // hui-generic-entity-row handles interaction (its actionHandler is bound to the .row
@@ -374,13 +379,17 @@ class MultipleEntityRow extends LitElement {
         // Resolution order: state_icon[state] (see #197) → explicit icon → entity's own icon.
         const overrideIcon =
             stateIcon(stateObj, config) ?? (config.icon === true ? stateObj.attributes.icon || null : config.icon);
+        // Exactly one of these is set (see badgeColorProps); the other stays undefined so
+        // state-badge falls through to the one that is.
+        const { stateColor, color } = badgeColorProps(resolveColor(config));
         return html`<state-badge
             class="icon-small"
             style="${iconColorCss(config.icon_color)}"
             .hass=${this._hass}
             .stateObj="${stateObj}"
             .overrideIcon="${overrideIcon}"
-            .stateColor="${config.state_color}"
+            .stateColor="${stateColor}"
+            .color="${color}"
         ></state-badge>`;
     }
 

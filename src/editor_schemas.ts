@@ -60,7 +60,7 @@ export const MAIN_TAB_SCHEMA = [
         type: 'grid',
         schema: [
             { name: 'show_state', default: true, selector: { boolean: {} } },
-            { name: 'state_color', selector: { boolean: {} } },
+            { name: 'color', selector: { ui_color: { include_state: true, include_none: true } } },
         ],
     },
     {
@@ -117,7 +117,7 @@ export const ADDITIONAL_TAB_SCHEMA = [
     {
         type: 'grid',
         schema: [
-            { name: 'state_color', selector: { boolean: {} } },
+            { name: 'color', selector: { ui_color: { include_state: true, include_none: true } } },
             { name: 'toggle', selector: { boolean: {} } },
         ],
     },
@@ -138,6 +138,9 @@ export const LABELS: Record<string, string> = {
     show_state: 'Show main entity state',
     show_state_first: 'State before entities',
     state_header: 'State header label',
+    // state_color is still accepted in YAML as a deprecated alias, but the editor offers only the
+    // color selector - the same swap HA made in its own row editors (see #416).
+    color: 'Icon color',
     state_color: 'State color',
     column: 'Column layout',
     wrap: 'Wrap instead of overflowing',

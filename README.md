@@ -57,7 +57,8 @@ A **visual editor** is available: when editing a `custom:multiple-entity-row` ro
 | show_state        | bool          | `true`                              | Set to `false` to hide the main entity           |
 | show_state_first  | bool          | `false`                             | Show the main state before other entities        |
 | state_header      | string        |                                     | Show header text above the main entity state     |
-| state_color       | bool          | `false`                             | Enable colored icon when entity is active        |
+| color             | string        | `state`                             | `state`, `none`, a theme color or a CSS color    |
+| state_color       | bool          | _deprecated_                        | Superseded by `color`                            |
 | column            | bool          | `false`                             | Show entities in a column instead of a row       |
 | wrap              | bool          | `false`                             | Wrap onto multiple lines instead of overflowing  |
 | default           | string        |                                     | Display this value when the state is hidden      |
@@ -92,7 +93,8 @@ attribute value instead of the state value. `icon` lets you display an icon inst
 | unit              | string/bool | `unit_of_measurement`       | Override entity unit of measurement (or `false` to hide)           |
 | toggle            | bool        | `false`                     | Display a toggle if supported by domain                            |
 | icon              | string/bool | `false`                     | Display default or custom icon instead of state or attribute value |
-| state_color       | bool        | `false`                     | Enable colored icon when entity is active                          |
+| color             | string      | `state`                     | `state`, `none`, a theme color or a CSS color                      |
+| state_color       | bool        | _deprecated_                | Superseded by `color`                                              |
 | icon_color        | string      |                             | CSS color for the entity icon                                      |
 | state_icon        | object      |                             | Map of state value → icon override                                 |
 | default           | string      |                             | Display this value if the entity does not exist or is hidden       |
@@ -233,7 +235,7 @@ For example, only show the alarm exit-state sensor while the alarm is armed:
 
 ### Templating
 
-Display options accept Jinja **templates**, rendered by Home Assistant server-side and updated live whenever the entities they reference change. Any supported option whose value contains `{{ }}` or `{% %}` is treated as a template: `name`, `icon`, `icon_color`, `secondary_info` text, `hide_if`, and a `template` option that replaces the displayed value entirely. The `entity` variable holds the owning entity's id.
+Display options accept Jinja **templates**, rendered by Home Assistant server-side and updated live whenever the entities they reference change. Any supported option whose value contains `{{ }}` or `{% %}` is treated as a template: `name`, `icon`, `icon_color`, `color`, `secondary_info` text, `hide_if`, and a `template` option that replaces the displayed value entirely. The `entity` variable holds the owning entity's id.
 
 ```yaml
 - type: custom:multiple-entity-row
@@ -250,7 +252,24 @@ See **[docs/templating.md](docs/templating.md)** for the full documentation: sup
 
 ### Icon styling
 
-`icon_color` accepts any CSS color value (`red`, `#ff0000`, `var(--my-color)`) and applies it to the entity's icon. `state_icon` maps state values to icon overrides, taking precedence over `icon` when the current state matches:
+`color` follows Home Assistant's icon color option and accepts `state` (color by entity state), `none` (never color), a theme color name (`red`, `deep-purple`, `accent`), or any CSS color. It applies to the main row icon and to additional entities rendering an icon. The default is `state`, matching the entities card:
+
+```yaml
+- entity: light.kitchen
+  type: custom:multiple-entity-row
+  color: state
+  entities:
+    - entity: binary_sensor.back_door
+      icon: true
+      color: red
+    - entity: sensor.humidity
+      icon: true
+      color: none
+```
+
+Theme color names and `state` require Home Assistant 2026.8 or newer for the main row icon; on older versions use `icon_color` there. `state_color` is still accepted as a deprecated alias — `true` means `color: state`, `false` means `color: none`.
+
+`icon_color` accepts any CSS color value (`red`, `#ff0000`, `var(--my-color)`) and applies it to the entity's icon **regardless of state**, which is the one thing `color` cannot express. Setting it also switches that entity's default to `color: none`, so the two do not fight; an explicit `color` still wins. `state_icon` maps state values to icon overrides, taking precedence over `icon` when the current state matches:
 
 ```yaml
 - entity: binary_sensor.front_door
