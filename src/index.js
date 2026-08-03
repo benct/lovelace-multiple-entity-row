@@ -20,12 +20,12 @@ const stopBubble = (event) => event.stopPropagation();
 
 const NBSP = '\u00a0';
 
-// `name: ' '` is the long-standing idiom for "blank header, but keep the line". HTML collapses
-// that space, so the span ends up zero-height and the entity renders one line shorter than its
-// headered siblings - which since #281 includes the main state, whose placeholder is an nbsp and
-// does not collapse. Render any blank header as that same nbsp so both sides reserve a line and
-// stay level (see #418).
-const headerText = (text) => (typeof text === 'string' && text.trim() === '' ? NBSP : text);
+// `name: ' '` is the common idiom for "no header here" and must behave exactly like name:false,
+// so blank names collapse to null and go through the same headerPlaceholder path. #418 got this
+// wrong by rendering them as an nbsp: that kept blank-named entities level with each other, but
+// made an all-blank row reserve a header line nothing needed, dropping its values below the row
+// name (see #421). Whether a line is reserved is headerPlaceholder's decision alone.
+const blankName = (text) => (typeof text === 'string' && text.trim() === '' ? null : text);
 
 console.info(
     `%c MULTIPLE-ENTITY-ROW %c ${process.env.PACKAGE_VERSION} (built ${process.env.BUILD_TIME}, ${process.env.BUILD_COMMIT}) `,
@@ -246,7 +246,10 @@ class MultipleEntityRow extends LitElement {
                 // #302) - except when the entity is missing entirely, where only an explicit
                 // name can label it.
                 return html`<div class="entity" style="${entityStyles(config)}">
-                    <span>${headerText(stateObj ? entityName(stateObj, config) : config.name)}</span>
+                    <span
+                        >${blankName(stateObj ? entityName(stateObj, config) : config.name) ??
+                        this.headerPlaceholder()}</span
+                    >
                     <div>${config.default}</div>
                 </div>`;
             }
@@ -266,7 +269,7 @@ class MultipleEntityRow extends LitElement {
             @touchcancel="${stopBubble}"
             @contextmenu="${stopBubble}"
         >
-            <span>${headerText(entityName(stateObj, config)) ?? this.headerPlaceholder()}</span>
+            <span>${blankName(entityName(stateObj, config)) ?? this.headerPlaceholder()}</span>
             <div>
                 ${config.icon || isObject(config.state_icon)
                     ? this.renderIcon(stateObj, config)
@@ -278,7 +281,7 @@ class MultipleEntityRow extends LitElement {
     // Main-state counterpart of headerPlaceholder(): render the state_header, or reserve the
     // header line when sub-entities render headers so the main value stays level with theirs.
     renderMainHeader() {
-        const header = headerText(this.config.state_header) ?? this.headerPlaceholder();
+        const header = blankName(this.config.state_header) ?? this.headerPlaceholder();
         return header ? html`<span>${header}</span>` : null;
     }
 
@@ -287,9 +290,12 @@ class MultipleEntityRow extends LitElement {
     // #281). Reserve the header line with an nbsp - but only when some sibling actually renders
     // a header, so all-headerless rows keep their compact centered layout.
     headerPlaceholder() {
+        // name:false and name:' ' both mean "no header"; an unset name falls back to the entity's
+        // friendly name, which is one.
+        const rendersHeader = (config) =>
+            config.name !== false && blankName(config.name) !== null && !!(config.name || config.entity);
         const anyHeader =
-            this.config.state_header !== undefined ||
-            this.entities.some((entity) => entity.name !== false && (entity.name || entity.entity));
+            blankName(this.config.state_header) != null || this.entities.some((entity) => rendersHeader(entity));
         return anyHeader ? NBSP : null;
     }
 

@@ -9,6 +9,9 @@ All notable changes to this project will be documented in this file.
 **Added:**
 - `color` option on the row and on additional entities, following HA's icon color API: `state`, `none`, a theme color name (`red`, `deep-purple`, ...) or any CSS color. Templatable like `icon_color`. Works back to HA 2024.4; theme colors and `state` need 2026.8+ for the main row icon (#416)
 
+**Fixed:**
+- `name: ' '` now behaves exactly like `name: false`. 4.8.0 gave it a reserved header line, which kept blank-named entities level with each other but pushed an all-blank row's values below the row name (#421)
+
 **Deprecated:**
 - `state_color` - still accepted and mapped to `color` (`true` → `state`, `false` → `none`), and no longer offered in the visual editor
 
