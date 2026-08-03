@@ -248,22 +248,26 @@ describe('multiple-entity-row', () => {
             expect(spans.some((span) => span.textContent === '\u00a0')).toBe(false);
         });
 
-        // See https://github.com/benct/lovelace-multiple-entity-row/issues/418 - `name: ' '` is
-        // the idiom for a blank-but-present header. A literal space collapses to zero height, so
-        // that entity ended up a line shorter than the main state, whose #281 placeholder is a
-        // non-collapsing nbsp - the toggle/value misalignment reported against 4.7.1-beta.3.
-        it('reserves the header line for a whitespace-only name', async () => {
+        // See https://github.com/benct/lovelace-multiple-entity-row/issues/418 and #421 -
+        // `name: ' '` means "no header here" and must behave exactly like name:false. #418 first
+        // rendered it as an nbsp, which kept blank-named entities level with each other but made
+        // an all-blank row reserve a line nothing needed, pushing its values below the row name.
+        it('treats a whitespace-only name like name:false', async () => {
             el.setConfig({ entity: 'sensor.main', entities: [{ entity: 'sensor.a', name: ' ' }] });
             el.hass = twoEntityHass();
             await flushRender(el);
             const spans = [...el.shadowRoot.querySelectorAll('.entity span')];
-            // both the sub-entity's blank header and the main state's placeholder reserve a line
-            expect(spans.filter((span) => span.textContent === '\u00a0')).toHaveLength(2);
+            expect(spans.some((span) => span.textContent === '\u00a0')).toBe(false);
             expect(spans.some((span) => span.textContent === ' ')).toBe(false);
         });
 
-        it('reserves the header line for a whitespace-only state_header', async () => {
-            el.setConfig({ entity: 'sensor.main', state_header: ' ', entities: [{ entity: 'sensor.a' }] });
+        // ...but a blank name still needs the placeholder when a sibling does render a header,
+        // which is the alignment #281 was about.
+        it('reserves the header line for a blank name beside a headered sibling', async () => {
+            el.setConfig({
+                entity: 'sensor.main',
+                entities: [{ entity: 'sensor.a' }, { entity: 'sensor.b', name: ' ' }],
+            });
             el.hass = twoEntityHass();
             await flushRender(el);
             const spans = [...el.shadowRoot.querySelectorAll('.entity span')];
@@ -271,8 +275,21 @@ describe('multiple-entity-row', () => {
             expect(spans.some((span) => span.textContent === ' ')).toBe(false);
         });
 
+        it('does not count a whitespace-only state_header as a header', async () => {
+            el.setConfig({
+                entity: 'sensor.main',
+                state_header: ' ',
+                entities: [{ entity: 'sensor.a', name: false }],
+            });
+            el.hass = twoEntityHass();
+            await flushRender(el);
+            const spans = [...el.shadowRoot.querySelectorAll('.entity span')];
+            expect(spans.some((span) => span.textContent === '\u00a0')).toBe(false);
+            expect(spans.some((span) => span.textContent === ' ')).toBe(false);
+        });
+
         // The default-value branch renders its own header span (see #302).
-        it('reserves the header line for a whitespace-only name on a hidden entity', async () => {
+        it('treats a whitespace-only name like name:false on a hidden entity', async () => {
             el.setConfig({
                 entity: 'sensor.main',
                 entities: [{ entity: 'sensor.a', name: ' ', hide_if: '1', default: 'n/a' }],
@@ -280,7 +297,7 @@ describe('multiple-entity-row', () => {
             el.hass = twoEntityHass();
             await flushRender(el);
             const spans = [...el.shadowRoot.querySelectorAll('.entity span')];
-            expect(spans.some((span) => span.textContent === '\u00a0')).toBe(true);
+            expect(spans.some((span) => span.textContent === '\u00a0')).toBe(false);
             expect(spans.some((span) => span.textContent === ' ')).toBe(false);
         });
     });
