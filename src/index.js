@@ -311,6 +311,23 @@ class MultipleEntityRow extends LitElement {
             const value = hasTemplate(config.template) ? '' : config.template;
             return `${value}${config.unit ? ` ${config.unit}` : ''}`;
         }
+        // HA's normal timer row does not format the entity's `active` state as text. It delegates
+        // to state-display's remaining_time content, which loads ha-timer-remaining-time and owns
+        // the one-second refresh while the timer is active (see #299). Keep explicit display
+        // overrides on this card's existing path so adding live timer support does not change
+        // configurations that deliberately select an attribute, format or unit.
+        if (
+            stateObj.entity_id?.startsWith('timer.') &&
+            config.attribute === undefined &&
+            config.format === undefined &&
+            config.unit === undefined
+        ) {
+            return html`<state-display
+                .hass=${this._hass}
+                .stateObj=${stateObj}
+                .content=${'remaining_time'}
+            ></state-display>`;
+        }
         const isLastChangedAttr = config.attribute && [LAST_CHANGED, LAST_UPDATED].includes(config.attribute);
         // A configured timestamp format wins over the default relative-time widget for the
         // last-changed/last-updated pseudo-attributes - previously it was silently ignored

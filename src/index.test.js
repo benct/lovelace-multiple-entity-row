@@ -102,6 +102,46 @@ describe('multiple-entity-row', () => {
         expect(el.shadowRoot.innerHTML).toContain('hui-generic-entity-row');
     });
 
+    // See https://github.com/benct/lovelace-multiple-entity-row/issues/299 - HA's normal timer
+    // row renders remaining_time through state-display, which owns the live one-second updates.
+    describe('timer remaining time', () => {
+        const timerState = {
+            entity_id: 'timer.blanket',
+            state: 'active',
+            attributes: { duration: '01:00:00', finishes_at: '2026-08-04T13:00:00+00:00' },
+        };
+
+        it('uses HA state-display for an unformatted timer entity', async () => {
+            el.setConfig({ entity: 'sensor.main', entities: [{ entity: 'timer.blanket' }] });
+            el.hass = buildHass({
+                'sensor.main': { entity_id: 'sensor.main', state: 'on', attributes: {} },
+                'timer.blanket': timerState,
+            });
+            await flushRender(el);
+
+            const display = el.shadowRoot.querySelector('state-display');
+            expect(display).not.toBeNull();
+            expect(display.hass).toBe(el._hass);
+            expect(display.stateObj).toBe(timerState);
+            expect(display.content).toBe('remaining_time');
+        });
+
+        it('keeps explicit timer display overrides on the existing formatting path', async () => {
+            el.setConfig({
+                entity: 'sensor.main',
+                entities: [{ entity: 'timer.blanket', attribute: 'duration' }],
+            });
+            el.hass = buildHass({
+                'sensor.main': { entity_id: 'sensor.main', state: 'on', attributes: {} },
+                'timer.blanket': timerState,
+            });
+            await flushRender(el);
+
+            expect(el.shadowRoot.querySelector('state-display')).toBeNull();
+            expect(el._hass.formatEntityAttributeValue).toHaveBeenCalledWith(timerState, 'duration');
+        });
+    });
+
     it('populates per-row entities with their own state objects', async () => {
         el.setConfig({ entity: 'sensor.main', entities: ['sensor.a'] });
         el.hass = buildHass({
