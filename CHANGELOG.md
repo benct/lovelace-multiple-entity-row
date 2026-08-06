@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## 4.10.0
 
 **Added:**
 - `vars` - named values usable in any template in the same scope, on the row and on additional entities, which inherit the row's and may shadow them. Values may themselves be templates, and a variable can build on one declared before it. Inlined into each template that uses them, so a field is still a single subscription (#422)
