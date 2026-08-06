@@ -90,6 +90,9 @@ attribute value instead of the state value. `icon` lets you display an icon inst
 An entity id that doesn't resolve is marked with a warning icon rather than silently dropped, so a renamed or removed entity is
 visible. Use `hide_unavailable: true` to hide it instead, or `default:` to show a placeholder value.
 
+A `timer` entity shows its remaining time rather than its raw state: the localized state while idle, a counting `mm:ss` while
+running, and `mm:ss (Paused)` when paused. An explicit `attribute:` or `template:` overrides this.
+
 | Name              | Type        | Default                     | Description                                                        |
 | ----------------- | ----------- | --------------------------- | ------------------------------------------------------------------ |
 | entity            | string      |                             | A valid entity_id (or skip to use main entity)                     |
