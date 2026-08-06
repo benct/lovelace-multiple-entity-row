@@ -279,6 +279,24 @@ class MultipleEntityRow extends LitElement {
                     <div>${config.default}</div>
                 </div>`;
             }
+            // A missing entity is nearly always a renamed or removed id, and dropping the slot
+            // silently leaves no clue which one (see #364). `hide_unavailable` is documented as
+            // the way to hide an entity that "is unavailable or does not exist", so honour that
+            // and mark the gap otherwise. Not a header slot: the marker is an icon (see #425).
+            if (!stateObj && !config.hide_unavailable) {
+                return html`<div
+                    class="entity"
+                    style="${entityStyles(config)}"
+                    title="${this._hass.localize(
+                        'ui.panel.lovelace.warning.entity_not_found',
+                        'entity',
+                        config.entity ?? ''
+                    )}"
+                >
+                    <span>${blankName(config.name)}</span>
+                    <div><ha-icon class="missing" icon="mdi:alert-circle-outline"></ha-icon></div>
+                </div>`;
+            }
             return null;
         }
         const gesture = this.getGestureHandlers(`sub-${index}`, stateObj.entity_id, config);

@@ -34,12 +34,23 @@ describe('multiple-entity-row', () => {
         expect(() => el.setConfig({})).toThrow('Please define a main entity.');
     });
 
-    // See https://github.com/benct/lovelace-multiple-entity-row/issues/364 -
-    // an invalid entities/secondary_info config should fail fast at setConfig time.
+    // A malformed entry still fails fast at setConfig time. Distinct from #364, which is about an
+    // entity id that is well-formed but resolves to nothing at runtime.
     it('throws when an entities item is invalid', () => {
-        expect(() => el.setConfig({ entity: 'sensor.main', entities: [{ name: 'no entity/attribute/icon' }] })).toThrow(
-            /requires at least one/
+        expect(() => el.setConfig({ entity: 'sensor.main', entities: [42] })).toThrow(
+            /valid entity ID string or entity object/
         );
+        expect(() => el.setConfig({ entity: 'sensor.main', entities: [''] })).toThrow(/must not be blank/);
+    });
+
+    // See https://github.com/benct/lovelace-multiple-entity-row/issues/340 - repeating the main
+    // entity's state without naming it again, which is the only way under auto-entities.
+    it('renders the main entity state for an entry with no entity of its own', async () => {
+        el.setConfig({ entity: 'sensor.main', entities: [{}, { name: 'Copy' }] });
+        el.hass = buildHass({ 'sensor.main': { entity_id: 'sensor.main', state: '21', attributes: {} } });
+        await flushRender(el);
+        const values = [...el.shadowRoot.querySelectorAll('.entity:not(.state) div')].map((d) => d.textContent.trim());
+        expect(values).toEqual(['21', '21']);
     });
 
     it('tracks entity ids from the main entity, entities list and secondary_info', () => {
@@ -160,6 +171,52 @@ describe('multiple-entity-row', () => {
         await flushRender(el);
         expect(el.shadowRoot.innerHTML).toContain('Alpha');
         expect(el.shadowRoot.innerHTML).toContain('n/a');
+    });
+
+    // See https://github.com/benct/lovelace-multiple-entity-row/issues/364 - a removed or renamed
+    // entity id used to vanish from the row with no clue which slot it was.
+    describe('missing entity', () => {
+        const hassWithoutB = () =>
+            buildHass({ 'sensor.main': { entity_id: 'sensor.main', state: 'on', attributes: {} } });
+
+        it('marks a missing entity instead of dropping the slot', async () => {
+            el.setConfig({ entity: 'sensor.main', entities: [{ entity: 'sensor.gone', name: 'Gone' }] });
+            el.hass = hassWithoutB();
+            await flushRender(el);
+            expect(el.shadowRoot.querySelector('.entity .missing')).not.toBeNull();
+            expect(el.shadowRoot.innerHTML).toContain('Gone');
+        });
+
+        // hide_unavailable is documented as hiding an entity that is unavailable OR absent.
+        it('still hides a missing entity with hide_unavailable', async () => {
+            el.setConfig({
+                entity: 'sensor.main',
+                entities: [{ entity: 'sensor.gone', hide_unavailable: true }],
+            });
+            el.hass = hassWithoutB();
+            await flushRender(el);
+            expect(el.shadowRoot.querySelector('.entity .missing')).toBeNull();
+            expect(el.shadowRoot.querySelectorAll('.entity:not(.state)')).toHaveLength(0);
+        });
+
+        it('prefers a configured default over the marker', async () => {
+            el.setConfig({ entity: 'sensor.main', entities: [{ entity: 'sensor.gone', default: 'n/a' }] });
+            el.hass = hassWithoutB();
+            await flushRender(el);
+            expect(el.shadowRoot.querySelector('.entity .missing')).toBeNull();
+            expect(el.shadowRoot.innerHTML).toContain('n/a');
+        });
+
+        // An entity that exists but is merely unavailable is a normal state, not a missing id.
+        it('does not mark an entity that exists but is unavailable', async () => {
+            el.setConfig({ entity: 'sensor.main', entities: [{ entity: 'sensor.a' }] });
+            el.hass = buildHass({
+                'sensor.main': { entity_id: 'sensor.main', state: 'on', attributes: {} },
+                'sensor.a': { entity_id: 'sensor.a', state: 'unavailable', attributes: {} },
+            });
+            await flushRender(el);
+            expect(el.shadowRoot.querySelector('.entity .missing')).toBeNull();
+        });
     });
 
     // See https://github.com/benct/lovelace-multiple-entity-row/issues/265 - a confirmation on
