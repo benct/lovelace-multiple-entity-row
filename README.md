@@ -42,31 +42,32 @@ This card produces an `entity-row` and must therefore be configured as an entity
 
 A **visual editor** is available: when editing a `custom:multiple-entity-row` row through the entities card's UI editor, the row opens a form-based editor with tabs for the main entity and each additional entity (add / reorder / copy / paste / delete), plus sections for secondary info, state-based icons, per-entity custom CSS, and tap/hold/double-tap actions. Everything below can still be configured in YAML; a few advanced options (`hide_if`, digit-suffixed formats like `precision5`, [templates](#templating)) are YAML-only — a config containing templates opens directly in the code editor.
 
-| Name              | Type          | Default                             | Description                                      |
-| ----------------- | ------------- | ----------------------------------- | ------------------------------------------------ |
-| type              | string        | **Required**                        | `custom:multiple-entity-row`                     |
-| entity            | string        | **Required**                        | Entity ID (`domain.my_entity_id`)                |
-| attribute         | string        |                                     | Show an attribute instead of the state value     |
-| name              | string/bool   | `friendly_name`                     | Override entity friendly name                    |
-| unit              | string/bool   | `unit_of_measurement`               | Override entity unit of measurement              |
-| icon              | string        | `icon`                              | Override entity icon or image                    |
-| icon_color        | string        |                                     | CSS color for the entity icon                    |
-| state_icon        | object        |                                     | Map of state value → icon override               |
-| image             | string        |                                     | Show an image instead of icon                    |
-| toggle            | bool          | `false`                             | Display a toggle (if supported) instead of state |
-| show_state        | bool          | `true`                              | Set to `false` to hide the main entity           |
-| show_state_first  | bool          | `false`                             | Show the main state before other entities        |
-| state_header      | string        |                                     | Show header text above the main entity state     |
-| color             | string        | `state`                             | `state`, `none`, a theme color or a CSS color    |
-| state_color       | bool          | _deprecated_                        | Superseded by `color`                            |
-| column            | bool          | `false`                             | Show entities in a column instead of a row       |
-| wrap              | bool          | `false`                             | Wrap onto multiple lines instead of overflowing  |
-| default           | string        |                                     | Display this value when the state is hidden      |
-| hide_unavailable  | bool          | `false`                             | Hide the state value if unavailable              |
-| hide_if           | object/any    | _[Hiding](#hiding)_                 | Hide the state value if criteria match           |
-| styles            | object        |                                     | Add custom CSS styles to the state element       |
-| format            | string        | _[Formatting](#formatting)_         | Format main state/attribute value                |
-| template          | string        | _[Templating](#templating)_         | Replace the state value with a template result   |
+| Name             | Type        | Default                     | Description                                      |
+| ---------------- | ----------- | --------------------------- | ------------------------------------------------ |
+| type             | string      | **Required**                | `custom:multiple-entity-row`                     |
+| entity           | string      | **Required**                | Entity ID (`domain.my_entity_id`)                |
+| attribute        | string      |                             | Show an attribute instead of the state value     |
+| name             | string/bool | `friendly_name`             | Override entity friendly name                    |
+| unit             | string/bool | `unit_of_measurement`       | Override entity unit of measurement              |
+| icon             | string      | `icon`                      | Override entity icon or image                    |
+| icon_color       | string      |                             | CSS color for the entity icon                    |
+| state_icon       | object      |                             | Map of state value → icon override               |
+| image            | string      |                             | Show an image instead of icon                    |
+| toggle           | bool        | `false`                     | Display a toggle (if supported) instead of state |
+| show_state       | bool        | `true`                      | Set to `false` to hide the main entity           |
+| show_state_first | bool        | `false`                     | Show the main state before other entities        |
+| state_header     | string      |                             | Show header text above the main entity state     |
+| color            | string      | `state`                     | `state`, `none`, a theme color or a CSS color    |
+| state_color      | bool        | _deprecated_                | Superseded by `color`                            |
+| column           | bool        | `false`                     | Show entities in a column instead of a row       |
+| wrap             | bool        | `false`                     | Wrap onto multiple lines instead of overflowing  |
+| default          | string      |                             | Display this value when the state is hidden      |
+| hide_unavailable | bool        | `false`                     | Hide the state value if unavailable              |
+| hide_if          | object/any  | _[Hiding](#hiding)_         | Hide the state value if criteria match           |
+| styles           | object      |                             | Add custom CSS styles to the state element       |
+| format           | string      | _[Formatting](#formatting)_ | Format main state/attribute value                |
+| template         | string      | _[Templating](#templating)_ | Replace the state value with a template result   |
+| vars             | object      | _[Templating](#templating)_ | Named values reusable in this scope's templates  |
 |                   |
 | entities          | list          | _[Entity Objects](#entity-objects)_ | Additional entity IDs or entity object(s)        |
 | secondary_info    | string/object | _[Secondary Info](#secondary-info)_ | Custom `secondary_info` entity                   |
@@ -103,6 +104,7 @@ attribute value instead of the state value. `icon` lets you display an icon inst
 | styles            | object      |                             | Add custom CSS styles to the entity element                        |
 | format            | string      | _[Formatting](#formatting)_ | Format entity value                                                |
 | template          | string      | _[Templating](#templating)_ | Replace the entity value with a template result                    |
+| vars              | object      | _[Templating](#templating)_ | Named values reusable in this scope's templates                    |
 | tap_action        | object      | _[Actions](#actions)_       | Custom entity tap action                                           |
 | hold_action       | object      | _[Actions](#actions)_       | Custom entity hold action                                          |
 | double_tap_action | object      | _[Actions](#actions)_       | Custom entity double-tap action                                    |
@@ -134,6 +136,7 @@ an object containing configuration options listed below, or any of the default s
 | hide_if          | object/any  | _[Hiding](#hiding)_         | Hide secondary info if its value matches given criteria  |
 | format           | string      | _[Formatting](#formatting)_ | Format secondary info value                              |
 | template         | string      | _[Templating](#templating)_ | Replace the secondary info value with a template result  |
+| vars             | object      | _[Templating](#templating)_ | Named values reusable in this scope's templates          |
 
 ### Actions
 
@@ -235,7 +238,7 @@ For example, only show the alarm exit-state sensor while the alarm is armed:
 
 ### Templating
 
-Display options accept Jinja **templates**, rendered by Home Assistant server-side and updated live whenever the entities they reference change. Any supported option whose value contains `{{ }}` or `{% %}` is treated as a template: `name`, `icon`, `icon_color`, `color`, `secondary_info` text, `hide_if`, and a `template` option that replaces the displayed value entirely. The `entity` variable holds the owning entity's id.
+Display options accept Jinja **templates**, rendered by Home Assistant server-side and updated live whenever the entities they reference change. Any supported option whose value contains `{{ }}` or `{% %}` is treated as a template: `name`, `icon`, `icon_color`, `color`, `secondary_info` text, `hide_if`, a `template` option that replaces the displayed value entirely, and any value inside `tap_action`/`hold_action`/`double_tap_action`. The `entity` variable holds the owning entity's id, and `vars` lets you name values reused across a row.
 
 ```yaml
 - type: custom:multiple-entity-row

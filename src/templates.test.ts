@@ -4,9 +4,12 @@ import {
     configHasTemplates,
     hasTemplate,
     isTruthyResult,
+    resolveActionConfig,
     resolveTemplateFields,
+    scopeVars,
     TemplateResults,
     TemplateSubscriptions,
+    varsPrefix,
 } from './templates';
 
 const NAME_TEMPLATE = "{{ states('sensor.a') }} name";
@@ -131,6 +134,151 @@ describe('collectTemplates', () => {
     });
 });
 
+// See https://github.com/benct/lovelace-multiple-entity-row/issues/422 - `vars` are inlined as
+// {% set %} statements ahead of each templated field in the same scope, so a field stays one
+// subscription and HA still tracks the entities the variables touch.
+describe('varsPrefix', () => {
+    it('is empty without vars', () => {
+        expect(varsPrefix(undefined)).toBe('');
+        expect(varsPrefix({})).toBe('');
+    });
+
+    // Unwrapped so the variable keeps its native type rather than becoming a string.
+    it('unwraps a lone expression', () => {
+        expect(varsPrefix({ host: "{{ state_attr(entity, 'host') }}" })).toBe(
+            "{% set host = state_attr(entity, 'host') %}"
+        );
+    });
+
+    // Surrounding text or a second expression can't be unwrapped, so capture the rendered output.
+    it('captures anything that is not a lone expression', () => {
+        expect(varsPrefix({ label: 'host {{ a }}' })).toBe('{% set label %}host {{ a }}{% endset %}');
+        expect(varsPrefix({ label: '{{ a }}{{ b }}' })).toBe('{% set label %}{{ a }}{{ b }}{% endset %}');
+        expect(varsPrefix({ label: '{% if x %}y{% endif %}' })).toBe(
+            '{% set label %}{% if x %}y{% endif %}{% endset %}'
+        );
+    });
+
+    it('emits literals as Jinja values', () => {
+        expect(varsPrefix({ action: 'restart' })).toBe('{% set action = "restart" %}');
+        expect(varsPrefix({ n: 5 })).toBe('{% set n = 5 %}');
+        expect(varsPrefix({ flag: true })).toBe('{% set flag = true %}');
+        expect(varsPrefix({ nothing: null })).toBe('{% set nothing = none %}');
+    });
+
+    it('preserves declaration order so a variable can build on an earlier one', () => {
+        expect(varsPrefix({ a: '{{ 1 }}', b: '{{ a + 1 }}' })).toBe('{% set a = 1 %}{% set b = a + 1 %}');
+    });
+});
+
+describe('scopeVars', () => {
+    it('merges row vars with the scope, the scope winning', () => {
+        expect(scopeVars({ vars: { host: 'h', action: 'stop' } }, { vars: { action: 'restart' } })).toEqual({
+            host: 'h',
+            action: 'restart',
+        });
+    });
+
+    it('is a no-op merge for the row itself', () => {
+        const config = { vars: { host: 'h' } };
+        expect(scopeVars(config, config)).toEqual({ host: 'h' });
+    });
+});
+
+describe('collectTemplates with vars', () => {
+    it('prefixes each templated field with the scope vars', () => {
+        const requests = collectTemplates({
+            entity: 'sensor.main',
+            vars: { host: '{{ 1 }}' },
+            name: '{{ host }}',
+        });
+        expect(requests).toEqual([{ template: '{% set host = 1 %}{{ host }}', entity: 'sensor.main' }]);
+    });
+
+    it('gives a sub-entity the merged row+entity vars', () => {
+        const requests = collectTemplates({
+            entity: 'sensor.main',
+            vars: { host: '{{ 1 }}' },
+            entities: [{ entity: 'sensor.a', vars: { act: 'stop' }, name: '{{ host }}{{ act }}' }],
+        });
+        expect(requests).toEqual([
+            {
+                template: '{% set host = 1 %}{% set act = "stop" %}{{ host }}{{ act }}',
+                entity: 'sensor.a',
+            },
+        ]);
+    });
+
+    // vars alone are not a subscription - they only exist as part of a field's template.
+    it('does not subscribe to vars on their own', () => {
+        expect(collectTemplates({ entity: 'sensor.main', vars: { host: '{{ 1 }}' }, name: 'plain' })).toEqual([]);
+    });
+});
+
+// See https://github.com/benct/lovelace-multiple-entity-row/issues/422 - action configs are
+// walked rather than enumerated, so a template works anywhere inside one.
+describe('action config templating', () => {
+    const config = {
+        entity: 'sensor.main',
+        vars: { host: 'nas' },
+        entities: [
+            {
+                entity: 'sensor.a',
+                tap_action: {
+                    action: 'call-service',
+                    service: 'button.press',
+                    confirmation: { text: 'Restart {{ host }}?' },
+                    service_data: { entity_id: "{{ 'button.' ~ host }}", brightness: '{{ 255 }}' },
+                },
+            },
+        ],
+    };
+
+    it('collects templates from anywhere inside an action config', () => {
+        expect(collectTemplates(config).map((r) => r.template)).toEqual([
+            '{% set host = "nas" %}Restart {{ host }}?',
+            '{% set host = "nas" %}{{ \'button.\' ~ host }}',
+            '{% set host = "nas" %}{{ 255 }}',
+        ]);
+    });
+
+    it('replaces templated values while leaving the rest of the config alone', () => {
+        const results: TemplateResults = new Map<string, unknown>([
+            ['sensor.a|{% set host = "nas" %}Restart {{ host }}?', 'Restart nas?'],
+            ['sensor.a|{% set host = "nas" %}{{ \'button.\' ~ host }}', 'button.nas'],
+            ['sensor.a|{% set host = "nas" %}{{ 255 }}', 255],
+        ]);
+        const resolved = resolveActionConfig(
+            config.entities[0].tap_action,
+            results,
+            'sensor.a',
+            scopeVars(config, config.entities[0])
+        );
+        expect(resolved).toEqual({
+            action: 'call-service',
+            service: 'button.press',
+            confirmation: { text: 'Restart nas?' },
+            service_data: { entity_id: 'button.nas', brightness: 255 },
+        });
+    });
+
+    // Service data often wants a real number or boolean, so results are used natively rather
+    // than stringified the way display fields are.
+    it('keeps native result types', () => {
+        const results: TemplateResults = new Map([['sensor.a|{{ n }}', 42]]);
+        expect(resolveActionConfig({ data: { v: '{{ n }}' } }, results, 'sensor.a')).toEqual({ data: { v: 42 } });
+    });
+
+    it('renders a pending result as empty rather than leaking Jinja into a service call', () => {
+        expect(resolveActionConfig({ data: { v: '{{ n }}' } }, new Map(), 'sensor.a')).toEqual({ data: { v: '' } });
+    });
+
+    it('returns a config with no templates untouched', () => {
+        const plain = { action: 'toggle' };
+        expect(resolveActionConfig(plain, new Map(), 'sensor.a')).toEqual(plain);
+    });
+});
+
 describe('resolveTemplateFields', () => {
     const empty: TemplateResults = new Map();
 
@@ -191,6 +339,26 @@ describe('resolveTemplateFields', () => {
         const { connection, results } = buildManager(config);
         connection.subs[0].callback({ result: { a: 1 } });
         expect(resolveTemplateFields(config, results(), 'sensor.a').template).toBe('{"a":1}');
+    });
+
+    // The prefix is part of the subscribed string and therefore part of the result key. This is
+    // the round trip that catches collect and resolve building it differently - the failure mode
+    // is silent, every lookup simply missing (see #422).
+    it('round-trips a result through the vars prefix', () => {
+        const config = { entity: 'sensor.a', vars: { host: "{{ 'kitchen' }}" }, name: '{{ host }}' };
+        const { connection, results } = buildManager(config);
+        expect(connection.subs[0].message.template).toBe("{% set host = 'kitchen' %}{{ host }}");
+        connection.subs[0].callback({ result: 'kitchen' });
+        expect(resolveTemplateFields(config, results(), 'sensor.a', scopeVars(config, config)).name).toBe('kitchen');
+    });
+
+    it('misses nothing when a sub-entity shadows a row var', () => {
+        const entry = { entity: 'sensor.b', vars: { act: 'restart' }, name: '{{ act }}' };
+        const config = { entity: 'sensor.a', vars: { act: 'stop' }, entities: [entry] };
+        const { connection, results } = buildManager(config);
+        expect(connection.subs[0].message.template).toBe('{% set act = "restart" %}{{ act }}');
+        connection.subs[0].callback({ result: 'restart' });
+        expect(resolveTemplateFields(entry, results(), 'sensor.b', scopeVars(config, entry)).name).toBe('restart');
     });
 });
 
