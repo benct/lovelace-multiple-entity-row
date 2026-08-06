@@ -59,6 +59,9 @@ interface EntityOptions {
     format?: string;
     // Jinja template replacing the displayed state (rendered server-side; see templates.ts).
     template?: string;
+    // Named values usable inside this scope's templates; sub-entities inherit the row's and may
+    // shadow them. Values may themselves be templates (see #422).
+    vars?: Record<string, unknown>;
     attribute?: string;
     unit?: string | false;
     name?: string | false;

@@ -59,28 +59,112 @@ const displayResult = (result: unknown): string =>
 // gets different `entity` variables, so the results are distinct.
 const resultKey = (template: string, entity?: string): string => `${entity ?? ''}|${template}`;
 
+// A single {{ ... }} expression with nothing around it and no other expression inside.
+const SINGLE_EXPRESSION = /^\{\{((?:(?!\}\}).)*)\}\}$/s;
+
+// One `vars` entry as a Jinja assignment. A lone expression is unwrapped so the variable keeps
+// its native type ({% set n = states(x)|float %} stays a number); anything with surrounding text
+// or several expressions goes through the capture form, which always yields a string.
+const setStatement = (name: string, value: unknown): string => {
+    if (typeof value === 'string' && hasTemplate(value)) {
+        const single = SINGLE_EXPRESSION.exec(value.trim());
+        return single ? `{% set ${name} = ${single[1].trim()} %}` : `{% set ${name} %}${value}{% endset %}`;
+    }
+    // Jinja's null literal is `none`; everything else JSON happens to share Jinja's syntax.
+    return `{% set ${name} = ${value === null || value === undefined ? 'none' : JSON.stringify(value)} %}`;
+};
+
+/**
+ * `vars` as a run of {% set %} statements to prepend to every templated field in the same scope
+ * (see #422). Inlining keeps one subscription per field - HA renders the variables as part of
+ * that template and tracks the entities they touch - instead of needing a second round of
+ * subscriptions whose results feed the first.
+ *
+ * Declaration order is preserved, so a variable can build on an earlier one.
+ *
+ * This prefix is part of the string handed to HA and therefore part of the result cache key, so
+ * collect and resolve MUST build it from this one helper or every lookup silently misses.
+ */
+export const varsPrefix = (vars: unknown): string =>
+    isObject(vars)
+        ? Object.entries(vars as LooseObject)
+              .map(([name, value]) => setStatement(name, value))
+              .join('')
+        : '';
+
+const ACTION_KEYS = ['tap_action', 'hold_action', 'double_tap_action'];
+
+// Action configs are walked rather than enumerated: templates are just as useful in
+// confirmation.text as in service data, a navigation_path or a target, and HA keeps adding
+// action types. Anything that is a string containing Jinja is a template, wherever it sits.
+const walkTemplates = (value: unknown, visit: (template: string) => void): void => {
+    if (hasTemplate(value)) visit(value);
+    else if (Array.isArray(value)) value.forEach((item) => walkTemplates(item, visit));
+    else if (isObject(value)) Object.values(value as LooseObject).forEach((item) => walkTemplates(item, visit));
+};
+
+/**
+ * A copy of one action config with its templated values replaced by current results (see #422).
+ *
+ * Resolved when the action fires rather than at render time: gesture handlers are cached until
+ * the next setConfig, so anything baked in at render would be frozen at whatever the first render
+ * saw - including still-pending results. Firing time also means the service call carries the
+ * values as they are at the moment of the tap.
+ */
+export const resolveActionConfig = <T>(action: T, results: TemplateResults, owner?: string, vars?: LooseObject): T => {
+    const prefix = varsPrefix(vars);
+    const resolve = (value: unknown): unknown => {
+        if (hasTemplate(value)) {
+            // Native result, not a display string - service data frequently wants numbers or
+            // booleans. A pending result becomes '' rather than leaking Jinja into a service call.
+            const result = results.get(resultKey(prefix + value, owner));
+            return result === undefined ? '' : result;
+        }
+        if (Array.isArray(value)) return value.map(resolve);
+        if (isObject(value)) {
+            return Object.fromEntries(Object.entries(value as LooseObject).map(([key, v]) => [key, resolve(v)]));
+        }
+        return value;
+    };
+    return resolve(action) as T;
+};
+
+/** Row-level `vars` merged with a scope's own, the scope winning. Sub-entities inherit the row's
+ * variables and may shadow them. Must match what index.js hands resolveTemplateFields. */
+export const scopeVars = (config: LooseObject, entry?: LooseObject): LooseObject => ({
+    ...(isObject(config.vars) ? (config.vars as LooseObject) : {}),
+    ...(entry && isObject(entry.vars) ? (entry.vars as LooseObject) : {}),
+});
+
 export const collectTemplates = (config: LooseObject): TemplateRequest[] => {
     const requests: TemplateRequest[] = [];
-    const add = (template: unknown, entity?: string): void => {
-        if (hasTemplate(template)) requests.push({ template, entity });
+    // hasTemplate is checked against the raw field - the prefix itself contains {% %} and would
+    // otherwise make every field look templated.
+    const add = (template: unknown, entity?: string, prefix = ''): void => {
+        if (hasTemplate(template)) requests.push({ template: prefix + template, entity });
     };
-    const collectEntry = (entry: LooseObject, owner?: string): void => {
-        add(entry.name, owner);
-        add(entry.icon, owner);
-        add(entry.icon_color, owner);
-        add(entry.color, owner);
-        add(entry.template, owner);
-        add(hideIfTemplate(entry), owner);
+    const collectEntry = (entry: LooseObject, owner?: string, prefix = ''): void => {
+        add(entry.name, owner, prefix);
+        add(entry.icon, owner, prefix);
+        add(entry.icon_color, owner, prefix);
+        add(entry.color, owner, prefix);
+        add(entry.template, owner, prefix);
+        add(hideIfTemplate(entry), owner, prefix);
+        ACTION_KEYS.forEach((key) => walkTemplates(entry[key], (template) => add(template, owner, prefix)));
     };
     const main = config.entity as string | undefined;
-    collectEntry(config, main);
+    collectEntry(config, main, varsPrefix(scopeVars(config)));
     if (typeof config.secondary_info === 'string') {
-        add(config.secondary_info, main);
+        add(config.secondary_info, main, varsPrefix(scopeVars(config)));
     } else if (isObject(config.secondary_info)) {
-        collectEntry(config.secondary_info, config.secondary_info.entity ?? main);
+        const info = config.secondary_info as LooseObject;
+        collectEntry(info, (info.entity as string) ?? main, varsPrefix(scopeVars(config, info)));
     }
     (config.entities as unknown[] | undefined)?.forEach((entry) => {
-        if (isObject(entry)) collectEntry(entry as LooseObject, (entry as LooseObject).entity ?? main);
+        if (isObject(entry)) {
+            const item = entry as LooseObject;
+            collectEntry(item, (item.entity as string) ?? main, varsPrefix(scopeVars(config, item)));
+        }
     });
     return requests;
 };
@@ -90,14 +174,17 @@ export const collectTemplates = (config: LooseObject): TemplateRequest[] => {
 export const resolveTemplateFields = <T extends LooseObject>(
     config: T,
     results: TemplateResults,
-    owner?: string
+    owner?: string,
+    vars?: LooseObject
 ): T => {
     let resolved = config;
     const patch = (key: string, value: unknown): void => {
         if (resolved === config) resolved = { ...config };
         (resolved as LooseObject)[key] = value;
     };
-    const get = (template: string): unknown => results.get(resultKey(template, owner));
+    // Same prefix collectTemplates subscribed with, or the key misses (see varsPrefix).
+    const prefix = varsPrefix(vars);
+    const get = (template: string): unknown => results.get(resultKey(prefix + template, owner));
 
     if (hasTemplate(config.name)) {
         // An empty name would fall back to the entity's friendly name in entityName - a pending
@@ -133,8 +220,12 @@ export const resolveTemplateFields = <T extends LooseObject>(
 };
 
 /** Current display string for a standalone template (e.g. a templated secondary_info string). */
-export const templateDisplay = (results: TemplateResults, template: string, entity?: string): string =>
-    displayResult(results.get(resultKey(template, entity)));
+export const templateDisplay = (
+    results: TemplateResults,
+    template: string,
+    entity?: string,
+    vars?: LooseObject
+): string => displayResult(results.get(resultKey(varsPrefix(vars) + template, entity)));
 
 type UnsubscribeFunc = () => Promise<void> | void;
 

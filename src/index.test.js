@@ -652,6 +652,64 @@ describe('multiple-entity-row', () => {
             expect(spans.some((span) => span.textContent === 'Wind')).toBe(true);
         });
 
+        // See https://github.com/benct/lovelace-multiple-entity-row/issues/422 - the whole point
+        // of inlining vars is that a field stays a single subscription; this is the end-to-end
+        // proof that the prefix survives the round trip through the element.
+        it('inlines vars into a field template and renders the result', async () => {
+            el.setConfig({
+                entity: 'sensor.main',
+                vars: { host: "{{ state_attr(entity, 'host') }}" },
+                entities: [{ entity: 'sensor.a', vars: { act: 'restart' }, name: '{{ act }} on {{ host }}' }],
+            });
+            el.hass = hassWith(states());
+            await flushRender(el);
+            expect(connection.subscribeMessage).toHaveBeenCalledTimes(1);
+            expect(connection.subs[0].message.template).toBe(
+                '{% set host = state_attr(entity, \'host\') %}{% set act = "restart" %}{{ act }} on {{ host }}'
+            );
+            connection.subs[0].callback({ result: 'restart on nas' });
+            await flushRender(el);
+            const spans = [...el.shadowRoot.querySelectorAll('.entity span')];
+            expect(spans.some((span) => span.textContent === 'restart on nas')).toBe(true);
+        });
+
+        // Gesture handlers are cached until the next setConfig, so an action config resolved at
+        // render time would be frozen at whatever the first render saw - including a pending
+        // result. Resolving at dispatch also means the service call carries current values.
+        it('resolves an action template when the action fires, not at first render', async () => {
+            const actions = [];
+            el.addEventListener('hass-action', (ev) => actions.push(ev.detail));
+            el.setConfig({
+                entity: 'sensor.main',
+                vars: { host: 'nas' },
+                entities: [
+                    {
+                        entity: 'sensor.a',
+                        tap_action: {
+                            action: 'call-service',
+                            service: 'button.press',
+                            service_data: { entity_id: "{{ 'button.' ~ host }}" },
+                        },
+                    },
+                ],
+            });
+            el.hass = hassWith(states());
+            await flushRender(el);
+
+            // fire once while the result is still pending
+            const gesture = el.getGestureHandlers('sub-0', 'sensor.a', el.config.entities[0]);
+            gesture.onDown();
+            gesture.onUp();
+            expect(actions[0].config.tap_action.service_data.entity_id).toBe('');
+
+            // the result lands; the SAME cached handler must now dispatch the resolved value
+            connection.subs[0].callback({ result: 'button.nas' });
+            await flushRender(el);
+            gesture.onDown();
+            gesture.onUp();
+            expect(actions[1].config.tap_action.service_data.entity_id).toBe('button.nas');
+        });
+
         it('hides and unhides an entity as its hide_if template verdict changes', async () => {
             el.setConfig({ entity: 'sensor.main', entities: [{ entity: 'sensor.a', hide_if: '{{ hide }}' }] });
             el.hass = hassWith(states());

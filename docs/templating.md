@@ -10,15 +10,67 @@ there is no separate `*_template` key.
 
 ## Supported options
 
-| Option           | Where                                    | Behavior                                              |
-| ---------------- | ---------------------------------------- | ----------------------------------------------------- |
-| `name`           | main row, additional entities, secondary | Result replaces the displayed name                    |
-| `secondary_info` | as a plain string                        | Result replaces the secondary text                    |
-| `icon`           | main row, additional entities            | Result is used as the icon (`mdi:...`)                |
-| `icon_color`     | main row, additional entities            | Result is used as the CSS color                       |
-| `color`          | main row, additional entities            | `state`, `none`, a theme color or a CSS color         |
-| `template`       | main row, additional entities, secondary | Result replaces the displayed state value entirely    |
-| `hide_if`        | as a plain string, or `hide_if.template` | Hides when the result renders true                    |
+| Option           | Where                                            | Behavior                                           |
+| ---------------- | ------------------------------------------------ | -------------------------------------------------- |
+| `name`           | main row, additional entities, secondary         | Result replaces the displayed name                 |
+| `secondary_info` | as a plain string                                | Result replaces the secondary text                 |
+| `icon`           | main row, additional entities                    | Result is used as the icon (`mdi:...`)             |
+| `icon_color`     | main row, additional entities                    | Result is used as the CSS color                    |
+| `color`          | main row, additional entities                    | `state`, `none`, a theme color or a CSS color      |
+| `template`       | main row, additional entities, secondary         | Result replaces the displayed state value entirely |
+| `hide_if`        | as a plain string, or `hide_if.template`         | Hides when the result renders true                 |
+| action configs   | `tap_action`, `hold_action`, `double_tap_action` | Any value inside them, at any depth                |
+
+## Variables (`vars`)
+
+Repeating the same lookup across a row gets noisy, so `vars` gives it a name. Variables are
+usable in every template in the same scope, and additional entities inherit the row's and may
+shadow them:
+
+```yaml
+- type: custom:multiple-entity-row
+  entity: switch.nas_plex
+  vars:
+    host: "{{ state_attr(entity, 'host') }}"
+    display_name: "{{ state_attr(entity, 'display_name') }}"
+  name: "{{ display_name }} on {{ host }}"
+  entities:
+    - vars:
+        service_action: restart
+      icon: "mdi:{{ service_action }}"
+      tap_action:
+        action: perform-action
+        perform_action: button.press
+        confirmation:
+          text: "{{ service_action | capitalize }} {{ display_name }} on {{ host }}?"
+        target:
+          entity_id: "{{ 'button.' ~ [host, service_action] | join('_') | slugify }}"
+```
+
+A value may be a template or a plain literal, and a variable can build on one declared before it:
+
+```yaml
+vars:
+  raw: "{{ states(entity) | float(0) }}"
+  doubled: "{{ raw * 2 }}"
+  suffix: kWh
+```
+
+A variable whose value is a single `{{ … }}` expression keeps its native type, so numbers stay
+numbers and can be used in arithmetic. Anything with surrounding text or several expressions
+renders to a string.
+
+Variables cost nothing extra: they are inlined into each template that uses them, so a field is
+still a single subscription and Home Assistant still tracks the entities the variables touch.
+
+## Templates in actions
+
+Every value inside `tap_action`, `hold_action` and `double_tap_action` is templatable at any
+depth — service data, `target`, `navigation_path`, `confirmation.text`, and so on. Results keep
+their native type, so a template returning a number arrives as a number.
+
+Action templates are resolved when the action fires rather than when the row renders, so a
+service call always carries current values.
 
 ## The `entity` variable
 

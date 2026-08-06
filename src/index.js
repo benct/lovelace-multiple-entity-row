@@ -5,7 +5,14 @@ import { createGestureHandlers } from './lib/gesture_handler';
 import { badgeColorProps, resolveColor, rowColorConfig } from './color';
 import { checkEntity, entityName, entityStateDisplay, entityStyles, iconColorCss, stateIcon } from './entity';
 import { fireEvent, getEntityIds, hasConfigOrEntitiesChanged, hasGenericSecondaryInfo, hideIf, isObject } from './util';
-import { hasTemplate, resolveTemplateFields, templateDisplay, TemplateSubscriptions } from './templates';
+import {
+    hasTemplate,
+    resolveActionConfig,
+    resolveTemplateFields,
+    scopeVars,
+    templateDisplay,
+    TemplateSubscriptions,
+} from './templates';
 import { style } from './styles';
 import './editor';
 
@@ -145,7 +152,14 @@ class MultipleEntityRow extends LitElement {
     // templated. Resolution happens here at render time, so downstream display logic only ever
     // sees plain values.
     _resolved(config) {
-        return resolveTemplateFields(config, this._templateResults, config.entity ?? this.config.entity);
+        // scopeVars merges the row's `vars` with this scope's own; passing this.config as the
+        // entry for the row itself is a no-op merge, so every scope goes through one path.
+        return resolveTemplateFields(
+            config,
+            this._templateResults,
+            config.entity ?? this.config.entity,
+            scopeVars(this.config, config)
+        );
     }
 
     render() {
@@ -203,7 +217,7 @@ class MultipleEntityRow extends LitElement {
         }
         if (typeof secondaryInfo === 'string') {
             return html`${hasTemplate(secondaryInfo)
-                ? templateDisplay(this._templateResults, secondaryInfo, this.config.entity)
+                ? templateDisplay(this._templateResults, secondaryInfo, this.config.entity, scopeVars(this.config))
                 : secondaryInfo}`;
         }
         const config = this._resolved(secondaryInfo);
@@ -375,9 +389,18 @@ class MultipleEntityRow extends LitElement {
                       const exempt =
                           isObject(confirmation) &&
                           confirmation.exemptions?.some((exemption) => exemption.user === this._hass.user?.id);
-                      const text =
-                          (isObject(confirmation) && confirmation.text) ||
-                          `Are you sure you want to toggle ${entityName(stateObj, config) ?? stateObj.entity_id}?`;
+                      // The dialog reads confirmation.text straight from the config, so a
+                      // templated one has to be resolved here too or it shows raw Jinja.
+                      const configured = isObject(confirmation) && confirmation.text;
+                      const text = hasTemplate(configured)
+                          ? templateDisplay(
+                                this._templateResults,
+                                configured,
+                                config.entity ?? this.config.entity,
+                                scopeVars(this.config, config)
+                            )
+                          : configured ||
+                            `Are you sure you want to toggle ${entityName(stateObj, config) ?? stateObj.entity_id}?`;
                       if (exempt || confirm(text)) {
                           this._hass.callService('homeassistant', 'toggle', { entity_id: stateObj.entity_id });
                       }
@@ -456,14 +479,23 @@ class MultipleEntityRow extends LitElement {
     // supports newer action types (perform-action, assist) for free. Approach adopted from the
     // duczz/ha-multiple-entity-row fork.
     dispatchAction(entity, config, hold, dblClick) {
-        const actionConfig = dblClick
+        const raw = dblClick
             ? config.double_tap_action
             : hold
             ? config.hold_action
             : config.tap_action ?? { action: 'more-info' };
-        if (!actionConfig || actionConfig.action === 'none') {
+        if (!raw || raw.action === 'none') {
             return;
         }
+        // Resolved here rather than in _resolved: gesture handlers are cached until the next
+        // setConfig, so a config resolved at render time would be frozen at the first render
+        // (see resolveActionConfig). The owner must match what collectTemplates subscribed with.
+        const actionConfig = resolveActionConfig(
+            raw,
+            this._templateResults,
+            config.entity ?? this.config.entity,
+            scopeVars(this.config, config)
+        );
         const actionType = dblClick ? 'double_tap' : hold ? 'hold' : 'tap';
         fireEvent(this, 'hass-action', {
             config: {
