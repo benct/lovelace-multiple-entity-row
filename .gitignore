@@ -4,3 +4,4 @@ multiple-entity-row.js.LICENSE.txt
 multiple-entity-row.js.gz
 coverage/
 .dev/ha-config/
+.dev/conversation*
