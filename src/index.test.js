@@ -173,6 +173,46 @@ describe('multiple-entity-row', () => {
         expect(el.shadowRoot.innerHTML).toContain('n/a');
     });
 
+    // See https://github.com/benct/lovelace-multiple-entity-row/issues/65, #299 and #350 - a
+    // timer's raw state is only active/idle/paused, so the countdown is shown instead.
+    describe('timer entities', () => {
+        const timerHass = (state, attributes) =>
+            buildHass({
+                'sensor.main': { entity_id: 'sensor.main', state: 'on', attributes: {} },
+                'timer.kitchen': { entity_id: 'timer.kitchen', state, attributes },
+            });
+
+        it('renders the countdown instead of the raw state', async () => {
+            el.setConfig({ entity: 'sensor.main', entities: [{ entity: 'timer.kitchen' }] });
+            el.hass = timerHass('paused', { remaining: '00:01:30' });
+            await flushRender(el);
+            expect(el.shadowRoot.querySelector('multiple-entity-row-timer')).not.toBeNull();
+            expect(el.shadowRoot.innerHTML).not.toContain('paused<');
+        });
+
+        it('works for the main state too', async () => {
+            el.setConfig({ entity: 'timer.kitchen' });
+            el.hass = timerHass('paused', { remaining: '00:01:30' });
+            await flushRender(el);
+            expect(el.shadowRoot.querySelector('.entity.state multiple-entity-row-timer')).not.toBeNull();
+        });
+
+        // An explicit attribute or template is a deliberate choice and must not be overridden.
+        it('leaves an explicit attribute alone', async () => {
+            el.setConfig({ entity: 'sensor.main', entities: [{ entity: 'timer.kitchen', attribute: 'duration' }] });
+            el.hass = timerHass('active', { remaining: '00:01:30', duration: '00:05:00' });
+            await flushRender(el);
+            expect(el.shadowRoot.querySelector('multiple-entity-row-timer')).toBeNull();
+        });
+
+        it('leaves a non-timer entity alone', async () => {
+            el.setConfig({ entity: 'sensor.main', entities: [{ entity: 'sensor.main' }] });
+            el.hass = timerHass('idle', {});
+            await flushRender(el);
+            expect(el.shadowRoot.querySelector('multiple-entity-row-timer')).toBeNull();
+        });
+    });
+
     // See https://github.com/benct/lovelace-multiple-entity-row/issues/364 - a removed or renamed
     // entity id used to vanish from the row with no clue which slot it was.
     describe('missing entity', () => {

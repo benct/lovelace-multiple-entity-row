@@ -15,6 +15,7 @@ import {
 } from './templates';
 import { style } from './styles';
 import './editor';
+import './timer_remaining';
 
 // hui-generic-entity-row attaches its own tap/hold/double-tap detection to the outer row
 // element unconditionally (see the catchInteraction comment in render() below) via mousedown/
@@ -360,6 +361,16 @@ class MultipleEntityRow extends LitElement {
         if (config.template !== undefined) {
             const value = hasTemplate(config.template) ? '' : config.template;
             return `${value}${config.unit ? ` ${config.unit}` : ''}`;
+        }
+        // A timer's raw state is just active/idle/paused, which is rarely what anyone wants to
+        // see - HA's own timer row shows the countdown instead (see #65, #299, #350). Automatic
+        // for the timer domain, but only for the state itself: an explicit attribute or template
+        // above still wins, and an idle timer falls through to its localized state anyway.
+        if (!config.attribute && stateObj.entity_id?.startsWith('timer.')) {
+            return html`<multiple-entity-row-timer
+                .hass=${this._hass}
+                .stateObj=${stateObj}
+            ></multiple-entity-row-timer>`;
         }
         const isLastChangedAttr = config.attribute && [LAST_CHANGED, LAST_UPDATED].includes(config.attribute);
         // A configured timestamp format wins over the default relative-time widget for the
