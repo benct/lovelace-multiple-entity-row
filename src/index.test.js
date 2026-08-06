@@ -288,6 +288,118 @@ describe('multiple-entity-row', () => {
             expect(spans.some((span) => span.textContent === ' ')).toBe(false);
         });
 
+        // See https://github.com/benct/lovelace-multiple-entity-row/issues/425 - the reserved line
+        // aligns text baselines, so a slot rendering a control (icon or toggle) should not get one:
+        // it only makes the row taller. Text renderers, including hui-timestamp-display and
+        // ha-relative-time, must keep reserving.
+        describe('non-text values', () => {
+            const withSibling = (entity) => ({
+                entity: 'sensor.main',
+                show_state: false,
+                entities: [{ entity: 'sensor.a' }, entity],
+            });
+            const nbspCount = () =>
+                [...el.shadowRoot.querySelectorAll('.entity span')].filter((s) => s.textContent === '\u00a0').length;
+
+            it('reserves no line for a blank-named icon entity', async () => {
+                el.setConfig(withSibling({ entity: 'sensor.b', name: false, icon: true }));
+                el.hass = twoEntityHass();
+                await flushRender(el);
+                expect(nbspCount()).toBe(0);
+            });
+
+            it('reserves no line for a blank-named state_icon entity', async () => {
+                el.setConfig(withSibling({ entity: 'sensor.b', name: false, state_icon: { 2: 'mdi:check' } }));
+                el.hass = twoEntityHass();
+                await flushRender(el);
+                expect(nbspCount()).toBe(0);
+            });
+
+            it('reserves no line for a blank-named toggle entity', async () => {
+                el.setConfig(withSibling({ entity: 'sensor.b', name: false, toggle: true }));
+                el.hass = twoEntityHass();
+                await flushRender(el);
+                expect(nbspCount()).toBe(0);
+            });
+
+            it('still reserves a line for a blank-named text entity', async () => {
+                el.setConfig(withSibling({ entity: 'sensor.b', name: false }));
+                el.hass = twoEntityHass();
+                await flushRender(el);
+                expect(nbspCount()).toBe(1);
+            });
+
+            // The icon box shrinks to the icon's natural height, but a picture-bearing entity
+            // needs the fixed box back: state-badge hides the icon and paints the picture as a
+            // background, so there is no in-flow content to give the host height.
+            it('marks a picture entity so its badge keeps a fixed box', async () => {
+                el.setConfig({ entity: 'sensor.main', entities: [{ entity: 'sensor.pic', icon: true }] });
+                el.hass = buildHass({
+                    'sensor.main': { entity_id: 'sensor.main', state: 'on', attributes: {} },
+                    'sensor.pic': {
+                        entity_id: 'sensor.pic',
+                        state: 'on',
+                        attributes: { entity_picture: '/api/image/serve/abc' },
+                    },
+                });
+                await flushRender(el);
+                expect(el.shadowRoot.querySelector('state-badge').classList.contains('has-picture')).toBe(true);
+            });
+
+            it('does not mark a plain icon entity', async () => {
+                el.setConfig({ entity: 'sensor.main', entities: [{ entity: 'sensor.a', icon: 'mdi:flash' }] });
+                el.hass = twoEntityHass();
+                await flushRender(el);
+                expect(el.shadowRoot.querySelector('state-badge').classList.contains('has-picture')).toBe(false);
+            });
+
+            // An explicit icon wins over the picture in state-badge, so the box should shrink.
+            it('does not mark a picture entity whose icon is overridden', async () => {
+                el.setConfig({ entity: 'sensor.main', entities: [{ entity: 'sensor.pic', icon: 'mdi:flash' }] });
+                el.hass = buildHass({
+                    'sensor.main': { entity_id: 'sensor.main', state: 'on', attributes: {} },
+                    'sensor.pic': {
+                        entity_id: 'sensor.pic',
+                        state: 'on',
+                        attributes: { entity_picture: '/api/image/serve/abc' },
+                    },
+                });
+                await flushRender(el);
+                expect(el.shadowRoot.querySelector('state-badge').classList.contains('has-picture')).toBe(false);
+            });
+
+            it('still renders a real name on a control entity', async () => {
+                el.setConfig(withSibling({ entity: 'sensor.b', name: 'Fan', icon: true }));
+                el.hass = twoEntityHass();
+                await flushRender(el);
+                const spans = [...el.shadowRoot.querySelectorAll('.entity span')];
+                expect(spans.some((s) => s.textContent === 'Fan')).toBe(true);
+            });
+
+            it('reserves no line for a toggle main state', async () => {
+                el.setConfig({ entity: 'sensor.main', toggle: true, entities: [{ entity: 'sensor.a' }] });
+                el.hass = twoEntityHass();
+                await flushRender(el);
+                expect(nbspCount()).toBe(0);
+            });
+
+            it('still reserves a line for a text main state', async () => {
+                el.setConfig({ entity: 'sensor.main', entities: [{ entity: 'sensor.a' }] });
+                el.hass = twoEntityHass();
+                await flushRender(el);
+                expect(nbspCount()).toBe(1);
+            });
+
+            // A row-level `icon:` is the row's own icon, drawn by hui-generic-entity-row - it says
+            // nothing about what the main STATE slot renders, so it must not suppress the line.
+            it('still reserves a line for a text main state on a row with an icon', async () => {
+                el.setConfig({ entity: 'sensor.main', icon: 'mdi:flash', entities: [{ entity: 'sensor.a' }] });
+                el.hass = twoEntityHass();
+                await flushRender(el);
+                expect(nbspCount()).toBe(1);
+            });
+        });
+
         // The default-value branch renders its own header span (see #302).
         it('treats a whitespace-only name like name:false on a hidden entity', async () => {
             el.setConfig({
