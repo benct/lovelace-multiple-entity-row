@@ -34,8 +34,12 @@ describe('checkEntity', () => {
         expect(() => checkEntity('')).toThrow(/must not be blank/);
     });
 
-    it('throws for an object missing entity, attribute and icon', () => {
-        expect(() => checkEntity({ name: 'Foo' })).toThrow(/requires at least one/);
+    // See https://github.com/benct/lovelace-multiple-entity-row/issues/340 - an entry without
+    // `entity` falls back to the row's main entity, so an empty or name-only object is a valid
+    // way to repeat the main state rather than a config error.
+    it('accepts an object with no entity, attribute or icon', () => {
+        expect(() => checkEntity({})).not.toThrow();
+        expect(() => checkEntity({ name: 'Foo' })).not.toThrow();
     });
 
     it('throws for any other config shape', () => {

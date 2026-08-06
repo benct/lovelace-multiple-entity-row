@@ -6,6 +6,10 @@ All notable changes to this project will be documented in this file.
 **Added:**
 - `vars` - named values usable in any template in the same scope, on the row and on additional entities, which inherit the row's and may shadow them. Values may themselves be templates, and a variable can build on one declared before it. Inlined into each template that uses them, so a field is still a single subscription (#422)
 - Templates inside `tap_action`/`hold_action`/`double_tap_action`, at any depth - service data, `target`, `navigation_path`, `confirmation.text`. Results keep their native type, and are resolved when the action fires so a service call carries current values (#422)
+- An additional entity no longer needs `entity`, `attribute` or `icon` - an entry with none of them (even `- {}`) shows the main entity's state, which is the only way to repeat it when the id isn't known in advance, as under `custom:auto-entities` (#340)
+
+**Changed:**
+- An entity id that doesn't resolve is now marked with a warning icon instead of silently disappearing from the row. `hide_unavailable: true` hides it as before, and `default:` still takes precedence (#364)
 
 **Fixed:**
 - Icons and toggles no longer reserve a header line when their name is hidden. The reserved line aligns text values with their headered siblings; a control has no baseline, so on rows mixing named values with icon-only entities it only added height (#425)

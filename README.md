@@ -81,10 +81,14 @@ A **visual editor** is available: when editing a `custom:multiple-entity-row` ro
 Similarly as the default HA `entities` card, each entity can be specified by an entity ID string,
 or by an object which allows more customization and configuration.
 
-If you define entities as objects, either `entity`, `attribute` or `icon` needs to be specified. `entity` is only required if you want
-to display data from another entity than the main entity specified above. `attribute` is necessary if you want to display an entity
+If you define entities as objects, every option is optional. `entity` is only required if you want to display data from another
+entity than the main entity specified above — leave it out (even `- {}` on its own) to show the main entity's state again, which is
+useful when the id isn't known in advance, as under `custom:auto-entities`. `attribute` is necessary if you want to display an entity
 attribute value instead of the state value. `icon` lets you display an icon instead of a state or attribute value
 (works well together with a custom `tap_action`).
+
+An entity id that doesn't resolve is marked with a warning icon rather than silently dropped, so a renamed or removed entity is
+visible. Use `hide_unavailable: true` to hide it instead, or `default:` to show a placeholder value.
 
 | Name              | Type        | Default                     | Description                                                        |
 | ----------------- | ----------- | --------------------------- | ------------------------------------------------------------------ |

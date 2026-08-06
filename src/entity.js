@@ -2,10 +2,13 @@ import { secondsToDuration } from './lib/seconds_to_duration';
 import { formatNumber } from './lib/format_number';
 import { isObject, isUnavailable } from './util';
 
+// An entry used to need one of entity/attribute/icon, on the reasoning that it would otherwise
+// render nothing. That stopped being true: an entry with no `entity` already falls back to the
+// row's main entity, so `- {}` is a meaningful way to repeat the main state - which is the only
+// way to get it under auto-entities, where the id isn't known when the config is written
+// (see #340). Only the string/type checks are real validation now.
 export const checkEntity = (config) => {
-    if (isObject(config) && !(config.entity || config.attribute || config.icon)) {
-        throw new Error(`Entity object requires at least one 'entity', 'attribute' or 'icon'.`);
-    } else if (typeof config === 'string' && config === '') {
+    if (typeof config === 'string' && config === '') {
         throw new Error('Entity ID string must not be blank.');
     } else if (typeof config !== 'string' && !isObject(config)) {
         throw new Error('Entity config must be a valid entity ID string or entity object.');

@@ -16,6 +16,10 @@ export const style = (css) => css`
         text-align: center;
         cursor: pointer;
     }
+    /* Marker for an entity id that resolves to nothing (see #364). */
+    .entity .missing {
+        color: var(--error-color, #db4437);
+    }
     .entity span {
         font-size: 10px;
         color: var(--multiple-entity-row-header-color, var(--secondary-text-color));
