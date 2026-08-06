@@ -1,6 +1,16 @@
 export const style = (css) => css`
+    /* state-badge is a fixed 40px box, which leaves an odd gap under a headered icon - let it
+       shrink to the icon's natural size instead (see #425). */
     .icon-small {
         width: auto;
+        height: auto;
+    }
+    /* ...except when it is showing a picture: state-badge then hides the icon and paints the
+       image as a background, so the host has no in-flow content and would collapse to nothing.
+       The class is set in renderIcon rather than reusing state-badge's own has-image. */
+    .icon-small.has-picture {
+        width: 40px;
+        height: 40px;
     }
     .entity {
         text-align: center;

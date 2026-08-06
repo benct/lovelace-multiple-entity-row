@@ -27,6 +27,18 @@ const NBSP = '\u00a0';
 // name (see #421). Whether a line is reserved is headerPlaceholder's decision alone.
 const blankName = (text) => (typeof text === 'string' && text.trim() === '' ? null : text);
 
+// The reserved header line exists so a blank-named entity's value shares a baseline with its
+// headered siblings' values (#281). A control has no baseline, so reserving one above it buys
+// nothing and just makes the row taller - which costs real information density on rows mixing
+// named values with icon-only entities (see #425). Of everything renderValue can produce, only
+// these two are non-text: an ha-entity-toggle and a state-badge. hui-timestamp-display and
+// ha-relative-time render ordinary text and must keep reserving.
+//
+// Sub-entity slots only. The main state slot renders text or a toggle and never an icon, because
+// a row-level `icon:` is the ROW's icon drawn by hui-generic-entity-row - feeding it through here
+// would make any row with an icon skip the placeholder for a perfectly ordinary text state.
+const rendersControl = (config) => config.toggle === true || !!config.icon || isObject(config.state_icon);
+
 console.info(
     `%c MULTIPLE-ENTITY-ROW %c ${process.env.PACKAGE_VERSION} (built ${process.env.BUILD_TIME}, ${process.env.BUILD_COMMIT}) `,
     'color: cyan; background: black; font-weight: bold;',
@@ -269,7 +281,10 @@ class MultipleEntityRow extends LitElement {
             @touchcancel="${stopBubble}"
             @contextmenu="${stopBubble}"
         >
-            <span>${blankName(entityName(stateObj, config)) ?? this.headerPlaceholder()}</span>
+            <span
+                >${blankName(entityName(stateObj, config)) ??
+                (rendersControl(config) ? null : this.headerPlaceholder())}</span
+            >
             <div>
                 ${config.icon || isObject(config.state_icon)
                     ? this.renderIcon(stateObj, config)
@@ -281,7 +296,10 @@ class MultipleEntityRow extends LitElement {
     // Main-state counterpart of headerPlaceholder(): render the state_header, or reserve the
     // header line when sub-entities render headers so the main value stays level with theirs.
     renderMainHeader() {
-        const header = blankName(this.config.state_header) ?? this.headerPlaceholder();
+        // Only `toggle` counts as a control here - see the rendersControl comment for why a
+        // row-level `icon:` must not.
+        const header =
+            blankName(this.config.state_header) ?? (this.config.toggle === true ? null : this.headerPlaceholder());
         return header ? html`<span>${header}</span>` : null;
     }
 
@@ -388,8 +406,15 @@ class MultipleEntityRow extends LitElement {
         // Exactly one of these is set (see badgeColorProps); the other stays undefined so
         // state-badge falls through to the one that is.
         const { stateColor, color } = badgeColorProps(resolveColor(config));
+        // state-badge shows an entity picture instead of an icon when the entity has one and no
+        // icon overrides it - and then it hides the icon and paints the picture as a background,
+        // so the host needs its fixed box or there is nothing to give it height. Deciding that
+        // here rather than leaning on state-badge's own has-image class, which it derives from
+        // this.style.backgroundImage and therefore always applies one render late.
+        const hasPicture =
+            !overrideIcon && !!(stateObj.attributes.entity_picture || stateObj.attributes.entity_picture_local);
         return html`<state-badge
-            class="icon-small"
+            class="icon-small${hasPicture ? ' has-picture' : ''}"
             style="${iconColorCss(config.icon_color)}"
             .hass=${this._hass}
             .stateObj="${stateObj}"

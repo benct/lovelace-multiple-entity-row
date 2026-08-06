@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+**Fixed:**
+- Icons and toggles no longer reserve a header line when their name is hidden. The reserved line aligns text values with their headered siblings; a control has no baseline, so on rows mixing named values with icon-only entities it only added height (#425)
+
 ## 4.9.0
 
 **Breaking:**
