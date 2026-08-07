@@ -47,7 +47,7 @@ A **visual editor** is available: when editing a `custom:multiple-entity-row` ro
 | type             | string      | **Required**                | `custom:multiple-entity-row`                     |
 | entity           | string      | **Required**                | Entity ID (`domain.my_entity_id`)                |
 | attribute        | string      |                             | Show an attribute instead of the state value     |
-| name             | string/bool | `friendly_name`             | Override entity friendly name                    |
+| name             | string/bool | `friendly_name`             | Override name; `false` also frees its space      |
 | unit             | string/bool | `unit_of_measurement`       | Override entity unit of measurement              |
 | icon             | string      | `icon`                      | Override entity icon or image                    |
 | icon_color       | string      |                             | CSS color for the entity icon                    |
@@ -61,6 +61,7 @@ A **visual editor** is available: when editing a `custom:multiple-entity-row` ro
 | state_color      | bool        | _deprecated_                | Superseded by `color`                            |
 | column           | bool        | `false`                     | Show entities in a column instead of a row       |
 | wrap             | bool        | `false`                     | Wrap onto multiple lines instead of overflowing  |
+| align            | string      | `center`                    | Vertical alignment: `top`, `center` or `bottom`  |
 | default          | string      |                             | Display this value when the state is hidden      |
 | hide_unavailable | bool        | `false`                     | Hide the state value if unavailable              |
 | hide_if          | object/any  | _[Hiding](#hiding)_         | Hide the state value if criteria match           |

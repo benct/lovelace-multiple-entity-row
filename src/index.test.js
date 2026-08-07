@@ -173,6 +173,80 @@ describe('multiple-entity-row', () => {
         expect(el.shadowRoot.innerHTML).toContain('n/a');
     });
 
+    // See https://github.com/benct/lovelace-multiple-entity-row/issues/341 and #365 - blanking
+    // the name left HA's name box in place taking its flex share; hideName removes the box so
+    // the entities get that width.
+    describe('hidden name', () => {
+        const hassWithMain = () =>
+            buildHass({ 'sensor.main': { entity_id: 'sensor.main', state: 'on', attributes: {} } });
+        const rowFor = async (config) => {
+            el.setConfig({ entity: 'sensor.main', ...config });
+            el.hass = hassWithMain();
+            await flushRender(el);
+            return el.shadowRoot.querySelector('hui-generic-entity-row');
+        };
+
+        it('hides the name box for name: false', async () => {
+            expect((await rowFor({ name: false })).hideName).toBe(true);
+        });
+
+        it('keeps the name box for a normal name', async () => {
+            expect((await rowFor({ name: 'Kitchen' })).hideName).toBe(false);
+        });
+
+        // The name box is also what pushes the entities right (it grows at flex: 1 1 30%), so
+        // removing it has to hand that job over or they end up against the icon.
+        it('keeps the entities right-aligned once the name box is gone', async () => {
+            await rowFor({ name: false });
+            expect(el.shadowRoot.querySelector('.entities-row').classList.contains('no-name')).toBe(true);
+        });
+
+        it('adds no such class while the name box remains', async () => {
+            await rowFor({ name: 'Kitchen' });
+            expect(el.shadowRoot.querySelector('.entities-row').classList.contains('no-name')).toBe(false);
+        });
+
+        // HA renders secondary info inside the same box, so hiding it would silently take the
+        // secondary text with it.
+        it('keeps the name box when secondary info would be lost', async () => {
+            expect((await rowFor({ name: false, secondary_info: 'last-changed' })).hideName).toBe(false);
+            expect((await rowFor({ name: false, secondary_info: { entity: 'sensor.main' } })).hideName).toBe(false);
+        });
+    });
+
+    // See https://github.com/benct/lovelace-multiple-entity-row/issues/261 - entity slots are
+    // flex items, so vertical alignment has to be set on their container.
+    describe('align', () => {
+        const containerFor = async (config) => {
+            el.setConfig({ entity: 'sensor.main', entities: ['sensor.main'], ...config });
+            el.hass = buildHass({ 'sensor.main': { entity_id: 'sensor.main', state: 'on', attributes: {} } });
+            await flushRender(el);
+            return el.shadowRoot.querySelector('.entities-row, .entities-column');
+        };
+
+        it('adds no class by default', async () => {
+            const row = await containerFor({});
+            expect(row.classList.contains('align-top')).toBe(false);
+            expect(row.classList.contains('align-bottom')).toBe(false);
+        });
+
+        it('aligns top and bottom', async () => {
+            expect((await containerFor({ align: 'top' })).classList.contains('align-top')).toBe(true);
+            expect((await containerFor({ align: 'bottom' })).classList.contains('align-bottom')).toBe(true);
+        });
+
+        it('ignores an unknown value rather than emitting a stray class', async () => {
+            const row = await containerFor({ align: 'sideways' });
+            expect(row.className).toBe('entities-row');
+        });
+
+        it('applies to a column layout too', async () => {
+            const row = await containerFor({ column: true, align: 'bottom' });
+            expect(row.classList.contains('entities-column')).toBe(true);
+            expect(row.classList.contains('align-bottom')).toBe(true);
+        });
+    });
+
     // See https://github.com/benct/lovelace-multiple-entity-row/issues/65, #299 and #350 - a
     // timer's raw state is only active/idle/paused, so the countdown is shown instead.
     describe('timer entities', () => {

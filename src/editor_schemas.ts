@@ -129,8 +129,8 @@ export const ADDITIONAL_TAB_SCHEMA = [
 export const LABELS: Record<string, string> = {
     entity: 'Entity',
     attribute: 'Attribute',
-    name: 'Name override',
-    unit: 'Unit',
+    name: 'Name override (or false to hide)',
+    unit: 'Unit (or false to hide)',
     icon: 'Icon',
     icon_color: 'Icon color (CSS value, e.g. red, #ff0000, var(--my-color))',
     image: 'Image URL',

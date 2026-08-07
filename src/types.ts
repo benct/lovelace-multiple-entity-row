@@ -95,6 +95,8 @@ export interface MultipleEntityRowConfig extends EntityOptions {
     image?: string;
     column?: boolean;
     wrap?: boolean;
+    // Vertical alignment of the entity slots: "top" | "center" (default) | "bottom".
+    align?: string;
     // HA 2026.7+'s row editor renames `format` to `time_format` on save (see #386).
     time_format?: string;
     entities?: (string | EntityConfig)[];
