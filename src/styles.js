@@ -30,6 +30,23 @@ export const style = (css) => css`
         justify-content: space-between;
         align-items: center;
     }
+    /* HA's name box is what pushes the entities to the right: it grows at flex: 1 1 30%. Hiding
+       it removes that push too, leaving them against the icon, so take over the job here - the
+       point of hiding the name is more room, not a different alignment (see #341, #365). */
+    .entities-row.no-name,
+    .entities-column.no-name {
+        margin-left: auto;
+    }
+    /* The 'styles' option reaches one entity's div, which is a flex item - so vertical-align
+       there does nothing and alignment has to be set on the container instead (see #261). */
+    .entities-row.align-top,
+    .entities-column.align-top {
+        align-items: flex-start;
+    }
+    .entities-row.align-bottom,
+    .entities-column.align-bottom {
+        align-items: flex-end;
+    }
     .entities-row .entity {
         margin-right: 16px;
     }

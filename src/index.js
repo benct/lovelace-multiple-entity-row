@@ -47,6 +47,11 @@ const blankName = (text) => (typeof text === 'string' && text.trim() === '' ? nu
 // would make any row with an icon skip the placeholder for a perfectly ordinary text state.
 const rendersControl = (config) => config.toggle === true || !!config.icon || isObject(config.state_icon);
 
+// Entities are flex items, so vertical alignment belongs on their container - `styles` only
+// reaches one entity's own div, where vertical-align does nothing (see #261). `center` is the
+// default and needs no class.
+const ALIGN_CLASSES = { top: 'align-top', bottom: 'align-bottom' };
+
 console.info(
     `%c MULTIPLE-ENTITY-ROW %c ${process.env.PACKAGE_VERSION} (built ${process.env.BUILD_TIME}, ${process.env.BUILD_COMMIT}) `,
     'color: cyan; background: black; font-weight: bold;',
@@ -113,6 +118,10 @@ class MultipleEntityRow extends LitElement {
         // semantics (see #386). That migration only touches the top-level row config, not our
         // own nested `entities`/`secondary_info` config, so this fallback only needs to happen
         // here. Prefer `format` if somehow both are present (e.g. a value hand-edited back in).
+        // Remembered before the normalization below erases it: `name: false` should remove HA's
+        // name box entirely rather than blank it (see hideName in render).
+        this._nameHidden = config.name === false;
+
         this.config = {
             ...config,
             name: config.name === false ? ' ' : config.name,
@@ -187,18 +196,28 @@ class MultipleEntityRow extends LitElement {
         // across the row up to 4.6.1 and stopped in 4.7.0 when this was flipped to true (see
         // #411). Keeping the bare slot also keeps .entities-row as the flex item, which is the
         // only reason our own CSS (wrap, shrinking) can affect overflow at all.
+        // `name: false` used to be blanked to a space, which left HA's name box in place taking
+        // its flex: 1 1 30% share; hideName drops the box so the entities get that width back
+        // (see #341, #365). HA renders secondary info inside that same box, though, so only hide
+        // it when there is no secondary info to lose.
+        const hideName = this._nameHidden && !this.config.secondary_info;
         return html`<hui-generic-entity-row
             style="${iconColorCss(config.icon_color)}"
             .hass="${this._hass}"
             .config="${rowConfig}"
             .secondaryText="${this.renderSecondaryInfo()}"
+            .hideName=${hideName}
             .catchInteraction=${false}
         >
             <div
-                class="${this.config.column ? 'entities-column' : 'entities-row'}${!this.config.column &&
-                this.config.wrap
-                    ? ' wrap'
-                    : ''}"
+                class="${[
+                    this.config.column ? 'entities-column' : 'entities-row',
+                    !this.config.column && this.config.wrap ? 'wrap' : '',
+                    ALIGN_CLASSES[this.config.align] ?? '',
+                    hideName ? 'no-name' : '',
+                ]
+                    .filter(Boolean)
+                    .join(' ')}"
             >
                 ${this.config.show_state_first
                     ? html`${this.renderMainEntity()}${this.entities.map((entity, index) =>

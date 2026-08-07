@@ -73,6 +73,24 @@ describe('multiple-entity-row-editor', () => {
             (el as any)._mainValueChanged({ detail: { value: { entity: 'sensor.main', unit: 'false' } } });
             expect(configs[0].unit).toBe(false);
         });
+
+        // `name: false` hides the name (and frees its space) but is otherwise unreachable from a
+        // text selector, so it round-trips the same way as unit (see #341, #365).
+        it('round-trips name: false through the text form as the string "false"', () => {
+            setConfig({ entity: 'sensor.main', name: false });
+            expect((el as any)._mainFormData().name).toBe('false');
+
+            (el as any)._mainValueChanged({ detail: { value: { entity: 'sensor.main', name: 'false' } } });
+            expect(configs[0].name).toBe(false);
+        });
+
+        it('leaves an ordinary name untouched', () => {
+            setConfig({ entity: 'sensor.main', name: 'Kitchen' });
+            expect((el as any)._mainFormData().name).toBe('Kitchen');
+
+            (el as any)._mainValueChanged({ detail: { value: { entity: 'sensor.main', name: 'Kitchen' } } });
+            expect(configs[0].name).toBe('Kitchen');
+        });
     });
 
     describe('additional entities', () => {
