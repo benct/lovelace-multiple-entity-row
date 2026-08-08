@@ -30,7 +30,7 @@ const blankName = (text) => (typeof text === 'string' && text.trim() === '' ? nu
 console.info(
     `%c MULTIPLE-ENTITY-ROW %c ${process.env.PACKAGE_VERSION} (built ${process.env.BUILD_TIME}, ${process.env.BUILD_COMMIT}) `,
     'color: cyan; background: black; font-weight: bold;',
-    'color: darkblue; background: white; font-weight: bold;',
+    'color: darkblue; background: white; font-weight: bold;'
 );
 
 class MultipleEntityRow extends LitElement {
@@ -179,19 +179,18 @@ class MultipleEntityRow extends LitElement {
             .catchInteraction=${false}
         >
             <div
-                class="${this.config.column ? 'entities-column' : 'entities-row'}${
-                    !this.config.column && this.config.wrap ? ' wrap' : ''
-                }"
+                class="${this.config.column ? 'entities-column' : 'entities-row'}${!this.config.column &&
+                this.config.wrap
+                    ? ' wrap'
+                    : ''}"
             >
-                ${
-                    this.config.show_state_first
-                        ? html`${this.renderMainEntity()}${this.entities.map((entity, index) =>
-                              this.renderEntity(entity.stateObj, entity, index),
-                          )}`
-                        : html`${this.entities.map((entity, index) =>
-                              this.renderEntity(entity.stateObj, entity, index),
-                          )}${this.renderMainEntity()}`
-                }
+                ${this.config.show_state_first
+                    ? html`${this.renderMainEntity()}${this.entities.map((entity, index) =>
+                          this.renderEntity(entity.stateObj, entity, index)
+                      )}`
+                    : html`${this.entities.map((entity, index) =>
+                          this.renderEntity(entity.stateObj, entity, index)
+                      )}${this.renderMainEntity()}`}
             </div>
         </hui-generic-entity-row>`;
     }
@@ -202,11 +201,9 @@ class MultipleEntityRow extends LitElement {
             return null;
         }
         if (typeof secondaryInfo === 'string') {
-            return html`${
-                hasTemplate(secondaryInfo)
-                    ? templateDisplay(this._templateResults, secondaryInfo, this.config.entity)
-                    : secondaryInfo
-            }`;
+            return html`${hasTemplate(secondaryInfo)
+                ? templateDisplay(this._templateResults, secondaryInfo, this.config.entity)
+                : secondaryInfo}`;
         }
         const config = this._resolved(secondaryInfo);
         if (hideIf(this.info, config, this._hass)) {
@@ -264,9 +261,8 @@ class MultipleEntityRow extends LitElement {
                 // name can label it.
                 return html`<div class="entity" style="${this.textColorCss(config)}${entityStyles(config)}">
                     <span
-                        >${
-                            blankName(stateObj ? entityName(stateObj, config) : config.name) ?? this.headerPlaceholder()
-                        }</span
+                        >${blankName(stateObj ? entityName(stateObj, config) : config.name) ??
+                        this.headerPlaceholder()}</span
                     >
                     <div>${config.default}</div>
                 </div>`;
@@ -289,11 +285,9 @@ class MultipleEntityRow extends LitElement {
         >
             <span>${blankName(entityName(stateObj, config)) ?? this.headerPlaceholder()}</span>
             <div>
-                ${
-                    config.icon || isObject(config.state_icon)
-                        ? this.renderIcon(stateObj, config)
-                        : this.renderValue(stateObj, config)
-                }
+                ${config.icon || isObject(config.state_icon)
+                    ? this.renderIcon(stateObj, config)
+                    : this.renderValue(stateObj, config)}
             </div>
         </div>`;
     }
@@ -340,8 +334,8 @@ class MultipleEntityRow extends LitElement {
             const value = isLastChangedAttr
                 ? stateObj[config.attribute.replace('-', '_')]
                 : config.attribute
-                  ? (stateObj.attributes[config.attribute] ?? stateObj[config.attribute])
-                  : stateObj.state;
+                ? stateObj.attributes[config.attribute] ?? stateObj[config.attribute]
+                : stateObj.state;
             const timestamp = new Date(value);
             if (!(timestamp instanceof Date) || isNaN(timestamp.getTime())) {
                 return value;
@@ -439,7 +433,7 @@ class MultipleEntityRow extends LitElement {
                 createGestureHandlers((hold, dblClick) => this.dispatchAction(entity, config, hold, dblClick), {
                     hasHold: !!config.hold_action,
                     hasDoubleTap: !!config.double_tap_action,
-                }),
+                })
             );
         }
         return this._actionHandlers.get(key);
@@ -454,8 +448,8 @@ class MultipleEntityRow extends LitElement {
         const actionConfig = dblClick
             ? config.double_tap_action
             : hold
-              ? config.hold_action
-              : (config.tap_action ?? { action: 'more-info' });
+            ? config.hold_action
+            : config.tap_action ?? { action: 'more-info' };
         if (!actionConfig || actionConfig.action === 'none') {
             return;
         }
