@@ -38,6 +38,17 @@ class MultipleEntityRow extends LitElement {
         return document.createElement('multiple-entity-row-editor');
     }
 
+    // PATCH(text-color): apply a custom `color` to the state text as inline CSS.
+    // Only custom colors (resolveColor -> cssColor) apply; `state`/`none` keep their
+    // icon-only semantics, so default behavior and `color: none` configs are unchanged.
+    // Entities rendering an icon keep icon-only coloring (isMain bypasses that guard,
+    // since the main row's `icon` is the leading row icon, not a state replacement).
+    textColorCss(config, isMain = false) {
+        if (!isMain && (config.icon || isObject(config.state_icon))) return '';
+        const resolved = resolveColor(config);
+        return 'cssColor' in resolved && resolved.cssColor ? `color: ${resolved.cssColor};` : '';
+    }
+
     static getStubConfig(hass, entities) {
         // Prefer a sensor for the stub so the row shows a value out of the box.
         const entity = entities?.find((e) => e.startsWith('sensor.')) ?? entities?.[0] ?? '';
@@ -212,7 +223,7 @@ class MultipleEntityRow extends LitElement {
         // itself (name, icon, sub-entities) stays visible.
         if (hideIf(this.stateObj, config, this._hass)) {
             if (this.config.default) {
-                return html`<div class="state entity" style="${entityStyles(this.config)}">
+                return html`<div class="state entity" style="${this.textColorCss(config, true)}${entityStyles(this.config)}">
                     ${this.renderMainHeader()}
                     <div>${this.config.default}</div>
                 </div>`;
@@ -222,7 +233,7 @@ class MultipleEntityRow extends LitElement {
         const gesture = this.getGestureHandlers('main', this.config.entity, this.config);
         return html`<div
             class="state entity"
-            style="${entityStyles(this.config)}"
+            style="${this.textColorCss(config, true)}${entityStyles(this.config)}"
             @pointerdown="${gesture?.onDown}"
             @pointerup="${gesture?.onUp}"
             @pointercancel="${gesture?.onCancel}"
@@ -245,7 +256,7 @@ class MultipleEntityRow extends LitElement {
                 // Same header resolution as a visible entity (friendly-name fallback etc., see
                 // #302) - except when the entity is missing entirely, where only an explicit
                 // name can label it.
-                return html`<div class="entity" style="${entityStyles(config)}">
+                return html`<div class="entity" style="${this.textColorCss(config)}${entityStyles(config)}">
                     <span
                         >${blankName(stateObj ? entityName(stateObj, config) : config.name) ??
                         this.headerPlaceholder()}</span
@@ -258,7 +269,7 @@ class MultipleEntityRow extends LitElement {
         const gesture = this.getGestureHandlers(`sub-${index}`, stateObj.entity_id, config);
         return html`<div
             class="entity"
-            style="${entityStyles(config)}"
+            style="${this.textColorCss(config)}${entityStyles(config)}"
             @pointerdown="${gesture?.onDown}"
             @pointerup="${gesture?.onUp}"
             @pointercancel="${gesture?.onCancel}"
