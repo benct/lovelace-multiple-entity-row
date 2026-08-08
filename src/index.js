@@ -404,7 +404,7 @@ class MultipleEntityRow extends LitElement {
         const { stateColor, color } = badgeColorProps(resolveColor(config));
         return html`<state-badge
             class="icon-small"
-            style="${iconColorCss(config.icon_color)}"
+            style="${iconColorCss(config.icon_color)}${entityStyles({ styles: config.icon_styles })}"
             .hass=${this._hass}
             .stateObj="${stateObj}"
             .overrideIcon="${overrideIcon}"
