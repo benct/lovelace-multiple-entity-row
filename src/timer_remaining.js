@@ -1,6 +1,7 @@
 import { LitElement, html } from 'lit';
 
 import { computeDisplayTimer, timerTimeRemaining } from './lib/timer';
+import { defineElement } from './lib/define';
 
 // A timer's countdown has to advance without any hass update to trigger it, which the row itself
 // cannot do: its shouldUpdate gate (hasConfigOrEntitiesChanged) returns false when no watched
@@ -66,4 +67,4 @@ class TimerRemaining extends LitElement {
     }
 }
 
-customElements.define('multiple-entity-row-timer', TimerRemaining);
+defineElement('multiple-entity-row-timer', TimerRemaining);
