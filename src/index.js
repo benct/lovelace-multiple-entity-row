@@ -189,7 +189,10 @@ class MultipleEntityRow extends LitElement {
         // catchInteraction must stay false: despite the name it does NOT control whether
         // hui-generic-entity-row handles interaction (its actionHandler is bound to the .row
         // wrapper unconditionally - that was the #338 root cause, and what actually protects us
-        // is stopBubble on each entity element). All it selects is the markup around our slot:
+        // is stopBubble on each entity element; since ~HA 2026.8 the false-branch slot also
+        // stops click/touchend/keydown/action itself, making slotted clicks inert to the row -
+        // which is why inter-entity gaps must be clickable padding, not margin, see #432).
+        // All it selects beyond that is the markup around our slot:
         // false yields a bare <slot>, true wraps it in `.text-content.value > .state`. Those two
         // extra boxes are shrink-to-fit, so they pin our row to its own content width and break
         // any `width: 100%` / justify-content styling users apply to .entities-row - it spread

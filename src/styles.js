@@ -47,11 +47,14 @@ export const style = (css) => css`
     .entities-column.align-bottom {
         align-items: flex-end;
     }
+    /* Padding, not margin: the row's cursor:pointer inherits into the gap, but HA stops slotted
+       clicks at the bare slot (catchInteraction=false), so a margin gap is dead space that looks
+       clickable. Padding keeps it inside the entity's own click target (see #432). */
     .entities-row .entity {
-        margin-right: 16px;
+        padding-right: 16px;
     }
     .entities-row .entity:last-of-type {
-        margin-right: 0;
+        padding-right: 0;
     }
     /* Opt-in, because it trades a taller row for not overflowing: nothing between HA's .row and
        our entities can shrink, so a row needing more width than the card has just spills past
