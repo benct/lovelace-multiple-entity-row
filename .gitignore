@@ -5,3 +5,4 @@ multiple-entity-row.js.gz
 coverage/
 .dev/ha-config/
 .dev/conversation*
+.claude/settings.local.json
