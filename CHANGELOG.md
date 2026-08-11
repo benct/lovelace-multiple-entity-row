@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 4.10.1
+
+**Fixed:**
+- The gap between entities showed the row's pointer cursor but ignored clicks - it is now part of the neighboring entity's tap target (#432)
+
 ## 4.10.0
 
 **Added:**
