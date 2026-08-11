@@ -2,6 +2,7 @@ import { css, html, LitElement } from 'lit';
 
 import { LAST_CHANGED, LAST_UPDATED, TIMESTAMP_FORMATS } from './lib/constants';
 import { createGestureHandlers } from './lib/gesture_handler';
+import { defineElement } from './lib/define';
 import { badgeColorProps, resolveColor, rowColorConfig } from './color';
 import { checkEntity, entityName, entityStateDisplay, entityStyles, iconColorCss, stateIcon } from './entity';
 import { fireEvent, getEntityIds, hasConfigOrEntitiesChanged, hasGenericSecondaryInfo, hideIf, isObject } from './util';
@@ -559,7 +560,7 @@ class MultipleEntityRow extends LitElement {
     }
 }
 
-customElements.define('multiple-entity-row', MultipleEntityRow);
+defineElement('multiple-entity-row', MultipleEntityRow);
 
 // Registers the row with HA's card/row pickers so it's discoverable in the UI.
 window.customCards = window.customCards || [];

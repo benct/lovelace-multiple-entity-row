@@ -6,6 +6,7 @@
 // class field would shadow Lit's generated accessors and silently break reactivity.
 
 import { css, html, LitElement, nothing, TemplateResult } from 'lit';
+import { defineElement } from './lib/define';
 import { keyed } from 'lit/directives/keyed.js';
 
 import { SECONDARY_INFO_VALUES } from './lib/constants';
@@ -1001,4 +1002,4 @@ export class MultipleEntityRowEditor extends LitElement {
     }
 }
 
-customElements.define('multiple-entity-row-editor', MultipleEntityRowEditor);
+defineElement('multiple-entity-row-editor', MultipleEntityRowEditor);
