@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 ## 4.10.1
 
 **Fixed:**
+- The gap between entities showed the row's pointer cursor but ignored clicks - it is now part of the neighboring entity's tap target (#432)
 - Rows no longer intermittently show "Configuration error: Custom element doesn't exist" on cold or slow loads under HA 2026.8. HA's new custom-element registry polyfill can replace `window.customElements` after this resource has registered; the card now detects the swap and re-registers, logging which detector caught it ([frontend#52960](https://github.com/home-assistant/frontend/issues/52960))
 - Loading the resource twice (e.g. a HACS entry plus a leftover manual one) no longer throws mid-load - the first copy wins with a console warning, and the card picker lists the card once
 
