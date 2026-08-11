@@ -561,8 +561,12 @@ defineElement('multiple-entity-row', MultipleEntityRow);
 
 // Registers the row with HA's card/row pickers so it's discoverable in the UI.
 window.customCards = window.customCards || [];
-window.customCards.push({
-    type: 'multiple-entity-row',
-    name: 'Multiple Entity Row',
-    description: 'Show multiple entity states and attributes on a single entity row',
-});
+// Guarded because defineElement tolerates a double-loaded resource (it no longer throws),
+// so a second module eval reaches this line - don't list the card in the picker twice.
+if (!window.customCards.some((card) => card.type === 'multiple-entity-row')) {
+    window.customCards.push({
+        type: 'multiple-entity-row',
+        name: 'Multiple Entity Row',
+        description: 'Show multiple entity states and attributes on a single entity row',
+    });
+}
