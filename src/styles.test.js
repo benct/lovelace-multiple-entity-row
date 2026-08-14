@@ -20,3 +20,11 @@ describe('entity spacing', () => {
         expect(cssText).toMatch(/\.entities-row \.entity \{[^}]*position: relative/);
     });
 });
+
+describe('toggle alignment', () => {
+    // HA's toggle host is display:flex with no horizontal alignment; without this it hugs the
+    // left edge of any slot wider than the switch (see #436).
+    it('centers ha-entity-toggle within its slot', () => {
+        expect(cssText).toMatch(/\.entity ha-entity-toggle \{[^}]*justify-content: center/);
+    });
+});

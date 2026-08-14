@@ -71,6 +71,13 @@ export const style = (css) => css`
         right: -16px;
         width: 16px;
     }
+    /* HA's ha-entity-toggle host is display:flex with no horizontal alignment, so in a slot
+       wider than the switch it hugs the left edge while everything else centers. Outer styles
+       out-rank :host rules, so it can be centered from here; keeping the host's flex box (vs
+       display:contents) preserves the full-width tap strip and HA's box assumptions (#436). */
+    .entity ha-entity-toggle {
+        justify-content: center;
+    }
     /* Opt-in, because it trades a taller row for not overflowing: nothing between HA's .row and
        our entities can shrink, so a row needing more width than the card has just spills past
        the edge (worst on narrow phone screens - see #411). Wrapping reflows instead. */
