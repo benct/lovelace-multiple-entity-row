@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 4.10.2
+
+**Fixed:**
+- 4.10.1 made the inter-entity gap padding, which stacked with margins users set via `styles` and widened tuned rows into overflowing on narrow screens. Spacing is margin again (layout identical to 4.10.0); the gap stays clickable through a layout-neutral hit-area extension (#432)
+
 ## 4.10.1
 
 **Fixed:**
