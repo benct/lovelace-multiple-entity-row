@@ -47,14 +47,36 @@ export const style = (css) => css`
     .entities-column.align-bottom {
         align-items: flex-end;
     }
-    /* Padding, not margin: the row's cursor:pointer inherits into the gap, but HA stops slotted
-       clicks at the bare slot (catchInteraction=false), so a margin gap is dead space that looks
-       clickable. Padding keeps it inside the entity's own click target (see #432). */
+    /* The 16px gap must be margin, not padding: users tune spacing with their own margins in
+       the 'styles' option, which replace this margin but would stack on top of a padding - 4.10.1 did
+       padding and widened every tuned row into overflowing on phones (see #432). The gap still
+       has to be clickable though: the row's cursor:pointer inherits into it, but HA stops
+       slotted clicks at the bare slot (catchInteraction=false), so bare margin is dead space
+       that looks clickable. The ::after extension puts the gap inside the entity's hit area
+       without affecting layout. position:relative on every entity keeps hit-testing fair: a
+       positioned later sibling beats its neighbor's ::after wherever a user's zero/negative
+       margin makes them overlap, so no entity steals its neighbor's clicks. */
     .entities-row .entity {
-        padding-right: 16px;
+        margin-right: 16px;
+        position: relative;
     }
     .entities-row .entity:last-of-type {
-        padding-right: 0;
+        margin-right: 0;
+    }
+    .entities-row .entity:not(:last-of-type)::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        right: -16px;
+        width: 16px;
+    }
+    /* HA's ha-entity-toggle host is display:flex with no horizontal alignment, so in a slot
+       wider than the switch it hugs the left edge while everything else centers. Outer styles
+       out-rank :host rules, so it can be centered from here; keeping the host's flex box (vs
+       display:contents) preserves the full-width tap strip and HA's box assumptions (#436). */
+    .entity ha-entity-toggle {
+        justify-content: center;
     }
     /* Opt-in, because it trades a taller row for not overflowing: nothing between HA's .row and
        our entities can shrink, so a row needing more width than the card has just spills past
