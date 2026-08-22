@@ -8,8 +8,6 @@ export const style = (css) => css`
     }
     .entity > span {
         display: block;
-    }
-    .entity span {
         font-size: 10px;
         color: var(--multiple-entity-row-header-color, var(--secondary-text-color));
     }
@@ -17,7 +15,7 @@ export const style = (css) => css`
         flex-direction: row;
         display: inline-flex;
         justify-content: space-between;
-        align-items: flex-start;
+        align-items: center;
     }
     .entities-row .entity {
         margin-right: 16px;
