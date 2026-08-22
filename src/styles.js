@@ -23,6 +23,12 @@ export const style = (css) => css`
     .entities-row .entity:last-of-type {
         margin-right: 0;
     }
+    .entities-row .entity-toggle > div {
+        min-height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
     /* Opt-in, because it trades a taller row for not overflowing: nothing between HA's .row and
        our entities can shrink, so a row needing more width than the card has just spills past
        the edge (worst on narrow phone screens - see #411). Wrapping reflows instead. */

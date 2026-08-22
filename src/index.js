@@ -257,7 +257,7 @@ class MultipleEntityRow extends LitElement {
         }
         const gesture = this.getGestureHandlers(`sub-${index}`, stateObj.entity_id, config);
         return html`<div
-            class="entity"
+            class="${config.toggle === true ? 'entity entity-toggle' : 'entity'}"
             style="${entityStyles(config)}"
             @pointerdown="${gesture?.onDown}"
             @pointerup="${gesture?.onUp}"
