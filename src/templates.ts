@@ -150,6 +150,9 @@ export const collectTemplates = (config: LooseObject): TemplateRequest[] => {
         add(entry.color, owner, prefix);
         add(entry.template, owner, prefix);
         add(hideIfTemplate(entry), owner, prefix);
+        if (isObject(entry.styles)) {
+            Object.values(entry.styles as LooseObject).forEach((value) => add(value, owner, prefix));
+        }
         ACTION_KEYS.forEach((key) => walkTemplates(entry[key], (template) => add(template, owner, prefix)));
     };
     const main = config.entity as string | undefined;
@@ -215,6 +218,17 @@ export const resolveTemplateFields = <T extends LooseObject>(
         // Collapse to the boolean verdict hideIf understands. Pending renders visible, matching
         // hide_if.entity's missing-reference behavior.
         patch('hide_if', isTruthyResult(get(hideTemplate)));
+    }
+    if (isObject(config.styles) && Object.values(config.styles as LooseObject).some(hasTemplate)) {
+        // Per-declaration: a pending one resolves to '' and entityStyles drops it, so the
+        // other declarations still apply while it is in flight (see #439).
+        const styles = Object.fromEntries(
+            Object.entries(config.styles as LooseObject).map(([key, value]) => [
+                key,
+                hasTemplate(value) ? displayResult(get(value)) : value,
+            ])
+        );
+        patch('styles', styles);
     }
     return resolved;
 };

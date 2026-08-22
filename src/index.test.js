@@ -844,6 +844,22 @@ describe('multiple-entity-row', () => {
             expect(spans.some((span) => span.textContent === 'restart on nas')).toBe(true);
         });
 
+        // See https://github.com/benct/lovelace-multiple-entity-row/issues/439
+        it('renders a templated styles value once its result lands', async () => {
+            el.setConfig({
+                entity: 'sensor.main',
+                styles: { color: "{{ 'red' if is_state(entity, 'on') else 'green' }}", 'font-weight': 'bold' },
+            });
+            el.hass = hassWith(states());
+            await flushRender(el);
+            const state = () => el.shadowRoot.querySelector('.state.entity').getAttribute('style');
+            // Pending: the other declarations apply, the templated one is absent.
+            expect(state()).toBe('font-weight: bold;');
+            connection.subs[0].callback({ result: 'red' });
+            await flushRender(el);
+            expect(state()).toBe('color: red;font-weight: bold;');
+        });
+
         // Gesture handlers are cached until the next setConfig, so an action config resolved at
         // render time would be frozen at whatever the first render saw - including a pending
         // result. Resolving at dispatch also means the service call carries current values.
@@ -926,6 +942,18 @@ describe('multiple-entity-row', () => {
             expect(row.secondaryText.values).toContain('5 min left');
         });
 
+        it('applies secondary_info styles, templated or not', async () => {
+            el.setConfig({
+                entity: 'sensor.main',
+                secondary_info: { entity: 'sensor.a', styles: { color: '{{ c }}', 'font-weight': 'bold' } },
+            });
+            el.hass = hassWith(states());
+            connection.subs[0].callback({ result: 'red' });
+            await flushRender(el);
+            const row = el.shadowRoot.querySelector('hui-generic-entity-row');
+            expect(row.secondaryText.values).toContain('color: red;font-weight: bold;');
+        });
+
         it('unsubscribes when the element is disconnected', async () => {
             el.setConfig({ entity: 'sensor.main', name: '{{ n }}' });
             el.hass = hassWith(states());
@@ -974,13 +1002,31 @@ describe('multiple-entity-row', () => {
             expect(await rowConfig({ state_color: false })).toMatchObject({ state_color: false });
         });
 
-        it('applies the resolved color to a sub-entity icon badge', async () => {
-            el.setConfig({ entity: 'sensor.main', entities: [{ entity: 'sensor.a', icon: true, color: 'blue' }] });
+        const subBadge = async (config) => {
+            el.setConfig({ entity: 'sensor.main', ...config });
             el.hass = buildHass(states());
             await flushRender(el);
-            const badge = el.shadowRoot.querySelector('.entity:not(.state) state-badge');
+            return el.shadowRoot.querySelector('.entity:not(.state) state-badge');
+        };
+
+        it('applies the resolved color to a sub-entity icon badge', async () => {
+            const badge = await subBadge({ entities: [{ entity: 'sensor.a', icon: true, color: 'blue' }] });
             expect(badge.color).toBe('var(--blue-color)');
             expect(badge.stateColor).toBeUndefined();
+        });
+
+        // See https://github.com/benct/lovelace-multiple-entity-row/issues/441
+        it('lets a sub-entity icon inherit the row color', async () => {
+            const badge = await subBadge({ color: 'none', entities: [{ entity: 'sensor.a', icon: true }] });
+            expect(badge.stateColor).toBe(false);
+        });
+
+        it('lets a sub-entity color override the row color', async () => {
+            const badge = await subBadge({
+                color: 'none',
+                entities: [{ entity: 'sensor.a', icon: true, color: 'state' }],
+            });
+            expect(badge.stateColor).toBe(true);
         });
     });
 

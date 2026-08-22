@@ -249,7 +249,9 @@ class MultipleEntityRow extends LitElement {
             return null;
         }
         const name = entityName(this.info, config);
-        return html`${name} ${this.renderValue(this.info, config)}`;
+        // hui-generic-entity-row owns the secondary line, so `styles` can only reach the text
+        // through a wrapper of our own - it had been silently ignored here since 4.0.0.
+        return html`<span style="${entityStyles(config)}">${name} ${this.renderValue(this.info, config)}</span>`;
     }
 
     renderMainEntity() {
@@ -262,7 +264,7 @@ class MultipleEntityRow extends LitElement {
         // itself (name, icon, sub-entities) stays visible.
         if (hideIf(this.stateObj, config, this._hass)) {
             if (this.config.default) {
-                return html`<div class="state entity" style="${entityStyles(this.config)}">
+                return html`<div class="state entity" style="${entityStyles(config)}">
                     ${this.renderMainHeader()}
                     <div>${this.config.default}</div>
                 </div>`;
@@ -272,7 +274,7 @@ class MultipleEntityRow extends LitElement {
         const gesture = this.getGestureHandlers('main', this.config.entity, this.config);
         return html`<div
             class="state entity"
-            style="${entityStyles(this.config)}"
+            style="${entityStyles(config)}"
             @pointerdown="${gesture?.onDown}"
             @pointerup="${gesture?.onUp}"
             @pointercancel="${gesture?.onCancel}"
@@ -479,8 +481,9 @@ class MultipleEntityRow extends LitElement {
         const overrideIcon =
             stateIcon(stateObj, config) ?? (config.icon === true ? stateObj.attributes.icon || null : config.icon);
         // Exactly one of these is set (see badgeColorProps); the other stays undefined so
-        // state-badge falls through to the one that is.
-        const { stateColor, color } = badgeColorProps(resolveColor(config));
+        // state-badge falls through to the one that is. Only sub-entities render here (the main
+        // icon belongs to hui-generic-entity-row), so the row config is the inherited scope.
+        const { stateColor, color } = badgeColorProps(resolveColor(config, this._resolved(this.config)));
         // state-badge shows an entity picture instead of an icon when the entity has one and no
         // icon overrides it - and then it hides the icon and paints the picture as a background,
         // so the host needs its fixed box or there is nothing to give it height. Deciding that

@@ -52,6 +52,29 @@ describe('resolveColor', () => {
         expect(resolveColor({ icon_color: 'red', color: 'state' })).toEqual({ stateColor: true });
         expect(resolveColor({ icon_color: 'red', state_color: true })).toEqual({ stateColor: true });
     });
+
+    // See https://github.com/benct/lovelace-multiple-entity-row/issues/441 - the row's color is
+    // the default for its sub-entities, so `color: none` on the row restores the pre-4.9 look.
+    describe('inherited scope', () => {
+        it('falls back to the inherited color or state_color', () => {
+            expect(resolveColor({}, { color: 'none' })).toEqual({ stateColor: false });
+            expect(resolveColor({}, { color: 'red' })).toEqual({ cssColor: 'var(--red-color)' });
+            expect(resolveColor({}, { state_color: false })).toEqual({ stateColor: false });
+        });
+
+        it('lets the entity override what it inherits', () => {
+            expect(resolveColor({ color: 'state' }, { color: 'none' })).toEqual({ stateColor: true });
+            expect(resolveColor({ state_color: true }, { color: 'none' })).toEqual({ stateColor: true });
+        });
+
+        it('does not inherit past an icon_color, which needs state coloring off', () => {
+            expect(resolveColor({ icon_color: 'red' }, { color: 'state' })).toEqual({ stateColor: false });
+        });
+
+        it('ignores the inherited icon_color - it paints that badge only', () => {
+            expect(resolveColor({}, { icon_color: 'red' })).toEqual({ stateColor: true });
+        });
+    });
 });
 
 describe('badgeColorProps', () => {

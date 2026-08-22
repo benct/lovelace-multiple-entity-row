@@ -44,17 +44,25 @@ export const computeCssColor = (color: string): string => (THEME_COLORS.has(colo
 
 export type ResolvedColor = { stateColor: boolean } | { cssColor: string };
 
+type ColorConfig = { color?: string; state_color?: boolean; icon_color?: string };
+
+// `color` wins, then the deprecated `state_color`; undefined when neither is set.
+const explicitColor = (config: ColorConfig): string | undefined =>
+    config.color ?? (config.state_color === undefined ? undefined : config.state_color ? 'state' : 'none');
+
 /**
  * Resolve a config's effective icon color into a form that can be handed to state-badge.
  *
- * `color` wins, then the deprecated `state_color`. With neither set the default is "state" (HA
- * 2026.8 colors entity rows by default) - EXCEPT when `icon_color` is configured, because that
- * option paints the icon through CSS variables and an inline state color would beat it, silently
- * dropping the user's color whenever the entity is active.
+ * `color` wins, then the deprecated `state_color`, then the same pair on `inherited` (the row,
+ * for a sub-entity - see #441: `color: none` on the row is documented as restoring the pre-4.9
+ * look, which it can only do if sub-entities follow it). With nothing set the default is
+ * "state" (HA 2026.8 colors entity rows by default) - EXCEPT when `icon_color` is configured,
+ * because that option paints the icon through CSS variables and an inline state color would
+ * beat it, silently dropping the user's color whenever the entity is active. The row's own
+ * `icon_color` is a paint on its badge only, so it is not inherited.
  */
-export const resolveColor = (config: { color?: string; state_color?: boolean; icon_color?: string }): ResolvedColor => {
-    const color =
-        config.color ?? (config.state_color === undefined ? undefined : config.state_color ? 'state' : 'none');
+export const resolveColor = (config: ColorConfig, inherited?: ColorConfig): ResolvedColor => {
+    const color = explicitColor(config) ?? (config.icon_color || !inherited ? undefined : explicitColor(inherited));
     if (color === undefined) {
         return config.icon_color ? { stateColor: false } : { stateColor: true };
     }

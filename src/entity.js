@@ -328,9 +328,11 @@ export const entityStateDisplay = (hass, stateObj, config) => {
     return breakablePercent(hass.formatEntityState(modifiedStateObj));
 };
 
+// An empty value is a pending `styles` template - drop the declaration rather than emit `key: ;`.
 export const entityStyles = (config) =>
     isObject(config?.styles)
         ? Object.keys(config.styles)
+              .filter((key) => config.styles[key] !== '' && config.styles[key] != null)
               .map((key) => `${key}: ${config.styles[key]};`)
               .join('')
         : '';
