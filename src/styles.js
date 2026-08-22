@@ -17,7 +17,7 @@ export const style = (css) => css`
         flex-direction: row;
         display: inline-flex;
         justify-content: space-between;
-        align-items: center;
+        align-items: flex-start;
     }
     .entities-row .entity {
         margin-right: 16px;
