@@ -155,7 +155,7 @@ all and re-evaluates when any of them change.
 
 ## Styles
 
-Any value inside `styles` can be a template, which is how the displayed text (rather than the icon) gets a state-dependent color. A pending declaration is left out until its result arrives; the others apply immediately.
+_4.11.0, currently in beta._ Any value inside `styles` can be a template, which is how the displayed text (rather than the icon) gets a state-dependent color. A pending declaration is left out until its result arrives; the others apply immediately.
 
 ```yaml
 - type: custom:multiple-entity-row

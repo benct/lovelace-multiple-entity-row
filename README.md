@@ -42,6 +42,8 @@ This card produces an `entity-row` and must therefore be configured as an entity
 
 A **visual editor** is available: when editing a `custom:multiple-entity-row` row through the entities card's UI editor, the row opens a form-based editor with tabs for the main entity and each additional entity (add / reorder / copy / paste / delete), plus sections for secondary info, state-based icons, per-entity custom CSS, and tap/hold/double-tap actions. Everything below can still be configured in YAML; a few advanced options (`hide_if`, digit-suffixed formats like `precision5`, [templates](#templating)) are YAML-only — a config containing templates opens directly in the code editor.
 
+> **Beta:** `name_gap`, templates in `styles`, and additional entities following the row's `color` ship in 4.11.0, currently available as a beta — enable *Show beta versions* on the card's HACS page to install it.
+
 | Name             | Type        | Default                     | Description                                      |
 | ---------------- | ----------- | --------------------------- | ------------------------------------------------ |
 | type             | string      | **Required**                | `custom:multiple-entity-row`                     |
@@ -144,6 +146,7 @@ an object containing configuration options listed below, or any of the default s
 | hide_unavailable | bool        | `false`                     | Hide secondary info if its entity is unavailable         |
 | hide_if          | object/any  | _[Hiding](#hiding)_         | Hide secondary info if its value matches given criteria  |
 | format           | string      | _[Formatting](#formatting)_ | Format secondary info value                              |
+| styles           | object      |                             | Add custom CSS styles to the secondary info text         |
 | template         | string      | _[Templating](#templating)_ | Replace the secondary info value with a template result  |
 | vars             | object      | _[Templating](#templating)_ | Named values reusable in this scope's templates          |
 
