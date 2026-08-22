@@ -6,6 +6,9 @@ export const style = (css) => css`
         text-align: center;
         cursor: pointer;
     }
+    .entity > span {
+        display: block;
+    }
     .entity span {
         font-size: 10px;
         color: var(--multiple-entity-row-header-color, var(--secondary-text-color));
