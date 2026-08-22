@@ -19,6 +19,7 @@ there is no separate `*_template` key.
 | `color`          | main row, additional entities                    | `state`, `none`, a theme color or a CSS color      |
 | `template`       | main row, additional entities, secondary         | Result replaces the displayed state value entirely |
 | `hide_if`        | as a plain string, or `hide_if.template`         | Hides when the result renders true                 |
+| `styles`         | main row, additional entities, secondary         | Each value is used as the CSS declaration's value  |
 | action configs   | `tap_action`, `hold_action`, `double_tap_action` | Any value inside them, at any depth                |
 
 ## Variables (`vars`)
@@ -150,6 +151,18 @@ all and re-evaluates when any of them change.
     - entity: binary_sensor.ferry_docked
       icon: "{{ 'mdi:ferry' if is_state(entity, 'on') else 'mdi:waves' }}"
       name: Dock
+```
+
+## Styles
+
+Any value inside `styles` can be a template, which is how the displayed text (rather than the icon) gets a state-dependent color. A pending declaration is left out until its result arrives; the others apply immediately.
+
+```yaml
+- type: custom:multiple-entity-row
+  entity: sensor.air_quality_label
+  styles:
+    color: "{{ 'green' if states('sensor.air_quality_index') | int(0) <= 50 else 'red' }}"
+    font-weight: bold
 ```
 
 ## Behavior details

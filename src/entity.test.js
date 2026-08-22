@@ -397,6 +397,11 @@ describe('entityStyles', () => {
         expect(entityStyles({})).toBe('');
         expect(entityStyles(undefined)).toBe('');
     });
+
+    // A pending styles template resolves to '' - the declaration is dropped, not emitted empty.
+    it('skips declarations with an empty value', () => {
+        expect(entityStyles({ styles: { color: '', 'font-weight': 'bold', width: null } })).toBe('font-weight: bold;');
+    });
 });
 
 // See https://github.com/benct/lovelace-multiple-entity-row/issues/325

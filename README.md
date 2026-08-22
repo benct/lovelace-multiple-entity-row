@@ -102,7 +102,7 @@ running, and `mm:ss (Paused)` when paused. An explicit `attribute:` or `template
 | unit              | string/bool | `unit_of_measurement`       | Override entity unit of measurement (or `false` to hide)           |
 | toggle            | bool        | `false`                     | Display a toggle if supported by domain                            |
 | icon              | string/bool | `false`                     | Display default or custom icon instead of state or attribute value |
-| color             | string      | `state`                     | `state`, `none`, a theme color or a CSS color                      |
+| color             | string      | the row's `color`           | `state`, `none`, a theme color or a CSS color                      |
 | state_color       | bool        | _deprecated_                | Superseded by `color`                                              |
 | icon_color        | string      |                             | CSS color for the entity icon                                      |
 | state_icon        | object      |                             | Map of state value → icon override                                 |
@@ -246,7 +246,7 @@ For example, only show the alarm exit-state sensor while the alarm is armed:
 
 ### Templating
 
-Display options accept Jinja **templates**, rendered by Home Assistant server-side and updated live whenever the entities they reference change. Any supported option whose value contains `{{ }}` or `{% %}` is treated as a template: `name`, `icon`, `icon_color`, `color`, `secondary_info` text, `hide_if`, a `template` option that replaces the displayed value entirely, and any value inside `tap_action`/`hold_action`/`double_tap_action`. The `entity` variable holds the owning entity's id, and `vars` lets you name values reused across a row.
+Display options accept Jinja **templates**, rendered by Home Assistant server-side and updated live whenever the entities they reference change. Any supported option whose value contains `{{ }}` or `{% %}` is treated as a template: `name`, `icon`, `icon_color`, `color`, `secondary_info` text, `hide_if`, a `template` option that replaces the displayed value entirely, any `styles` value, and any value inside `tap_action`/`hold_action`/`double_tap_action`. The `entity` variable holds the owning entity's id, and `vars` lets you name values reused across a row.
 
 ```yaml
 - type: custom:multiple-entity-row
@@ -263,7 +263,7 @@ See **[docs/templating.md](docs/templating.md)** for the full documentation: sup
 
 ### Icon styling
 
-`color` follows Home Assistant's icon color option and accepts `state` (color by entity state), `none` (never color), a theme color name (`red`, `deep-purple`, `accent`), or any CSS color. It applies to the main row icon and to additional entities rendering an icon. The default is `state`, matching the entities card:
+`color` follows Home Assistant's icon color option and accepts `state` (color by entity state), `none` (never color), a theme color name (`red`, `deep-purple`, `accent`), or any CSS color. It applies to the main row icon and to additional entities rendering an icon; an additional entity without its own `color` follows the row's. The default is `state`, matching the entities card:
 
 ```yaml
 - entity: light.kitchen

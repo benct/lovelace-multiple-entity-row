@@ -121,6 +121,19 @@ describe('collectTemplates', () => {
         ]);
     });
 
+    // See https://github.com/benct/lovelace-multiple-entity-row/issues/439
+    it('collects templated styles values', () => {
+        const requests = collectTemplates({
+            entity: 'sensor.main',
+            styles: { color: '{{ c }}', 'font-weight': 'bold' },
+            entities: [{ entity: 'sensor.a', styles: { width: '{{ w }}px' } }],
+        });
+        expect(requests).toEqual([
+            { template: '{{ c }}', entity: 'sensor.main' },
+            { template: '{{ w }}px', entity: 'sensor.a' },
+        ]);
+    });
+
     it('collects both hide_if template forms', () => {
         const requests = collectTemplates({
             entity: 'sensor.main',
@@ -332,6 +345,16 @@ describe('resolveTemplateFields', () => {
         expect(resolved.template).toBe('42');
         expect(resolved.icon).toBe('mdi:fan');
         expect(resolved.hide_if).toBe(true);
+    });
+
+    it('resolves templated styles per declaration, dropping a pending one', () => {
+        const config = { entity: 'sensor.a', styles: { color: '{{ c }}', 'font-size': '{{ s }}px', width: '10px' } };
+        const { connection, results } = buildManager(config);
+        connection.subs.find((sub) => sub.message.template === '{{ c }}')!.callback({ result: 'red' });
+        const resolved = resolveTemplateFields(config, results(), 'sensor.a');
+        expect(resolved.styles).toEqual({ color: 'red', 'font-size': '', width: '10px' });
+        // The source config is never mutated.
+        expect(config.styles.color).toBe('{{ c }}');
     });
 
     it('stringifies list/dict results as JSON instead of [object Object]', () => {
