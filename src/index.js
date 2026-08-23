@@ -10,6 +10,7 @@ import {
     entityStateDisplay,
     entityStyles,
     iconColorCss,
+    mainIconColorCss,
     nameGapCss,
     stateIcon,
 } from './entity';
@@ -36,6 +37,19 @@ import './timer_remaining';
 const stopBubble = (event) => event.stopPropagation();
 
 const NBSP = '\u00a0';
+
+// `:host .info` (specificity 0,2,0) is needed to beat core's own `.info` rule (0,1,0): Lit
+// puts core's `static styles` in adoptedStyleSheets, which the cascade orders *after* a
+// <style> appended to the shadow root, so an equal-specificity rule would lose. Higher
+// specificity wins regardless of order, and without !important a user override still wins.
+// Logical property only: a physical padding-left would pad the wrong (end) edge in RTL.
+const NAME_GAP_RULE = ':host .info{padding-inline-start:var(--multiple-entity-row-name-gap,16px)}';
+
+// Scopes the main row's icon_color / state_color-map paint to the main badge instead of setting
+// icon variables host-wide, which cascades into slotted sub-entity badges (see #445 and
+// mainIconColorCss). Class-gated so an unpainted row leaves the badge's theme fallbacks alone.
+const MAIN_ICON_RULE =
+    ':host(.main-icon-painted) state-badge{--paper-item-icon-color:var(--multiple-entity-row-main-icon-color);--mdc-icon-color:var(--multiple-entity-row-main-icon-color);--state-icon-color:var(--multiple-entity-row-main-icon-color)}';
 
 // `name: ' '` is the common idiom for "no header here" and must behave exactly like name:false,
 // so blank names collapse to null and go through the same headerPlaceholder path. #418 got this
@@ -217,10 +231,14 @@ class MultipleEntityRow extends LitElement {
         // (see #341, #365). HA renders secondary info inside that same box, though, so only hide
         // it when there is no secondary info to lose.
         const hideName = this._nameHidden && !this.config.secondary_info;
+        // The paint reaches only the main state-badge: a class-gated rule injected into the
+        // child's shadow (see injectMainIconStyle) reads the host variable set here. The class
+        // gate matters - with no paint the rule must not match at all, or the variable's absence
+        // would blank the badge's own theme fallbacks (see #445).
+        const mainPaint = mappedColor(config, this.stateObj.state) ?? config.icon_color;
         return html`<hui-generic-entity-row
-            style="${iconColorCss(mappedColor(config, this.stateObj.state) ?? config.icon_color)}${nameGapCss(
-                config.name_gap
-            )}"
+            class="${mainPaint ? 'main-icon-painted' : ''}"
+            style="${mainIconColorCss(mainPaint)}${nameGapCss(config.name_gap)}"
             .hass="${this._hass}"
             .config="${rowConfig}"
             .secondaryText="${this.renderSecondaryInfo()}"
@@ -258,20 +276,28 @@ class MultipleEntityRow extends LitElement {
     // variable), so a later name_gap change only updates the host variable via re-render - no re-inject.
     async updated(changedProps) {
         super.updated?.(changedProps);
-        if (this.config?.name_gap == null || this.config.name_gap === '') return;
         const row = this.renderRoot?.querySelector('hui-generic-entity-row');
         if (!row) return;
+        if (this.config?.name_gap != null && this.config.name_gap !== '') {
+            await this.injectRowStyle(row, 'data-mer-name-gap', NAME_GAP_RULE);
+        }
+        // Inject once the row first has a paint; from then on the :host class alone gates it, so
+        // a paint that comes and goes (a state_color map, a templated icon_color) needs no
+        // re-injection and an unpainted row keeps zero shadow modification.
+        if (this.renderRoot.querySelector('hui-generic-entity-row.main-icon-painted')) {
+            await this.injectRowStyle(row, 'data-mer-main-icon', MAIN_ICON_RULE);
+        }
+    }
+
+    // Inject a one-time scoped rule into hui-generic-entity-row's shadow. The rules are static
+    // (they read host variables), so later config changes only update the host via re-render.
+    async injectRowStyle(row, marker, rule) {
         await row.updateComplete;
         const root = row.shadowRoot;
-        if (!root || root.querySelector('style[data-mer-name-gap]')) return;
+        if (!root || root.querySelector(`style[${marker}]`)) return;
         const style = document.createElement('style');
-        style.setAttribute('data-mer-name-gap', '');
-        // `:host .info` (specificity 0,2,0) is needed to beat core's own `.info` rule (0,1,0): Lit
-        // puts core's `static styles` in adoptedStyleSheets, which the cascade orders *after* a
-        // <style> appended to the shadow root, so an equal-specificity rule would lose. Higher
-        // specificity wins regardless of order, and without !important a user override still wins.
-        // Logical property only: a physical padding-left would pad the wrong (end) edge in RTL.
-        style.textContent = ':host .info{padding-inline-start:var(--multiple-entity-row-name-gap,16px)}';
+        style.setAttribute(marker, '');
+        style.textContent = rule;
         root.appendChild(style);
     }
 

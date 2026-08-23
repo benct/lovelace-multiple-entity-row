@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 - `styles` values accept templates, on the row, additional entities and `secondary_info` - the way to color the displayed text by state. A pending declaration is dropped until its result lands; the rest apply (#439)
 
 **Changed:**
+- The main row's `icon_color` (and `state_color` map) no longer bleeds into additional entities' icons - it paints the main icon only, as documented. Sub-entity icons that relied on inheriting it need their own `icon_color` (#445)
 - An additional entity without its own `color`/`state_color` now follows the row's, so `color: none` on the row restores the pre-4.9 look for the whole row. An explicit per-entity `color`, `state_color` or `icon_color` still wins (#441)
 
 **Fixed:**

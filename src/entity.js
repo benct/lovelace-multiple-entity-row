@@ -171,6 +171,12 @@ const stringTransform = (format, value) => {
 export const iconColorCss = (color) =>
     color ? `--paper-item-icon-color: ${color}; --mdc-icon-color: ${color}; --state-icon-color: ${color};` : '';
 
+// The main row's paint as a host variable consumed by the rule injectMainIconStyle puts inside
+// hui-generic-entity-row's shadow. Deliberately NOT iconColorCss on the host: custom properties
+// cascade into slotted children, so host-wide icon variables bleed into every sub-entity badge
+// that falls back to them (inactive, or color: none) with no way to undo it (see #445).
+export const mainIconColorCss = (color) => (color ? `--multiple-entity-row-main-icon-color: ${color};` : '');
+
 // A configured name_gap as the --multiple-entity-row-name-gap custom property, set on the
 // hui-generic-entity-row host so it cascades into that element's shadow, where index.js's injected
 // override reads it (core hardcodes the .info icon→name padding at 16px with no variable). A number

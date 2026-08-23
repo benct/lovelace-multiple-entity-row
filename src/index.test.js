@@ -1068,7 +1068,29 @@ describe('multiple-entity-row', () => {
             expect(badge.getAttribute('style')).toContain('--state-icon-color: var(--blue-color)');
             const row = el.shadowRoot.querySelector('hui-generic-entity-row');
             expect(row.config.state_color).toBe(false);
-            expect(row.getAttribute('style')).toContain('--state-icon-color: var(--red-color)');
+            expect(row.getAttribute('style')).toContain('--multiple-entity-row-main-icon-color: var(--red-color)');
+            expect(row.classList.contains('main-icon-painted')).toBe(true);
+        });
+
+        // See https://github.com/benct/lovelace-multiple-entity-row/issues/445 - a host-wide
+        // icon variable cascades into every slotted sub-entity badge with no way to undo it, so
+        // the main paint travels as a dedicated variable scoped to the main badge instead.
+        it('keeps the main icon_color off the sub-entity badges', async () => {
+            const badge = await subBadge({ icon_color: 'purple', entities: [{ entity: 'sensor.a', icon: true }] });
+            const row = el.shadowRoot.querySelector('hui-generic-entity-row');
+            expect(row.getAttribute('style')).toContain('--multiple-entity-row-main-icon-color: purple');
+            expect(row.getAttribute('style')).not.toContain('--state-icon-color');
+            expect(row.classList.contains('main-icon-painted')).toBe(true);
+            expect(badge.getAttribute('style')).toBe('');
+        });
+
+        // The class gate is what protects theme fallbacks: with no paint the injected rule must
+        // not match, so the badge never sees an unset variable (see #445).
+        it('does not mark the row painted without an icon_color or state_color match', async () => {
+            await subBadge({ state_color: { off: 'red' }, entities: [{ entity: 'sensor.a', icon: true }] });
+            const row = el.shadowRoot.querySelector('hui-generic-entity-row');
+            expect(row.classList.contains('main-icon-painted')).toBe(false);
+            expect(row.getAttribute('style')).not.toContain('--multiple-entity-row-main-icon-color');
         });
 
         it('lets a sub-entity color override the row color', async () => {

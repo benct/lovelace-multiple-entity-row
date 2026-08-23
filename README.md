@@ -297,7 +297,7 @@ Theme color names and `state` require Home Assistant 2026.8 or newer for the mai
 
 The boolean form of `state_color` is deprecated — `true` means `color: state`, `false` means `color: none`.
 
-`icon_color` accepts any CSS color value (`red`, `#ff0000`, `var(--my-color)`) and applies it to the entity's icon **regardless of state**, which is the one thing `color` cannot express. Setting it also switches that entity's default to `color: none`, so the two do not fight; an explicit `color` still wins. `state_icon` maps state values to icon overrides, taking precedence over `icon` when the current state matches:
+`icon_color` accepts any CSS color value (`red`, `#ff0000`, `var(--my-color)`) and applies it to the entity's icon **regardless of state**, which is the one thing `color` cannot express. It paints only the entity it is set on - an additional entity that wants the row's color sets its own `icon_color`. Setting it also switches that entity's default to `color: none`, so the two do not fight; an explicit `color` still wins. `state_icon` maps state values to icon overrides, taking precedence over `icon` when the current state matches:
 
 ```yaml
 - entity: binary_sensor.front_door
