@@ -496,10 +496,10 @@ name_gap: 8px
 ```
 
 This gap is core `hui-generic-entity-row`'s `.info` `padding-inline-start`, which lives inside that
-element's own shadow DOM and is otherwise unreachable (it's not a CSS variable, `padding` isn't
-inherited, and outside styles — including a theme or card-mod — can't cross the shadow boundary).
-Setting `name_gap` makes the card inject a scoped override into that shadow, driven by the
-`--multiple-entity-row-name-gap` variable; rows without `name_gap` are left completely untouched.
+element's own shadow DOM - plain CSS and themes can't reach it, so until now it took card-mod or
+UIX's shadow-piercing `$` selector. Setting `name_gap` makes the card inject a scoped override into
+that shadow, driven by the `--multiple-entity-row-name-gap` variable; rows without `name_gap` are
+left completely untouched.
 
 ## Development
 
