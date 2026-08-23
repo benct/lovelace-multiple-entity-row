@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 
 **Added:**
 - `name_gap` - the spacing between the main icon and the row name, a CSS length or a number (px). HA hardcodes it at 16px inside its row element's shadow DOM, so it previously took card-mod's shadow-piercing `$`; unset rows are untouched. Contributed by @BlackZork (#401, #443)
+- `state_color` accepts a map of state value → color, overriding `color` for matching states the way `state_icon` overrides `icon`. A match is painted like `icon_color`, active or not, so an entry for `off` works. Static, so it costs no template subscription; the boolean form keeps working as the deprecated alias (#444)
 - `styles` values accept templates, on the row, additional entities and `secondary_info` - the way to color the displayed text by state. A pending declaration is dropped until its result lands; the rest apply (#439)
 
 **Changed:**

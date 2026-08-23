@@ -1056,6 +1056,21 @@ describe('multiple-entity-row', () => {
             expect(badge.stateColor).toBe(false);
         });
 
+        // See https://github.com/benct/lovelace-multiple-entity-row/issues/444
+        // A mapped color is painted through the icon_color variables with state coloring off,
+        // so it applies to inactive states too (HA's `color` only paints active entities).
+        it('applies a state_color map to the main row and a sub-entity icon', async () => {
+            const badge = await subBadge({
+                state_color: { on: 'red' },
+                entities: [{ entity: 'sensor.a', icon: true, state_color: { on: 'blue', off: 'grey' } }],
+            });
+            expect(badge.stateColor).toBe(false);
+            expect(badge.getAttribute('style')).toContain('--state-icon-color: var(--blue-color)');
+            const row = el.shadowRoot.querySelector('hui-generic-entity-row');
+            expect(row.config.state_color).toBe(false);
+            expect(row.getAttribute('style')).toContain('--state-icon-color: var(--red-color)');
+        });
+
         it('lets a sub-entity color override the row color', async () => {
             const badge = await subBadge({
                 color: 'none',

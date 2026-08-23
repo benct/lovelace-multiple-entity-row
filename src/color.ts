@@ -44,24 +44,43 @@ export const computeCssColor = (color: string): string => (THEME_COLORS.has(colo
 
 export type ResolvedColor = { stateColor: boolean } | { cssColor: string };
 
-type ColorConfig = { color?: string; state_color?: boolean; icon_color?: string };
+type ColorConfig = { color?: string; state_color?: boolean | Record<string, string>; icon_color?: string };
 
-// `color` wins, then the deprecated `state_color`; undefined when neither is set.
+/**
+ * The `state_color` map entry for the current state as a CSS color, matched on the raw state
+ * like state_icon (see #444). Painted through the icon_color CSS variables rather than
+ * state-badge's `color`, because HA 2026.8 applies `color` only while the entity is active - a
+ * mapping for `off` would silently do nothing, and the point of a map is that every entry paints.
+ */
+export const mappedColor = (config: ColorConfig, state?: string): string | undefined => {
+    const color =
+        typeof config.state_color === 'object' && config.state_color !== null && state !== undefined
+            ? config.state_color[state]
+            : undefined;
+    return color === undefined ? undefined : computeCssColor(color);
+};
+
+// `color` wins, then the deprecated boolean `state_color`; undefined when neither is set. A
+// `state_color` map is deliberately not an "explicit color" here: it is keyed by this entity's
+// states, so it must not be inherited by sub-entities with different states.
 const explicitColor = (config: ColorConfig): string | undefined =>
-    config.color ?? (config.state_color === undefined ? undefined : config.state_color ? 'state' : 'none');
+    config.color ?? (typeof config.state_color === 'boolean' ? (config.state_color ? 'state' : 'none') : undefined);
 
 /**
  * Resolve a config's effective icon color into a form that can be handed to state-badge.
  *
- * `color` wins, then the deprecated `state_color`, then the same pair on `inherited` (the row,
- * for a sub-entity - see #441: `color: none` on the row is documented as restoring the pre-4.9
- * look, which it can only do if sub-entities follow it). With nothing set the default is
- * "state" (HA 2026.8 colors entity rows by default) - EXCEPT when `icon_color` is configured,
- * because that option paints the icon through CSS variables and an inline state color would
- * beat it, silently dropping the user's color whenever the entity is active. The row's own
- * `icon_color` is a paint on its badge only, so it is not inherited.
+ * A `state_color` map entry for the current `state` wins and, like `icon_color`, is painted
+ * through CSS variables - so state coloring is switched off here and the caller paints it (see
+ * mappedColor). Then `color`, then the deprecated boolean `state_color`, then the same pair on
+ * `inherited` (the row, for a sub-entity - see #441: `color: none` on the row is documented as
+ * restoring the pre-4.9 look, which it can only do if sub-entities follow it). With nothing set
+ * the default is "state" (HA 2026.8 colors entity rows by default) - EXCEPT when `icon_color` is
+ * configured, because that option paints the icon through CSS variables and an inline state
+ * color would beat it, silently dropping the user's color whenever the entity is active. The
+ * row's own `icon_color` is a paint on its badge only, so it is not inherited.
  */
-export const resolveColor = (config: ColorConfig, inherited?: ColorConfig): ResolvedColor => {
+export const resolveColor = (config: ColorConfig, inherited?: ColorConfig, state?: string): ResolvedColor => {
+    if (mappedColor(config, state) !== undefined) return { stateColor: false };
     const color = explicitColor(config) ?? (config.icon_color || !inherited ? undefined : explicitColor(inherited));
     if (color === undefined) {
         return config.icon_color ? { stateColor: false } : { stateColor: true };
