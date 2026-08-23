@@ -70,8 +70,9 @@ interface EntityOptions {
     state_icon?: Record<string, string>;
     // "state" | "none" | a theme color name | any CSS color (HA 2026.8's color API; see color.ts).
     color?: string;
-    /** @deprecated superseded by `color`; true/false map to "state"/"none". */
-    state_color?: boolean;
+    /** A state → color map overriding `color` for matching states (see #444). The boolean form is
+     * deprecated: superseded by `color`, true/false map to "state"/"none". */
+    state_color?: boolean | Record<string, string>;
     toggle?: boolean;
     hide_unavailable?: boolean;
     hide_if?: any | any[] | HideIfObject;

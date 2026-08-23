@@ -40,9 +40,9 @@ The above configuration can be managed in the Configuration -> Dashboards -> Res
 
 This card produces an `entity-row` and must therefore be configured as an entity in an [entities](https://www.home-assistant.io/lovelace/entities/) card.
 
-A **visual editor** is available: when editing a `custom:multiple-entity-row` row through the entities card's UI editor, the row opens a form-based editor with tabs for the main entity and each additional entity (add / reorder / copy / paste / delete), plus sections for secondary info, state-based icons, per-entity custom CSS, and tap/hold/double-tap actions. Everything below can still be configured in YAML; a few advanced options (`hide_if`, digit-suffixed formats like `precision5`, [templates](#templating)) are YAML-only — a config containing templates opens directly in the code editor.
+A **visual editor** is available: when editing a `custom:multiple-entity-row` row through the entities card's UI editor, the row opens a form-based editor with tabs for the main entity and each additional entity (add / reorder / copy / paste / delete), plus sections for secondary info, state-based icons, per-entity custom CSS, and tap/hold/double-tap actions. Everything below can still be configured in YAML; a few advanced options (`hide_if`, `state_color` maps, digit-suffixed formats like `precision5`, [templates](#templating)) are YAML-only — a config containing templates opens directly in the code editor.
 
-> **Beta:** `name_gap`, templates in `styles`, and additional entities following the row's `color` ship in 4.11.0, currently available as a beta — enable *Show beta versions* on the card's HACS page to install it.
+> **Beta:** `name_gap`, templates in `styles`, `state_color` maps, and additional entities following the row's `color` ship in 4.11.0, currently available as a beta — enable *Show beta versions* on the card's HACS page to install it.
 
 | Name             | Type        | Default                     | Description                                      |
 | ---------------- | ----------- | --------------------------- | ------------------------------------------------ |
@@ -61,7 +61,7 @@ A **visual editor** is available: when editing a `custom:multiple-entity-row` ro
 | show_state_first | bool        | `false`                     | Show the main state before other entities        |
 | state_header     | string      |                             | Show header text above the main entity state     |
 | color            | string      | `state`                     | `state`, `none`, a theme color or a CSS color    |
-| state_color      | bool        | _deprecated_                | Superseded by `color`                            |
+| state_color      | object/bool | _[Colors](#icon-styling)_   | Map of state value → color; bool form deprecated |
 | column           | bool        | `false`                     | Show entities in a column instead of a row       |
 | wrap             | bool        | `false`                     | Wrap onto multiple lines instead of overflowing  |
 | align            | string      | `center`                    | Vertical alignment: `top`, `center` or `bottom`  |
@@ -106,7 +106,7 @@ running, and `mm:ss (Paused)` when paused. An explicit `attribute:` or `template
 | toggle            | bool        | `false`                     | Display a toggle if supported by domain                            |
 | icon              | string/bool | `false`                     | Display default or custom icon instead of state or attribute value |
 | color             | string      | the row's `color`           | `state`, `none`, a theme color or a CSS color                      |
-| state_color       | bool        | _deprecated_                | Superseded by `color`                                              |
+| state_color       | object/bool | _[Colors](#icon-styling)_   | Map of state value → color; bool form deprecated                   |
 | icon_color        | string      |                             | CSS color for the entity icon                                      |
 | state_icon        | object      |                             | Map of state value → icon override                                 |
 | default           | string      |                             | Display this value if the entity does not exist or is hidden       |
@@ -282,7 +282,20 @@ See **[docs/templating.md](docs/templating.md)** for the full documentation: sup
       color: none
 ```
 
-Theme color names and `state` require Home Assistant 2026.8 or newer for the main row icon; on older versions use `icon_color` there. `state_color` is still accepted as a deprecated alias — `true` means `color: state`, `false` means `color: none`.
+Theme color names and `state` require Home Assistant 2026.8 or newer for the main row icon; on older versions use `icon_color` there.
+
+`state_color` maps state values to colors, overriding `color` when the current state matches — the same relationship `state_icon` has to `icon`. A matched color is painted like `icon_color`, i.e. whether or not the entity is active, so an entry for `off` works; unmatched states fall back to `color`. Like `state_icon` it is matched on the raw state and belongs to the entity it is set on (additional entities do not inherit it), and being static it needs no template subscription:
+
+```yaml
+- entity: sensor.backup_status
+  color: var(--disabled-text-color)
+  state_color:
+    critical: var(--error-color)
+    warning: var(--warning-color)
+    ok: var(--success-color)
+```
+
+The boolean form of `state_color` is deprecated — `true` means `color: state`, `false` means `color: none`.
 
 `icon_color` accepts any CSS color value (`red`, `#ff0000`, `var(--my-color)`) and applies it to the entity's icon **regardless of state**, which is the one thing `color` cannot express. Setting it also switches that entity's default to `color: none`, so the two do not fight; an explicit `color` still wins. `state_icon` maps state values to icon overrides, taking precedence over `icon` when the current state matches:
 

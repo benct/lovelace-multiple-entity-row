@@ -3,7 +3,7 @@ import { css, html, LitElement } from 'lit';
 import { LAST_CHANGED, LAST_UPDATED, TIMESTAMP_FORMATS } from './lib/constants';
 import { createGestureHandlers } from './lib/gesture_handler';
 import { defineElement } from './lib/define';
-import { badgeColorProps, resolveColor, rowColorConfig } from './color';
+import { badgeColorProps, mappedColor, resolveColor, rowColorConfig } from './color';
 import {
     checkEntity,
     entityName,
@@ -189,10 +189,14 @@ class MultipleEntityRow extends LitElement {
         // A state_icon match overrides the main row's icon by injecting it into the config
         // handed to hui-generic-entity-row, which owns the main icon rendering (see #197).
         const mainStateIcon = stateIcon(this.stateObj, config);
+        // The raw state_color is dropped: rowColorConfig re-expresses it, and a map (see #444)
+        // would otherwise reach state-badge as a truthy stateColor.
+        const rowBase = { ...config };
+        delete rowBase.state_color;
         const rowConfig = {
-            ...config,
+            ...rowBase,
             ...(mainStateIcon ? { icon: mainStateIcon } : {}),
-            ...rowColorConfig(resolveColor(config)),
+            ...rowColorConfig(resolveColor(config, undefined, this.stateObj.state)),
         };
 
         // catchInteraction must stay false: despite the name it does NOT control whether
@@ -214,7 +218,9 @@ class MultipleEntityRow extends LitElement {
         // it when there is no secondary info to lose.
         const hideName = this._nameHidden && !this.config.secondary_info;
         return html`<hui-generic-entity-row
-            style="${iconColorCss(config.icon_color)}${nameGapCss(config.name_gap)}"
+            style="${iconColorCss(mappedColor(config, this.stateObj.state) ?? config.icon_color)}${nameGapCss(
+                config.name_gap
+            )}"
             .hass="${this._hass}"
             .config="${rowConfig}"
             .secondaryText="${this.renderSecondaryInfo()}"
@@ -518,7 +524,9 @@ class MultipleEntityRow extends LitElement {
         // Exactly one of these is set (see badgeColorProps); the other stays undefined so
         // state-badge falls through to the one that is. Only sub-entities render here (the main
         // icon belongs to hui-generic-entity-row), so the row config is the inherited scope.
-        const { stateColor, color } = badgeColorProps(resolveColor(config, this._resolved(this.config)));
+        const { stateColor, color } = badgeColorProps(
+            resolveColor(config, this._resolved(this.config), stateObj.state)
+        );
         // state-badge shows an entity picture instead of an icon when the entity has one and no
         // icon overrides it - and then it hides the icon and paints the picture as a background,
         // so the host needs its fixed box or there is nothing to give it height. Deciding that
@@ -528,7 +536,7 @@ class MultipleEntityRow extends LitElement {
             !overrideIcon && !!(stateObj.attributes.entity_picture || stateObj.attributes.entity_picture_local);
         return html`<state-badge
             class="icon-small${hasPicture ? ' has-picture' : ''}"
-            style="${iconColorCss(config.icon_color)}"
+            style="${iconColorCss(mappedColor(config, stateObj.state) ?? config.icon_color)}"
             .hass=${this._hass}
             .stateObj="${stateObj}"
             .overrideIcon="${overrideIcon}"

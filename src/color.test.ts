@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { badgeColorProps, computeCssColor, resolveColor, rowColorConfig } from './color';
+import { badgeColorProps, computeCssColor, mappedColor, resolveColor, rowColorConfig } from './color';
 
 describe('computeCssColor', () => {
     it('maps theme color names to their CSS variable', () => {
@@ -73,6 +73,41 @@ describe('resolveColor', () => {
 
         it('ignores the inherited icon_color - it paints that badge only', () => {
             expect(resolveColor({}, { icon_color: 'red' })).toEqual({ stateColor: true });
+        });
+    });
+
+    // See https://github.com/benct/lovelace-multiple-entity-row/issues/444 - a per-state color,
+    // as state_icon is a per-state icon. Static, so it costs no template subscription. A match
+    // is painted via CSS variables (mappedColor) and switches state coloring off here.
+    describe('state_color map', () => {
+        const map = { critical: 'red', warning: 'var(--warning-color)' };
+
+        it('turns state coloring off for a matching state, which mappedColor then paints', () => {
+            expect(resolveColor({ state_color: map }, undefined, 'critical')).toEqual({ stateColor: false });
+            expect(mappedColor({ state_color: map }, 'critical')).toBe('var(--red-color)');
+            expect(mappedColor({ state_color: map }, 'warning')).toBe('var(--warning-color)');
+        });
+
+        it('falls back to color, then the default, for an unmapped state', () => {
+            expect(mappedColor({ state_color: map }, 'ok')).toBeUndefined();
+            expect(resolveColor({ state_color: map, color: 'grey' }, undefined, 'ok')).toEqual({
+                cssColor: 'var(--grey-color)',
+            });
+            expect(resolveColor({ state_color: map }, undefined, 'ok')).toEqual({ stateColor: true });
+            expect(resolveColor({ state_color: map })).toEqual({ stateColor: true });
+        });
+
+        it('wins over color for a matching state', () => {
+            expect(resolveColor({ state_color: map, color: 'grey' }, undefined, 'critical')).toEqual({
+                stateColor: false,
+            });
+        });
+
+        it("is not inherited - it is keyed by the owning entity's states", () => {
+            expect(mappedColor({}, 'critical')).toBeUndefined();
+            expect(resolveColor({}, { state_color: map, color: 'grey' }, 'critical')).toEqual({
+                cssColor: 'var(--grey-color)',
+            });
         });
     });
 });
