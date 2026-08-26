@@ -150,9 +150,7 @@ export const collectTemplates = (config: LooseObject): TemplateRequest[] => {
         add(entry.color, owner, prefix);
         add(entry.template, owner, prefix);
         add(hideIfTemplate(entry), owner, prefix);
-        if (isObject(entry.styles)) {
-            Object.values(entry.styles as LooseObject).forEach((value) => add(value, owner, prefix));
-        }
+        if (isObject(entry.styles)) walkTemplates(entry.styles, (template) => add(template, owner, prefix));
         ACTION_KEYS.forEach((key) => walkTemplates(entry[key], (template) => add(template, owner, prefix)));
     };
     const main = config.entity as string | undefined;
@@ -219,7 +217,7 @@ export const resolveTemplateFields = <T extends LooseObject>(
         // hide_if.entity's missing-reference behavior.
         patch('hide_if', isTruthyResult(get(hideTemplate)));
     }
-    if (isObject(config.styles) && Object.values(config.styles as LooseObject).some(hasTemplate)) {
+    if (isObject(config.styles) && configHasTemplates(config.styles)) {
         // Per-declaration: a pending one resolves to '' and entityStyles drops it, so the
         // other declarations still apply while it is in flight (see #439).
         const styles = Object.fromEntries(

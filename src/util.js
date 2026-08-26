@@ -2,6 +2,16 @@ import { LAST_CHANGED, LAST_UPDATED, SECONDARY_INFO_VALUES, UNAVAILABLE_STATES }
 
 export const isObject = (obj) => typeof obj === 'object' && !Array.isArray(obj) && !!obj;
 
+// Own-property lookup for state → value maps (state_icon, state_color). A bare index walks the
+// prototype chain, so a state literally named 'constructor' or 'toString' would return an
+// Object.prototype member; and a null/empty entry (YAML `on:` with no value) is "no entry",
+// not a match - callers treat a match as authoritative and would otherwise render nothing.
+export const stateMapValue = (map, state) => {
+    if (!isObject(map) || state === undefined || !Object.prototype.hasOwnProperty.call(map, state)) return undefined;
+    const value = map[state];
+    return value == null || value === '' ? undefined : value;
+};
+
 // bubbles + composed so the event crosses our shadow root up to HA's root-level listener.
 export const fireEvent = (node, type, detail) => {
     const event = new Event(type, { bubbles: true, composed: true });

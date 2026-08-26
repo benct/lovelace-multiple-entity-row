@@ -7,7 +7,27 @@ import {
     hideUnavailable,
     isObject,
     isUnavailable,
+    stateMapValue,
 } from './util';
+
+describe('stateMapValue', () => {
+    it('returns the own entry for a state', () => {
+        expect(stateMapValue({ on: 'red' }, 'on')).toBe('red');
+    });
+
+    it('ignores prototype members, arrays and non-maps', () => {
+        expect(stateMapValue({ on: 'red' }, 'constructor')).toBeUndefined();
+        expect(stateMapValue({ on: 'red' }, 'toString')).toBeUndefined();
+        expect(stateMapValue(['red', 'green'], '0')).toBeUndefined();
+        expect(stateMapValue(true, 'on')).toBeUndefined();
+        expect(stateMapValue(undefined, 'on')).toBeUndefined();
+    });
+
+    it('treats null and empty entries as no entry', () => {
+        expect(stateMapValue({ on: null }, 'on')).toBeUndefined();
+        expect(stateMapValue({ on: '' }, 'on')).toBeUndefined();
+    });
+});
 
 describe('isObject', () => {
     it('is true for plain objects', () => {

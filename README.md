@@ -42,7 +42,7 @@ This card produces an `entity-row` and must therefore be configured as an entity
 
 A **visual editor** is available: when editing a `custom:multiple-entity-row` row through the entities card's UI editor, the row opens a form-based editor with tabs for the main entity and each additional entity (add / reorder / copy / paste / delete), plus sections for secondary info, state-based icons, per-entity custom CSS, and tap/hold/double-tap actions. Everything below can still be configured in YAML; a few advanced options (`hide_if`, `state_color` maps, digit-suffixed formats like `precision5`, [templates](#templating)) are YAML-only — a config containing templates opens directly in the code editor.
 
-> **Beta:** `name_gap`, templates in `styles`, `state_color` maps, and additional entities following the row's `color` ship in 4.11.0, currently available as a beta — enable *Show beta versions* on the card's HACS page to install it.
+> **Beta:** `name_gap`, templates in `styles`, `state_color` maps, `styles` on `secondary_info`, and additional entities following the row's `color` ship in 4.11.0, currently available as a beta — enable *Show beta versions* on the card's HACS page to install it.
 
 | Name             | Type        | Default                     | Description                                      |
 | ---------------- | ----------- | --------------------------- | ------------------------------------------------ |
@@ -284,7 +284,7 @@ See **[docs/templating.md](docs/templating.md)** for the full documentation: sup
 
 Theme color names and `state` require Home Assistant 2026.8 or newer for the main row icon; on older versions use `icon_color` there.
 
-`state_color` maps state values to colors, overriding `color` when the current state matches — the same relationship `state_icon` has to `icon`. A matched color is painted like `icon_color`, i.e. whether or not the entity is active, so an entry for `off` works; unmatched states fall back to `color`. Like `state_icon` it is matched on the raw state and belongs to the entity it is set on (additional entities do not inherit it), and being static it needs no template subscription:
+`state_color` maps state values to colors, overriding `color` when the current state matches — the same relationship `state_icon` has to `icon`. A matched color is painted like `icon_color`, i.e. whether or not the entity is active, so an entry for `off` works; unmatched states fall back to `color`. Like `state_icon` it is matched on the raw state and belongs to the entity it is set on (additional entities do not inherit it), and being static it needs no template subscription. In YAML-mode dashboards, quote `'on'`/`'off'` keys - unquoted, YAML 1.1 parses them as booleans and the entry never matches:
 
 ```yaml
 - entity: sensor.backup_status
