@@ -88,6 +88,15 @@ describe('resolveColor', () => {
             expect(mappedColor({ state_color: map }, 'warning')).toBe('var(--warning-color)');
         });
 
+        it('treats null/empty map entries and prototype members as no entry', () => {
+            expect(mappedColor({ state_color: { on: null } as never }, 'on')).toBeUndefined();
+            expect(mappedColor({ state_color: { on: '' } }, 'on')).toBeUndefined();
+            expect(mappedColor({ state_color: { on: 'red' } }, 'constructor')).toBeUndefined();
+            expect(resolveColor({ state_color: { on: null } as never, color: 'red' }, undefined, 'on')).toEqual({
+                cssColor: 'var(--red-color)',
+            });
+        });
+
         it('falls back to color, then the default, for an unmapped state', () => {
             expect(mappedColor({ state_color: map }, 'ok')).toBeUndefined();
             expect(resolveColor({ state_color: map, color: 'grey' }, undefined, 'ok')).toEqual({

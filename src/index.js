@@ -48,8 +48,10 @@ const NAME_GAP_RULE = ':host .info{padding-inline-start:var(--multiple-entity-ro
 // Scopes the main row's icon_color / state_color-map paint to the main badge instead of setting
 // icon variables host-wide, which cascades into slotted sub-entity badges (see #445 and
 // mainIconColorCss). Class-gated so an unpainted row leaves the badge's theme fallbacks alone.
-const MAIN_ICON_RULE =
-    ':host(.main-icon-painted) state-badge{--paper-item-icon-color:var(--multiple-entity-row-main-icon-color);--mdc-icon-color:var(--multiple-entity-row-main-icon-color);--state-icon-color:var(--multiple-entity-row-main-icon-color)}';
+// Built from iconColorCss so the variable triple stays defined in exactly one place (#325).
+const MAIN_ICON_RULE = `:host(.main-icon-painted) state-badge{${iconColorCss(
+    'var(--multiple-entity-row-main-icon-color)'
+)}}`;
 
 // `name: ' '` is the common idiom for "no header here" and must behave exactly like name:false,
 // so blank names collapse to null and go through the same headerPlaceholder path. #418 got this
@@ -104,6 +106,8 @@ class MultipleEntityRow extends LitElement {
     constructor() {
         super();
         this._templateResults = new Map();
+        this._injected = new Set();
+        this._mainPainted = false;
         this._templates = new TemplateSubscriptions((results) => {
             this._templateResults = results;
         });
@@ -112,6 +116,12 @@ class MultipleEntityRow extends LitElement {
     connectedCallback() {
         super.connectedCallback();
         this._templates.connect();
+        // If hui-generic-entity-row's chunk lands after our first render (the frontend#52960
+        // load-order class), the injection pass in updated() found no shadowRoot and nothing
+        // re-triggers it - shouldUpdate swallows a bare requestUpdate(), so run it directly.
+        if (!customElements.get('hui-generic-entity-row')) {
+            customElements.whenDefined('hui-generic-entity-row').then(() => this.syncRowStyles());
+        }
     }
 
     disconnectedCallback() {
@@ -200,13 +210,21 @@ class MultipleEntityRow extends LitElement {
         if (!this.stateObj) return this.renderWarning();
 
         const config = this._resolved(this.config);
+        // Shared with renderMainEntity and renderIcon (the sub-entities' inherited color scope),
+        // which would otherwise each re-resolve the identical row config per render.
+        this._rowScope = config;
         // A state_icon match overrides the main row's icon by injecting it into the config
         // handed to hui-generic-entity-row, which owns the main icon rendering (see #197).
         const mainStateIcon = stateIcon(this.stateObj, config);
-        // The raw state_color is dropped: rowColorConfig re-expresses it, and a map (see #444)
-        // would otherwise reach state-badge as a truthy stateColor.
+        // The raw color and state_color are dropped: rowColorConfig re-expresses whichever
+        // applies. Left in, a map (see #444) would reach state-badge as a truthy stateColor, and
+        // a custom `color` would ride along on a map match and be painted inline by state-badge,
+        // beating the injected variables - so the map would never show (crowbarz, beta.2).
         const rowBase = { ...config };
-        delete rowBase.state_color;
+        delete rowBase.color;
+        // The boolean form stays: pre-2026.8 rows read ONLY state_color for their badge, and on
+        // 2026.8+ state-badge prefers `color` anyway, so precedence is preserved on both sides.
+        if (typeof rowBase.state_color !== 'boolean') delete rowBase.state_color;
         const rowConfig = {
             ...rowBase,
             ...(mainStateIcon ? { icon: mainStateIcon } : {}),
@@ -232,10 +250,11 @@ class MultipleEntityRow extends LitElement {
         // it when there is no secondary info to lose.
         const hideName = this._nameHidden && !this.config.secondary_info;
         // The paint reaches only the main state-badge: a class-gated rule injected into the
-        // child's shadow (see injectMainIconStyle) reads the host variable set here. The class
+        // child's shadow (see injectRowStyle) reads the host variable set here. The class
         // gate matters - with no paint the rule must not match at all, or the variable's absence
         // would blank the badge's own theme fallbacks (see #445).
         const mainPaint = mappedColor(config, this.stateObj.state) ?? config.icon_color;
+        this._mainPainted = !!mainPaint;
         return html`<hui-generic-entity-row
             class="${mainPaint ? 'main-icon-painted' : ''}"
             style="${mainIconColorCss(mainPaint)}${nameGapCss(config.name_gap)}"
@@ -274,31 +293,49 @@ class MultipleEntityRow extends LitElement {
     // render()), with a 16px fallback so the default is byte-for-byte unchanged. Gated on name_gap, so
     // rows that don't use it get zero shadow modification. The injected rule is static (reads the
     // variable), so a later name_gap change only updates the host variable via re-render - no re-inject.
-    async updated(changedProps) {
+    updated(changedProps) {
         super.updated?.(changedProps);
+        this.syncRowStyles();
+    }
+
+    syncRowStyles() {
+        // Cheap bail before any DOM query: most rows use neither feature. _mainPainted is set in
+        // render(); nameGapCss doubles as the "is a usable gap configured" predicate so the
+        // injection gate can never disagree with what render() emitted.
+        const gap = nameGapCss(this.config?.name_gap);
+        if (!gap && !this._mainPainted) return;
         const row = this.renderRoot?.querySelector('hui-generic-entity-row');
         if (!row) return;
-        if (this.config?.name_gap != null && this.config.name_gap !== '') {
-            await this.injectRowStyle(row, 'data-mer-name-gap', NAME_GAP_RULE);
-        }
+        if (gap) this.injectRowStyle(row, 'data-mer-name-gap', NAME_GAP_RULE);
         // Inject once the row first has a paint; from then on the :host class alone gates it, so
         // a paint that comes and goes (a state_color map, a templated icon_color) needs no
         // re-injection and an unpainted row keeps zero shadow modification.
-        if (this.renderRoot.querySelector('hui-generic-entity-row.main-icon-painted')) {
-            await this.injectRowStyle(row, 'data-mer-main-icon', MAIN_ICON_RULE);
+        if (row.classList.contains('main-icon-painted')) {
+            this.injectRowStyle(row, 'data-mer-main-icon', MAIN_ICON_RULE);
         }
     }
 
     // Inject a one-time scoped rule into hui-generic-entity-row's shadow. The rules are static
-    // (they read host variables), so later config changes only update the host via re-render.
+    // (they read host variables), so later config changes only update the host via re-render;
+    // _injected skips the await/query round on every update after the first successful one.
     async injectRowStyle(row, marker, rule) {
-        await row.updateComplete;
+        if (this._injected.has(marker)) return;
+        try {
+            await row.updateComplete;
+        } catch {
+            // The row's own update threw (broken child config, HA regression) - skip this pass
+            // rather than surface an unhandled rejection; the next update retries.
+            return;
+        }
         const root = row.shadowRoot;
-        if (!root || root.querySelector(`style[${marker}]`)) return;
-        const style = document.createElement('style');
-        style.setAttribute(marker, '');
-        style.textContent = rule;
-        root.appendChild(style);
+        if (!root) return;
+        if (!root.querySelector(`style[${marker}]`)) {
+            const style = document.createElement('style');
+            style.setAttribute(marker, '');
+            style.textContent = rule;
+            root.appendChild(style);
+        }
+        this._injected.add(marker);
     }
 
     renderSecondaryInfo() {
@@ -325,7 +362,7 @@ class MultipleEntityRow extends LitElement {
         if (this.config.show_state === false) {
             return null;
         }
-        const config = this._resolved(this.config);
+        const config = this._rowScope ?? this._resolved(this.config);
         // Top-level hide_if/hide_unavailable hide the main state slot, symmetrical to per-entity
         // behavior - previously they were silently ignored on the main entity (see #227). The row
         // itself (name, icon, sub-entities) stays visible.
@@ -550,9 +587,8 @@ class MultipleEntityRow extends LitElement {
         // Exactly one of these is set (see badgeColorProps); the other stays undefined so
         // state-badge falls through to the one that is. Only sub-entities render here (the main
         // icon belongs to hui-generic-entity-row), so the row config is the inherited scope.
-        const { stateColor, color } = badgeColorProps(
-            resolveColor(config, this._resolved(this.config), stateObj.state)
-        );
+        const inherited = this._rowScope ?? this._resolved(this.config);
+        const { stateColor, color } = badgeColorProps(resolveColor(config, inherited, stateObj.state));
         // state-badge shows an entity picture instead of an icon when the entity has one and no
         // icon overrides it - and then it hides the icon and paints the picture as a background,
         // so the host needs its fixed box or there is nothing to give it height. Deciding that

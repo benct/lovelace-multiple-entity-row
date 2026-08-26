@@ -7,6 +7,7 @@ import {
     entityStyles,
     iconColorCss,
     stateIcon,
+    nameGapCss,
 } from './entity';
 import { NumberFormat } from './lib/constants';
 
@@ -401,6 +402,33 @@ describe('entityStyles', () => {
     // A pending styles template resolves to '' - the declaration is dropped, not emitted empty.
     it('skips declarations with an empty value', () => {
         expect(entityStyles({ styles: { color: '', 'font-weight': 'bold', width: null } })).toBe('font-weight: bold;');
+    });
+});
+
+// The editor's name_gap field is a text selector, so numeric strings must behave like numbers,
+// and anything that is not a usable CSS length must be treated as unset - a defined-but-invalid
+// variable suppresses the injected rule's 16px fallback and collapses the gap to 0.
+describe('nameGapCss', () => {
+    it('adds px to numbers and numeric strings', () => {
+        expect(nameGapCss(8)).toBe('--multiple-entity-row-name-gap: 8px;');
+        expect(nameGapCss('8')).toBe('--multiple-entity-row-name-gap: 8px;');
+        expect(nameGapCss(' 8.5 ')).toBe('--multiple-entity-row-name-gap: 8.5px;');
+        expect(nameGapCss(0)).toBe('--multiple-entity-row-name-gap: 0px;');
+    });
+
+    it('passes CSS lengths through', () => {
+        expect(nameGapCss('0.5em')).toBe('--multiple-entity-row-name-gap: 0.5em;');
+        expect(nameGapCss('var(--x)')).toBe('--multiple-entity-row-name-gap: var(--x);');
+    });
+
+    it('treats unusable values as unset', () => {
+        expect(nameGapCss(undefined)).toBe('');
+        expect(nameGapCss(null)).toBe('');
+        expect(nameGapCss('')).toBe('');
+        expect(nameGapCss(false)).toBe('');
+        expect(nameGapCss(true)).toBe('');
+        expect(nameGapCss(NaN)).toBe('');
+        expect(nameGapCss("{{ '8px' }}")).toBe('');
     });
 });
 

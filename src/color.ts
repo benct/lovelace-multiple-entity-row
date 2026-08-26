@@ -6,6 +6,8 @@
 // than sniff hass.config.version, resolveColor() maps a config value onto the state-badge
 // properties that behave correctly on BOTH sides. See applyColor() for that mapping.
 
+import { stateMapValue } from './util';
+
 // Mirrors THEME_COLORS + YAML_ONLY_THEMES_COLORS in HA's src/common/color/compute-color.ts.
 const THEME_COLORS = new Set([
     'primary',
@@ -53,11 +55,8 @@ type ColorConfig = { color?: string; state_color?: boolean | Record<string, stri
  * mapping for `off` would silently do nothing, and the point of a map is that every entry paints.
  */
 export const mappedColor = (config: ColorConfig, state?: string): string | undefined => {
-    const color =
-        typeof config.state_color === 'object' && config.state_color !== null && state !== undefined
-            ? config.state_color[state]
-            : undefined;
-    return color === undefined ? undefined : computeCssColor(color);
+    const color = stateMapValue(config.state_color, state) as string | undefined;
+    return color === undefined ? undefined : computeCssColor(String(color));
 };
 
 // `color` wins, then the deprecated boolean `state_color`; undefined when neither is set. A

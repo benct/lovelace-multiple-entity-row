@@ -1,6 +1,7 @@
 import { secondsToDuration } from './lib/seconds_to_duration';
 import { formatNumber } from './lib/format_number';
-import { isObject, isUnavailable } from './util';
+import { isObject, isUnavailable, stateMapValue } from './util';
+import { hasTemplate } from './templates';
 
 // An entry used to need one of entity/attribute/icon, on the reasoning that it would otherwise
 // render nothing. That stopped being true: an entry with no `entity` already falls back to the
@@ -171,7 +172,7 @@ const stringTransform = (format, value) => {
 export const iconColorCss = (color) =>
     color ? `--paper-item-icon-color: ${color}; --mdc-icon-color: ${color}; --state-icon-color: ${color};` : '';
 
-// The main row's paint as a host variable consumed by the rule injectMainIconStyle puts inside
+// The main row's paint as a host variable consumed by the rule injectRowStyle puts inside
 // hui-generic-entity-row's shadow. Deliberately NOT iconColorCss on the host: custom properties
 // cascade into slotted children, so host-wide icon variables bleed into every sub-entity badge
 // that falls back to them (inactive, or color: none) with no way to undo it (see #445).
@@ -182,12 +183,23 @@ export const mainIconColorCss = (color) => (color ? `--multiple-entity-row-main-
 // override reads it (core hardcodes the .info icon→name padding at 16px with no variable). A number
 // is treated as px; a string passes through ('8px', '0.5em', 'var(--x)'). `0` is a valid gap, so the
 // guard is `!= null` (and rejects only the empty string), not truthiness.
-export const nameGapCss = (gap) =>
-    gap != null && gap !== '' ? `--multiple-entity-row-name-gap: ${typeof gap === 'number' ? `${gap}px` : gap};` : '';
+// A number means px - and so does a numeric string, because the editor's name_gap field is a
+// text selector and can only save strings ('8' must behave like 8). Anything else that is not a
+// plausible CSS length - booleans, NaN, a Jinja template (name_gap is not a templated field) -
+// is treated as unset: a defined-but-invalid variable would suppress the injected rule's 16px
+// var() fallback and compute the padding to 0, silently collapsing the gap.
+export const nameGapCss = (gap) => {
+    let value = null;
+    if (typeof gap === 'number' && Number.isFinite(gap)) value = `${gap}px`;
+    else if (typeof gap === 'string' && gap.trim() !== '' && !hasTemplate(gap)) {
+        const text = gap.trim();
+        value = /^\d+(\.\d+)?$/.test(text) ? `${text}px` : text;
+    }
+    return value === null ? '' : `--multiple-entity-row-name-gap: ${value};`;
+};
 
 // The state_icon map's icon for the current state, or undefined (see #197).
-export const stateIcon = (stateObj, config) =>
-    isObject(config.state_icon) ? config.state_icon[stateObj.state] : undefined;
+export const stateIcon = (stateObj, config) => stateMapValue(config.state_icon, stateObj.state);
 
 export const entityName = (stateObj, config) => {
     if (config.name === false) return null;

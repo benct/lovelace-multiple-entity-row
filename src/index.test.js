@@ -1072,6 +1072,32 @@ describe('multiple-entity-row', () => {
             expect(row.classList.contains('main-icon-painted')).toBe(true);
         });
 
+        // A custom color must not ride along into the row config on a map match: state-badge
+        // paints .color inline, which would beat the injected variables (#444, beta.2 report).
+        it('drops the raw color from the row config when the state_color map matches', async () => {
+            await subBadge({ color: 'grey', state_color: { on: 'blue' }, entities: [{ entity: 'sensor.a' }] });
+            const row = el.shadowRoot.querySelector('hui-generic-entity-row');
+            expect(row.config.color).toBeUndefined();
+            expect(row.config.state_color).toBe(false);
+            expect(row.getAttribute('style')).toContain('--multiple-entity-row-main-icon-color: var(--blue-color)');
+        });
+
+        // Pre-2026.8 rows read ONLY state_color for their badge, so the boolean form must ride
+        // along with the computed color (2026.8's badge prefers color, so precedence holds).
+        it('keeps a boolean state_color beside a custom color in the row config', async () => {
+            await subBadge({ color: 'red', state_color: true, entities: [{ entity: 'sensor.a' }] });
+            const rowCfg = el.shadowRoot.querySelector('hui-generic-entity-row').config;
+            expect(rowCfg.color).toBe('var(--red-color)');
+            expect(rowCfg.state_color).toBe(true);
+        });
+
+        it('restores the custom color in the row config for an unmapped state', async () => {
+            await subBadge({ color: 'grey', state_color: { off: 'blue' }, entities: [{ entity: 'sensor.a' }] });
+            const row = el.shadowRoot.querySelector('hui-generic-entity-row');
+            expect(row.config.color).toBe('var(--grey-color)');
+            expect(row.classList.contains('main-icon-painted')).toBe(false);
+        });
+
         // See https://github.com/benct/lovelace-multiple-entity-row/issues/445 - a host-wide
         // icon variable cascades into every slotted sub-entity badge with no way to undo it, so
         // the main paint travels as a dedicated variable scoped to the main badge instead.
