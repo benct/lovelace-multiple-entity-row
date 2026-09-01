@@ -115,8 +115,8 @@ describe('multiple-entity-row', () => {
 
     // name_gap sets a --multiple-entity-row-name-gap custom property on the hui-generic-entity-row
     // host; the actual `.info` padding override is injected into that (real) element's shadow at
-    // runtime (see updated() in index.js), which the jsdom stub row can't exercise - so these cover
-    // the host-variable half, and the injection is verified live on the target dashboard.
+    // runtime (see updated() in index.js). The stub row has no shadow of its own, so the injection
+    // test below attaches one; the rule's live effect is verified on the target dashboard.
     describe('name_gap', () => {
         const renderWith = async (config) => {
             el.setConfig({ entity: 'sensor.main', ...config });
@@ -145,6 +145,27 @@ describe('multiple-entity-row', () => {
 
         it('omits the variable when name_gap is not configured', async () => {
             expect((await renderWith({})).getAttribute('style') ?? '').not.toContain('--multiple-entity-row-name-gap');
+        });
+
+        // The injection half: jsdom's stub row has no shadow root of its own, so attach one and
+        // verify the rule lands - and lands again after being swept, which happens for real when
+        // the row's root template swaps to a warning and back on an entity blip (#450 audit).
+        it('injects the name_gap rule once and re-injects after the row shadow is swept', async () => {
+            const rerender = async (state) => {
+                el.hass = buildHass({ 'sensor.main': { entity_id: 'sensor.main', state, attributes: {} } });
+                await flushRender(el);
+                // injectRowStyle awaits row.updateComplete (undefined on the stub) before appending.
+                await new Promise((resolve) => setTimeout(resolve, 0));
+            };
+            const row = await renderWith({ name_gap: 8 });
+            row.attachShadow({ mode: 'open' });
+            await rerender('2');
+            expect(row.shadowRoot.querySelectorAll('style[data-mer-name-gap]')).toHaveLength(1);
+            await rerender('3');
+            expect(row.shadowRoot.querySelectorAll('style[data-mer-name-gap]')).toHaveLength(1);
+            row.shadowRoot.innerHTML = '';
+            await rerender('4');
+            expect(row.shadowRoot.querySelectorAll('style[data-mer-name-gap]')).toHaveLength(1);
         });
     });
 
@@ -812,6 +833,13 @@ describe('multiple-entity-row', () => {
 
     // 4.8.0 templating: supported config strings containing {{ }} render server-side via a
     // render_template websocket subscription (see #409 and the module comment in templates.ts).
+    it('passes a plain secondary_info string through to the generic row untouched', async () => {
+        el.setConfig({ entity: 'sensor.main', secondary_info: 'hello' });
+        el.hass = buildHass({ 'sensor.main': { entity_id: 'sensor.main', state: 'on', attributes: {} } });
+        await flushRender(el);
+        expect(el.shadowRoot.querySelector('hui-generic-entity-row').secondaryText).toBe('hello');
+    });
+
     describe('templating', () => {
         let connection;
 
@@ -968,13 +996,33 @@ describe('multiple-entity-row', () => {
             expect(el.shadowRoot.querySelector('hui-generic-entity-row').config.name).toBe('Row Name');
         });
 
-        it('renders a templated secondary_info string', async () => {
+        // secondaryText carries a plain string, never an html`` wrapper: HA types the property
+        // as a string, and a foreign TemplateResult makes HA's lit re-walk our nested DOM on
+        // every changed result - the #450 crash cascade when anything else mutates that DOM.
+        it('passes a templated secondary_info to the generic row as a plain string', async () => {
             el.setConfig({ entity: 'sensor.main', secondary_info: '{{ s }}' });
             el.hass = hassWith(states());
             connection.subs[0].callback({ result: '5 min left' });
             await flushRender(el);
             const row = el.shadowRoot.querySelector('hui-generic-entity-row');
-            expect(row.secondaryText.values).toContain('5 min left');
+            expect(row.secondaryText).toBe('5 min left');
+        });
+
+        // Falsy secondaryText makes hui-generic-entity-row fall back to config.secondary_info -
+        // for a templated string that is the raw Jinja source - so pending/empty pads to a space.
+        it('renders a space while a secondary_info template is pending', async () => {
+            el.setConfig({ entity: 'sensor.main', secondary_info: '{{ s }}' });
+            el.hass = hassWith(states());
+            await flushRender(el);
+            expect(el.shadowRoot.querySelector('hui-generic-entity-row').secondaryText).toBe(' ');
+        });
+
+        it('renders a space when a secondary_info template resolves empty', async () => {
+            el.setConfig({ entity: 'sensor.main', secondary_info: '{{ s }}' });
+            el.hass = hassWith(states());
+            connection.subs[0].callback({ result: '' });
+            await flushRender(el);
+            expect(el.shadowRoot.querySelector('hui-generic-entity-row').secondaryText).toBe(' ');
         });
 
         it('applies secondary_info styles, templated or not', async () => {
