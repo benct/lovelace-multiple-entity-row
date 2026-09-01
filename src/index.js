@@ -106,7 +106,6 @@ class MultipleEntityRow extends LitElement {
     constructor() {
         super();
         this._templateResults = new Map();
-        this._injected = new Set();
         this._mainPainted = false;
         this._templates = new TemplateSubscriptions((results) => {
             this._templateResults = results;
@@ -315,11 +314,14 @@ class MultipleEntityRow extends LitElement {
         }
     }
 
-    // Inject a one-time scoped rule into hui-generic-entity-row's shadow. The rules are static
-    // (they read host variables), so later config changes only update the host via re-render;
-    // _injected skips the await/query round on every update after the first successful one.
+    // Inject a scoped rule into hui-generic-entity-row's shadow. The rules are static (they read
+    // host variables), so later config changes only update the host via re-render. Presence in the
+    // DOM is the only "already injected" state worth trusting: the row's lit render owns its shadow
+    // root to the end (no end marker), so a root template swap - the entity blipping away swaps
+    // both our template and the row's own to a warning and back - silently sweeps injected styles
+    // out with the old tree, and a cached flag would then block the re-inject forever (#450 audit).
     async injectRowStyle(row, marker, rule) {
-        if (this._injected.has(marker)) return;
+        if (row.shadowRoot?.querySelector(`style[${marker}]`)) return;
         try {
             await row.updateComplete;
         } catch {
@@ -335,7 +337,6 @@ class MultipleEntityRow extends LitElement {
             style.textContent = rule;
             root.appendChild(style);
         }
-        this._injected.add(marker);
     }
 
     renderSecondaryInfo() {
@@ -344,9 +345,19 @@ class MultipleEntityRow extends LitElement {
             return null;
         }
         if (typeof secondaryInfo === 'string') {
-            return html`${hasTemplate(secondaryInfo)
-                ? templateDisplay(this._templateResults, secondaryInfo, this.config.entity, scopeVars(this.config))
-                : secondaryInfo}`;
+            // A plain string, never an html`` wrapper: hui-generic-entity-row types secondaryText
+            // as a string, and a TemplateResult from our own lit makes HA's lit re-walk the nested
+            // part's DOM on every value change - if anything else (an extension, a translator) has
+            // mutated that DOM, every subsequent update throws, and HA's frontend source-maps each
+            // uncaught error at ~600ms a pop (see #450). A string commits once and then updates via
+            // textNode.data, touching no surrounding DOM. Falsy secondaryText makes the generic row
+            // fall back to config.secondary_info - the raw Jinja source - so pad '' to a space.
+            if (!hasTemplate(secondaryInfo)) {
+                return secondaryInfo;
+            }
+            return (
+                templateDisplay(this._templateResults, secondaryInfo, this.config.entity, scopeVars(this.config)) || ' '
+            );
         }
         const config = this._resolved(secondaryInfo);
         if (hideIf(this.info, config, this._hass)) {

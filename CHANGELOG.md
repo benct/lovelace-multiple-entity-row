@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+**Fixed:**
+- A templated string `secondary_info` is now handed to HA's row element as a plain string instead of a rendered template fragment. When anything else mutates the row's DOM (a browser extension, a page translator), the old form made HA's renderer crash on every template update - each crash triggering HA's error reporter and burning CPU (#450)
+- `name_gap` and the main icon paint survive an entity temporarily disappearing: HA's row element sweeps its shadow DOM when it swaps to the "entity not found" warning and back, which silently removed the card's injected style rules until a full reload
+
 ## 4.11.0
 
 **Added:**
