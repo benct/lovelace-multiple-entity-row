@@ -263,6 +263,8 @@ Display options accept Jinja **templates**, rendered by Home Assistant server-si
 
 See **[docs/templating.md](docs/templating.md)** for the full documentation: supported options, value-template semantics, hide conditions, loading/error behavior, and more examples. Templated rows are YAML-only — the visual editor switches to the code editor when a config contains templates.
 
+**Known conflict:** [lovelace-canary](https://github.com/jcwillox/lovelace-canary) also renders templates in `secondary_info` and rewrites the same DOM, crashing HA's row renderer on every update — high CPU (#450). If you run both, add `disable_canary: true` to affected rows.
+
 ### Icon styling
 
 `color` follows Home Assistant's icon color option and accepts `state` (color by entity state), `none` (never color), a theme color name (`red`, `deep-purple`, `accent`), or any CSS color. It applies to the main row icon and to additional entities rendering an icon; an additional entity without its own `color` follows the row's. The default is `state`, matching the entities card:
