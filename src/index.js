@@ -39,8 +39,8 @@ const stopBubble = (event) => event.stopPropagation();
 const NBSP = '\u00a0';
 
 // `:host .info` (specificity 0,2,0) is needed to beat core's own `.info` rule (0,1,0): Lit
-// puts core's `static styles` in adoptedStyleSheets, which the cascade orders *after* a
-// <style> appended to the shadow root, so an equal-specificity rule would lose. Higher
+// puts core's `static styles` in adoptedStyleSheets, which the cascade orders *after* any
+// <style> in the shadow root, so an equal-specificity rule would lose. Higher
 // specificity wins regardless of order, and without !important a user override still wins.
 // Logical property only: a physical padding-left would pad the wrong (end) edge in RTL.
 const NAME_GAP_RULE = ':host .info{padding-inline-start:var(--multiple-entity-row-name-gap,16px)}';
@@ -315,11 +315,13 @@ class MultipleEntityRow extends LitElement {
     }
 
     // Inject a scoped rule into hui-generic-entity-row's shadow. The rules are static (they read
-    // host variables), so later config changes only update the host via re-render. Presence in the
-    // DOM is the only "already injected" state worth trusting: the row's lit render owns its shadow
-    // root to the end (no end marker), so a root template swap - the entity blipping away swaps
-    // both our template and the row's own to a warning and back - silently sweeps injected styles
-    // out with the old tree, and a cached flag would then block the re-inject forever (#450 audit).
+    // host variables), so later config changes only update the host via re-render. Prepended, not
+    // appended: the row's lit part spans its start marker to the end of the root, so an appended
+    // node is swept on every root template swap (entity blipping to a warning and back) while a
+    // node before the marker survives them all - and every <style> re-insertion costs a restyle.
+    // Cascade order doesn't care (the rules win by specificity, see NAME_GAP_RULE). The
+    // DOM-presence check stays as the safety net: a cached "already injected" flag would block
+    // the re-inject forever if anything else ever cleared the root (#450 audit).
     async injectRowStyle(row, marker, rule) {
         if (row.shadowRoot?.querySelector(`style[${marker}]`)) return;
         try {
@@ -335,7 +337,7 @@ class MultipleEntityRow extends LitElement {
             const style = document.createElement('style');
             style.setAttribute(marker, '');
             style.textContent = rule;
-            root.appendChild(style);
+            root.prepend(style);
         }
     }
 

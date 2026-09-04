@@ -150,17 +150,22 @@ describe('multiple-entity-row', () => {
         // The injection half: jsdom's stub row has no shadow root of its own, so attach one and
         // verify the rule lands - and lands again after being swept, which happens for real when
         // the row's root template swaps to a warning and back on an entity blip (#450 audit).
-        it('injects the name_gap rule once and re-injects after the row shadow is swept', async () => {
+        // The rule must land BEFORE existing content: the row's lit part spans its start marker
+        // to the end of the root, so only a node prepended above the marker survives the swaps.
+        it('prepends the name_gap rule once and re-injects after the row shadow is swept', async () => {
             const rerender = async (state) => {
                 el.hass = buildHass({ 'sensor.main': { entity_id: 'sensor.main', state, attributes: {} } });
                 await flushRender(el);
-                // injectRowStyle awaits row.updateComplete (undefined on the stub) before appending.
+                // injectRowStyle awaits row.updateComplete (undefined on the stub) before injecting.
                 await new Promise((resolve) => setTimeout(resolve, 0));
             };
             const row = await renderWith({ name_gap: 8 });
             row.attachShadow({ mode: 'open' });
+            // Stand-in for lit's start marker + rendered tree.
+            row.shadowRoot.append(document.createElement('div'));
             await rerender('2');
             expect(row.shadowRoot.querySelectorAll('style[data-mer-name-gap]')).toHaveLength(1);
+            expect(row.shadowRoot.firstChild.getAttribute('data-mer-name-gap')).toBe('');
             await rerender('3');
             expect(row.shadowRoot.querySelectorAll('style[data-mer-name-gap]')).toHaveLength(1);
             row.shadowRoot.innerHTML = '';

@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+**Changed:**
+- The style rules the card injects into HA's row element (`name_gap`, the main icon paint) are placed above lit's render marker, so they survive the row's template swaps instead of being removed and re-injected - one less style recalc per entity blip. Thanks @dcapslock
+
 ## 4.11.1
 
 **Fixed:**
