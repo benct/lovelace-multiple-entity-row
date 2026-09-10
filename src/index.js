@@ -224,6 +224,15 @@ class MultipleEntityRow extends LitElement {
         // The boolean form stays: pre-2026.8 rows read ONLY state_color for their badge, and on
         // 2026.8+ state-badge prefers `color` anyway, so precedence is preserved on both sides.
         if (typeof rowBase.state_color !== 'boolean') delete rowBase.state_color;
+        // Any secondary_info we render ourselves (object form, plain or templated text) is
+        // dropped too - only the generic keywords HA renders natively pass through. Left in,
+        // the row's fallback for a falsy secondaryText (a hidden object form) renders it via
+        // <state-display> since HA 2026.8, which can't read our forms and displays the MAIN
+        // entity's state (#452); it also baits row-patching plugins - lovelace-canary keys its
+        // takeover off a template in the row's secondary_info (#450).
+        if (rowBase.secondary_info && !hasGenericSecondaryInfo(rowBase.secondary_info)) {
+            delete rowBase.secondary_info;
+        }
         const rowConfig = {
             ...rowBase,
             ...(mainStateIcon ? { icon: mainStateIcon } : {}),
@@ -350,8 +359,9 @@ class MultipleEntityRow extends LitElement {
             // part's DOM on every value change - if anything else (an extension, a translator) has
             // mutated that DOM, every subsequent update throws, and HA's frontend source-maps each
             // uncaught error at ~600ms a pop (see #450). A string commits once and then updates via
-            // textNode.data, touching no surrounding DOM. Falsy secondaryText makes the generic row
-            // fall back to config.secondary_info - the raw Jinja source - so pad '' to a space.
+            // textNode.data, touching no surrounding DOM. A pending or empty template pads '' to a
+            // space to keep the line reserved - rowConfig strips our secondary_info forms (#452),
+            // so a falsy secondaryText would collapse it and the row would jump on the first result.
             if (!hasTemplate(secondaryInfo)) {
                 return secondaryInfo;
             }

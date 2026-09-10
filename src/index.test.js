@@ -833,11 +833,45 @@ describe('multiple-entity-row', () => {
 
     // 4.8.0 templating: supported config strings containing {{ }} render server-side via a
     // render_template websocket subscription (see #409 and the module comment in templates.ts).
-    it('passes a plain secondary_info string through to the generic row untouched', async () => {
+    // Any secondary_info the card renders itself is stripped from the config handed to the row:
+    // left in, HA 2026.8+'s <state-display> fallback renders it against the MAIN entity whenever
+    // secondaryText is falsy, showing the primary state on a hidden line (#452).
+    it('renders a plain secondary_info string via secondaryText, stripped from the row config', async () => {
         el.setConfig({ entity: 'sensor.main', secondary_info: 'hello' });
         el.hass = buildHass({ 'sensor.main': { entity_id: 'sensor.main', state: 'on', attributes: {} } });
         await flushRender(el);
-        expect(el.shadowRoot.querySelector('hui-generic-entity-row').secondaryText).toBe('hello');
+        const row = el.shadowRoot.querySelector('hui-generic-entity-row');
+        expect(row.secondaryText).toBe('hello');
+        expect(row.config.secondary_info).toBeUndefined();
+    });
+
+    // The #452 report: object form + hide_unavailable, secondary entity unknown. Hiding must
+    // yield BOTH a falsy secondaryText and no secondary_info in the row config, or HA's
+    // fallback renders the main entity's state in the "hidden" line.
+    it('hides an unavailable object-form secondary_info without leaking it to the row config', async () => {
+        el.setConfig({
+            entity: 'sensor.main',
+            secondary_info: { entity: 'sensor.app', name: 'App: ', hide_unavailable: true },
+        });
+        el.hass = buildHass({
+            'sensor.main': { entity_id: 'sensor.main', state: 'HDMI', attributes: {} },
+            'sensor.app': { entity_id: 'sensor.app', state: 'unknown', attributes: {} },
+        });
+        await flushRender(el);
+        const row = el.shadowRoot.querySelector('hui-generic-entity-row');
+        expect(row.secondaryText).toBeFalsy();
+        expect(row.config.secondary_info).toBeUndefined();
+    });
+
+    // Generic keywords are the one secondary_info HA renders natively - those must keep
+    // passing through, with no secondaryText override.
+    it('passes a generic secondary_info keyword through to the row config', async () => {
+        el.setConfig({ entity: 'sensor.main', secondary_info: 'last-changed' });
+        el.hass = buildHass({ 'sensor.main': { entity_id: 'sensor.main', state: 'on', attributes: {} } });
+        await flushRender(el);
+        const row = el.shadowRoot.querySelector('hui-generic-entity-row');
+        expect(row.config.secondary_info).toBe('last-changed');
+        expect(row.secondaryText).toBeFalsy();
     });
 
     describe('templating', () => {
@@ -1006,10 +1040,14 @@ describe('multiple-entity-row', () => {
             await flushRender(el);
             const row = el.shadowRoot.querySelector('hui-generic-entity-row');
             expect(row.secondaryText).toBe('5 min left');
+            // The raw Jinja never reaches the row config - HA's fallback would render it against
+            // the main entity (#452), and lovelace-canary keys its takeover off it (#450).
+            expect(row.config.secondary_info).toBeUndefined();
         });
 
-        // Falsy secondaryText makes hui-generic-entity-row fall back to config.secondary_info -
-        // for a templated string that is the raw Jinja source - so pending/empty pads to a space.
+        // Pending/empty pads to a space to keep the secondary line reserved: with secondary_info
+        // stripped from the row config (#452), a falsy secondaryText collapses the line, and the
+        // row would jump a line when the first result lands.
         it('renders a space while a secondary_info template is pending', async () => {
             el.setConfig({ entity: 'sensor.main', secondary_info: '{{ s }}' });
             el.hass = hassWith(states());
