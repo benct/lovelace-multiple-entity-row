@@ -6,6 +6,9 @@ All notable changes to this project will be documented in this file.
 **Fixed:**
 - A hidden `secondary_info` (object form with `hide_unavailable` or `hide_if`) showed the main entity's state on HA 2026.8+ instead of hiding: HA's row now renders any `secondary_info` it's given against the main entity whenever the card supplies no secondary text. The card no longer passes its own `secondary_info` forms through to HA's row - only the generic keywords HA renders natively (#452). This also stops lovelace-canary from taking over templated secondary lines, so `disable_canary` is no longer needed alongside this card (#450)
 
+**Changed:**
+- The style rules the card injects into HA's row element (`name_gap`, the main icon paint) are placed above lit's render marker, so they survive the row's template swaps instead of being removed and re-injected - one less style recalc per entity blip. Thanks @dcapslock
+
 ## 4.11.1
 
 **Fixed:**
