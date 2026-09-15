@@ -47,7 +47,7 @@ A **visual editor** is available: when editing a `custom:multiple-entity-row` ro
 | type             | string      | **Required**                | `custom:multiple-entity-row`                     |
 | entity           | string      | **Required**                | Entity ID (`domain.my_entity_id`)                |
 | attribute        | string      |                             | Show an attribute instead of the state value     |
-| name             | string/bool | `friendly_name`             | Override name; `false` also frees its space      |
+| name             | string/list/bool | entity name            | Override name; `false` also frees its space. [Structured](#structured-names) on HA 2026.4+ |
 | unit             | string/bool | `unit_of_measurement`       | Override entity unit of measurement              |
 | icon             | string      | `icon`                      | Override entity icon or image                    |
 | icon_color       | string      |                             | CSS color for the entity icon                    |
@@ -542,3 +542,28 @@ After editing source and running `yarn build`, hard-refresh the browser to pick 
 [github-entity-row](https://github.com/benct/lovelace-github-entity-row) |
 [battery-entity-row](https://github.com/benct/lovelace-battery-entity-row) |
 [~~attribute-entity-row~~](https://github.com/benct/lovelace-attribute-entity-row)
+
+## Structured names
+
+*Requires Home Assistant 2026.4 or later. On earlier versions a structured `name` falls back to the entity's friendly name.*
+
+Home Assistant composes an entity's display name out of its registry context
+(entity, device, area, floor) rather than one `friendly_name` string. From 2026.4
+this row uses that composed name by default, and `name` can be a list of those
+parts instead of a plain string:
+
+```yaml
+entities:
+  - entity: sensor.kitchen_temperature
+    name:
+      - type: area
+      - type: entity
+```
+
+Available part types are `entity`, `device`, `parent_device`, `area`, `floor`, and
+`text` (a literal, written as `{type: text, text: Temp}`). Parts that resolve to
+nothing are dropped. A plain string `name` keeps working exactly as before, and
+`name: false` still frees the space.
+
+See the [Home Assistant developer documentation](https://developers.home-assistant.io/docs/frontend/data#hassformatentitynamestateobj-name-options) for details.
+

@@ -89,7 +89,17 @@ export const getEntityIds = (config) =>
 // the real implementations once translations load. None of that swap is otherwise observable, so
 // without this check a row can get stuck showing stale/raw output until some unrelated entity
 // state change happens to force a re-render.
-const HASS_FORMATTER_KEYS = ['formatEntityName', 'formatEntityState', 'formatEntityAttributeValue'];
+// The registries are the other half of what formatEntityName resolves against:
+// a device, area or floor rename replaces them without any entity state changing.
+const HASS_FORMATTER_KEYS = [
+    'formatEntityName',
+    'formatEntityState',
+    'formatEntityAttributeValue',
+    'entities',
+    'devices',
+    'areas',
+    'floors',
+];
 
 export const hasConfigOrEntitiesChanged = (node, changedProps) => {
     if (changedProps.has('config')) {

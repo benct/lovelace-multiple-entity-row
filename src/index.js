@@ -375,7 +375,7 @@ class MultipleEntityRow extends LitElement {
         if (hideIf(this.info, config, this._hass)) {
             return null;
         }
-        const name = entityName(this.info, config);
+        const name = entityName(this._hass, this.info, config);
         // hui-generic-entity-row owns the secondary line, so `styles` can only reach the text
         // through a wrapper of our own - it had been silently ignored here since 4.0.0.
         return html`<span style="${entityStyles(config)}">${name} ${this.renderValue(this.info, config)}</span>`;
@@ -426,7 +426,7 @@ class MultipleEntityRow extends LitElement {
                 // name can label it.
                 return html`<div class="entity" style="${entityStyles(config)}">
                     <span
-                        >${blankName(stateObj ? entityName(stateObj, config) : config.name) ??
+                        >${blankName(stateObj ? entityName(this._hass, stateObj, config) : config.name) ??
                         this.headerPlaceholder()}</span
                     >
                     <div>${config.default}</div>
@@ -467,7 +467,7 @@ class MultipleEntityRow extends LitElement {
             @contextmenu="${stopBubble}"
         >
             <span
-                >${blankName(entityName(stateObj, config)) ??
+                >${blankName(entityName(this._hass, stateObj, config)) ??
                 (rendersControl(config) ? null : this.headerPlaceholder())}</span
             >
             <div>
@@ -581,7 +581,9 @@ class MultipleEntityRow extends LitElement {
                                 scopeVars(this.config, config)
                             )
                           : configured ||
-                            `Are you sure you want to toggle ${entityName(stateObj, config) ?? stateObj.entity_id}?`;
+                            `Are you sure you want to toggle ${
+                                entityName(this._hass, stateObj, config) ?? stateObj.entity_id
+                            }?`;
                       if (exempt || confirm(text)) {
                           this._hass.callService('homeassistant', 'toggle', { entity_id: stateObj.entity_id });
                       }
