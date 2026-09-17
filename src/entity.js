@@ -222,9 +222,7 @@ export const entityName = (hass, stateObj, config) => {
     // always meant "use Home Assistant's name", but formatEntityName returns any
     // string verbatim, so it has to reach the formatter as undefined.
     if (supportsEntityNames(hass)) {
-        return (
-            hass.formatEntityName(stateObj, config.name || undefined) || computeEntity(stateObj.entity_id) || null
-        );
+        return hass.formatEntityName(stateObj, config.name || undefined) || computeEntity(stateObj.entity_id) || null;
     }
     return stateObj.attributes.friendly_name || computeEntity(stateObj.entity_id) || null;
 };

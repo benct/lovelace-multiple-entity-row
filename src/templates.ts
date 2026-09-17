@@ -31,7 +31,10 @@ const isStructuredName = (name: unknown): boolean => Array.isArray(name) || isOb
 
 export const configHasStructuredName = (config: LooseObject): boolean =>
     isStructuredName(config.name) ||
-    (Array.isArray(config.entities) && config.entities.some((e) => isObject(e) && isStructuredName((e as LooseObject).name)));
+    // The secondary_info entity form renders the same name text field in the editor.
+    (isObject(config.secondary_info) && isStructuredName((config.secondary_info as LooseObject).name)) ||
+    (Array.isArray(config.entities) &&
+        config.entities.some((e) => isObject(e) && isStructuredName((e as LooseObject).name)));
 
 // Deep scan used by the editor: a template anywhere in the config forces YAML-only editing,
 // since round-tripping Jinja strings through ha-form risks mangling them.

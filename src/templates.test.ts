@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
     collectTemplates,
+    configHasStructuredName,
     configHasTemplates,
     hasTemplate,
     isTruthyResult,
@@ -69,6 +70,27 @@ describe('configHasTemplates', () => {
 
     it('is false for a template-free config', () => {
         expect(configHasTemplates({ entity: 'sensor.a', entities: ['sensor.b', { name: 'plain' }] })).toBe(false);
+    });
+});
+
+// Structured names force YAML-only editing the same way templates do: every editor surface
+// that renders a name text field (main, entities tabs, secondary_info entity form) must be
+// covered, or ha-form flattens the array on save (#453).
+describe('configHasStructuredName', () => {
+    const composed = [{ type: 'area' }, { type: 'entity' }];
+
+    it('finds a structured name on the row, an additional entity, or secondary_info', () => {
+        expect(configHasStructuredName({ entity: 'sensor.a', name: composed })).toBe(true);
+        expect(configHasStructuredName({ entity: 'sensor.a', entities: [{ name: composed }] })).toBe(true);
+        expect(
+            configHasStructuredName({ entity: 'sensor.a', secondary_info: { entity: 'sensor.b', name: composed } })
+        ).toBe(true);
+        expect(configHasStructuredName({ entity: 'sensor.a', name: { type: 'device' } })).toBe(true);
+    });
+
+    it('is false for string names and non-object secondary_info', () => {
+        expect(configHasStructuredName({ entity: 'sensor.a', name: 'plain', entities: ['sensor.b'] })).toBe(false);
+        expect(configHasStructuredName({ entity: 'sensor.a', secondary_info: 'last-changed' })).toBe(false);
     });
 });
 
