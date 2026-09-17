@@ -55,24 +55,60 @@ describe('computeEntity', () => {
 });
 
 describe('entityName', () => {
+    // A hass without formatEntityName, i.e. anything before HA 2026.4.
+    const legacyHass = {};
+
     it('returns null when name is explicitly false', () => {
-        expect(entityName({}, { name: false })).toBeNull();
+        expect(entityName(legacyHass, {}, { name: false })).toBeNull();
     });
 
     it('prefers the configured name', () => {
-        expect(entityName({}, { name: 'Custom Name' })).toBe('Custom Name');
+        expect(entityName(legacyHass, {}, { name: 'Custom Name' })).toBe('Custom Name');
     });
 
     it('falls back to friendly_name, then the computed entity id', () => {
         const stateObj = { entity_id: 'sensor.temp', attributes: { friendly_name: 'Temperature' } };
-        expect(entityName(stateObj, { entity: 'sensor.temp' })).toBe('Temperature');
+        expect(entityName(legacyHass, stateObj, { entity: 'sensor.temp' })).toBe('Temperature');
 
         const stateObjNoFriendly = { entity_id: 'sensor.temp', attributes: {} };
-        expect(entityName(stateObjNoFriendly, { entity: 'sensor.temp' })).toBe('temp');
+        expect(entityName(legacyHass, stateObjNoFriendly, { entity: 'sensor.temp' })).toBe('temp');
     });
 
     it('returns null when there is no entity and no name', () => {
-        expect(entityName({}, {})).toBeNull();
+        expect(entityName(legacyHass, {}, {})).toBeNull();
+    });
+
+    describe('on Home Assistant 2026.4 and later', () => {
+        const modernHass = {
+            config: { version: '2026.4.0' },
+            formatEntityName: (stateObj, name) =>
+                name === undefined ? 'Composed name' : `[${name.map((n) => n.type).join('+')}]`,
+        };
+
+        it('uses the name composed from the registry context', () => {
+            const stateObj = { entity_id: 'sensor.temp', attributes: { friendly_name: 'Temperature' } };
+            expect(entityName(modernHass, stateObj, { entity: 'sensor.temp' })).toBe('Composed name');
+        });
+
+        it('resolves a structured name', () => {
+            const stateObj = { entity_id: 'sensor.temp', attributes: { friendly_name: 'Temperature' } };
+            const config = { entity: 'sensor.temp', name: [{ type: 'area' }, { type: 'entity' }] };
+            expect(entityName(modernHass, stateObj, config)).toBe('[area+entity]');
+        });
+
+        // formatEntityName returns any string verbatim, so an empty name has to
+        // reach it as undefined or the row renders blank (see #453).
+        it("treats name: '' as no name configured", () => {
+            const stateObj = { entity_id: 'sensor.temp', attributes: { friendly_name: 'Temperature' } };
+            expect(entityName(modernHass, stateObj, { entity: 'sensor.temp', name: '' })).toBe('Composed name');
+        });
+
+        it('falls back to friendly_name when the version is reported but the helper is missing', () => {
+            const stateObj = { entity_id: 'sensor.temp', attributes: { friendly_name: 'Temperature' } };
+            expect(entityName({ config: { version: '2026.4.0' } }, stateObj, { entity: 'sensor.temp' })).toBe(
+                'Temperature'
+            );
+        });
     });
 });
 

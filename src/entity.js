@@ -201,13 +201,30 @@ export const nameGapCss = (gap) => {
 // The state_icon map's icon for the current state, or undefined (see #197).
 export const stateIcon = (stateObj, config) => stateMapValue(config.state_icon, stateObj.state);
 
-export const entityName = (stateObj, config) => {
+// hass.formatEntityName only accepts a card's `name` option (a user string, a
+// structured name, or undefined) from HA 2026.4 - earlier versions expose the
+// same helper with an incompatible signature, so a version check is needed. A
+// hass can also report a recent version without carrying the helper at all (the
+// stub swap above, or a test harness), so both conditions are checked.
+const supportsEntityNames = (hass) => {
+    if (!hass || typeof hass.formatEntityName !== 'function') return false;
+    const [major, minor] = ((hass.config && hass.config.version) || '').split('.', 2);
+    return Number(major) > 2026 || (Number(major) === 2026 && Number(minor) >= 4);
+};
+
+export const entityName = (hass, stateObj, config) => {
     if (config.name === false) return null;
-    return (
-        config.name ||
-        (config.entity ? stateObj.attributes.friendly_name || computeEntity(stateObj.entity_id) : null) ||
-        null
-    );
+    if (typeof config.name === 'string' && config.name) return config.name;
+    if (!config.entity) return config.name || null;
+
+    // Resolve from the entity's registry context so the name matches the
+    // built-in rows; a structured name is resolved the same way. `name: ''` has
+    // always meant "use Home Assistant's name", but formatEntityName returns any
+    // string verbatim, so it has to reach the formatter as undefined.
+    if (supportsEntityNames(hass)) {
+        return hass.formatEntityName(stateObj, config.name || undefined) || computeEntity(stateObj.entity_id) || null;
+    }
+    return stateObj.attributes.friendly_name || computeEntity(stateObj.entity_id) || null;
 };
 
 // HA's formatter attaches % directly to the value in most locales ('87.0%'), making the whole

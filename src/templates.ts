@@ -25,6 +25,17 @@ export type TemplateResults = Map<string, unknown>;
 export const hasTemplate = (value: unknown): value is string =>
     typeof value === 'string' && (value.includes('{{') || value.includes('{%'));
 
+// A structured name is an array of parts, which ha-form's text selector would
+// flatten on save. Like a template, it forces YAML-only editing.
+const isStructuredName = (name: unknown): boolean => Array.isArray(name) || isObject(name);
+
+export const configHasStructuredName = (config: LooseObject): boolean =>
+    isStructuredName(config.name) ||
+    // The secondary_info entity form renders the same name text field in the editor.
+    (isObject(config.secondary_info) && isStructuredName((config.secondary_info as LooseObject).name)) ||
+    (Array.isArray(config.entities) &&
+        config.entities.some((e) => isObject(e) && isStructuredName((e as LooseObject).name)));
+
 // Deep scan used by the editor: a template anywhere in the config forces YAML-only editing,
 // since round-tripping Jinja strings through ha-form risks mangling them.
 export const configHasTemplates = (value: unknown): boolean => {
