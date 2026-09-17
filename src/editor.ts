@@ -11,7 +11,7 @@ import { keyed } from 'lit/directives/keyed.js';
 
 import { SECONDARY_INFO_VALUES } from './lib/constants';
 import { fireEvent, isObject } from './util';
-import { configHasTemplates } from './templates';
+import { configHasStructuredName, configHasTemplates } from './templates';
 import {
     ACTIONS_SCHEMA,
     ADDITIONAL_TAB_SCHEMA,
@@ -190,6 +190,10 @@ export class MultipleEntityRowEditor extends LitElement {
         // mangling them. Throwing here makes HA's element editor fall back to its code editor.
         if (configHasTemplates(config)) {
             throw new Error('This row uses templates - edit it in the code (YAML) editor.');
+        }
+        // Same for a structured name: the text selector would flatten the array on save.
+        if (configHasStructuredName(config)) {
+            throw new Error('This row uses a composed name - edit it in the code (YAML) editor.');
         }
         this._config = config;
         const maxAdditionalTab = config.entities?.length ?? 0;

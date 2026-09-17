@@ -218,9 +218,13 @@ export const entityName = (hass, stateObj, config) => {
     if (!config.entity) return config.name || null;
 
     // Resolve from the entity's registry context so the name matches the
-    // built-in rows; a structured name is resolved the same way.
+    // built-in rows; a structured name is resolved the same way. `name: ''` has
+    // always meant "use Home Assistant's name", but formatEntityName returns any
+    // string verbatim, so it has to reach the formatter as undefined.
     if (supportsEntityNames(hass)) {
-        return hass.formatEntityName(stateObj, config.name) || computeEntity(stateObj.entity_id) || null;
+        return (
+            hass.formatEntityName(stateObj, config.name || undefined) || computeEntity(stateObj.entity_id) || null
+        );
     }
     return stateObj.attributes.friendly_name || computeEntity(stateObj.entity_id) || null;
 };

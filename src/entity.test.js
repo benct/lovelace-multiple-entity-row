@@ -96,6 +96,13 @@ describe('entityName', () => {
             expect(entityName(modernHass, stateObj, config)).toBe('[area+entity]');
         });
 
+        // formatEntityName returns any string verbatim, so an empty name has to
+        // reach it as undefined or the row renders blank (see #453).
+        it("treats name: '' as no name configured", () => {
+            const stateObj = { entity_id: 'sensor.temp', attributes: { friendly_name: 'Temperature' } };
+            expect(entityName(modernHass, stateObj, { entity: 'sensor.temp', name: '' })).toBe('Composed name');
+        });
+
         it('falls back to friendly_name when the version is reported but the helper is missing', () => {
             const stateObj = { entity_id: 'sensor.temp', attributes: { friendly_name: 'Temperature' } };
             expect(entityName({ config: { version: '2026.4.0' } }, stateObj, { entity: 'sensor.temp' })).toBe(
