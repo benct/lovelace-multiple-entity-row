@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+**Added:**
+- Entity names resolve through Home Assistant's own naming on HA 2026.4+, matching the built-in rows as HA moves to names composed from registry context (entity, device, area, floor) - a rename of any of those now updates rows live. `name` also accepts the composed form as a list of parts (see README "Structured names"); plain strings and `name: false` are unchanged. Contributed by @bramkragten (#453)
+
 **Fixed:**
 - A hidden `secondary_info` (object form with `hide_unavailable` or `hide_if`) showed the main entity's state on HA 2026.8+ instead of hiding: HA's row now renders any `secondary_info` it's given against the main entity whenever the card supplies no secondary text. The card no longer passes its own `secondary_info` forms through to HA's row - only the generic keywords HA renders natively (#452). This also stops lovelace-canary from taking over templated secondary lines, so `disable_canary` is no longer needed alongside this card (#450)
 
