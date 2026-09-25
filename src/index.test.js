@@ -879,6 +879,35 @@ describe('multiple-entity-row', () => {
         expect(row.secondaryText).toBeFalsy();
     });
 
+    // HA's row hands `time_format` to the <state-display> behind a generic secondary_info, but
+    // HA's editor also renames our own `format` to it (#386): a number format leaking through
+    // shows "Invalid display format" on the last-changed line (#454).
+    describe('time_format passthrough', () => {
+        const rowConfig = async (config) => {
+            el.setConfig({ entity: 'sensor.main', secondary_info: 'last-changed', ...config });
+            el.hass = buildHass({ 'sensor.main': { entity_id: 'sensor.main', state: '12.34', attributes: {} } });
+            await flushRender(el);
+            return el.shadowRoot.querySelector('hui-generic-entity-row').config;
+        };
+
+        it('strips a migrated number format while still formatting the main state with it', async () => {
+            expect((await rowConfig({ time_format: 'precision0' })).time_format).toBeUndefined();
+            expect(el.shadowRoot.querySelector('.state.entity div').textContent.trim()).toBe('12');
+        });
+
+        it.each(['relative', 'total', 'date', 'time', 'datetime'])('keeps the timestamp format %s', async (format) => {
+            expect((await rowConfig({ time_format: format })).time_format).toBe(format);
+        });
+
+        // Not ours, so it must not be adopted as `format` either - the value formatter expects a
+        // string and threw on it.
+        it("passes HA's object form through untouched without using it as format", async () => {
+            const timeFormat = { type: 'date', style: 'short' };
+            expect((await rowConfig({ time_format: timeFormat })).time_format).toEqual(timeFormat);
+            expect(el.config.format).toBeUndefined();
+        });
+    });
+
     describe('templating', () => {
         let connection;
 

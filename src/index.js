@@ -150,6 +150,8 @@ class MultipleEntityRow extends LitElement {
         // semantics (see #386). That migration only touches the top-level row config, not our
         // own nested `entities`/`secondary_info` config, so this fallback only needs to happen
         // here. Prefer `format` if somehow both are present (e.g. a value hand-edited back in).
+        // Strings only: HA's own object form ({type, style}) is not a format of ours and would
+        // crash the value formatter (#454).
         // Remembered before the normalization below erases it: `name: false` should remove HA's
         // name box entirely rather than blank it (see hideName in render).
         this._nameHidden = config.name === false;
@@ -157,7 +159,7 @@ class MultipleEntityRow extends LitElement {
         this.config = {
             ...config,
             name: config.name === false ? ' ' : config.name,
-            format: config.format ?? config.time_format,
+            format: config.format ?? (typeof config.time_format === 'string' ? config.time_format : undefined),
         };
         this._templates.setConfig(this.config);
     }
@@ -232,6 +234,13 @@ class MultipleEntityRow extends LitElement {
         // takeover off a template in the row's secondary_info (#450).
         if (rowBase.secondary_info && !hasGenericSecondaryInfo(rowBase.secondary_info)) {
             delete rowBase.secondary_info;
+        }
+        // HA's row formats a generic secondary_info timestamp with `time_format`, but here that
+        // key is usually our own `format` renamed by HA's editor (#386) - a `precision0` there
+        // renders "Invalid display format" (#454). Only a value HA's timestamp display takes
+        // passes on; HA's object form ({type, style}) is never ours, so it passes untouched.
+        if (typeof rowBase.time_format === 'string' && !TIMESTAMP_FORMATS.includes(rowBase.time_format)) {
+            delete rowBase.time_format;
         }
         const rowConfig = {
             ...rowBase,
