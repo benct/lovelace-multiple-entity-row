@@ -545,6 +545,8 @@ After editing source and running `yarn build`, hard-refresh the browser to pick 
 
 ## Structured names
 
+> **Beta pre-release.** Ships in 4.12.0, currently in beta. To try it, turn on **Show beta versions** for Multiple Entity Row in HACS.
+
 *Requires Home Assistant 2026.4 or later. On earlier versions a structured `name` falls back to the entity's friendly name.*
 
 Home Assistant composes an entity's display name out of its registry context
