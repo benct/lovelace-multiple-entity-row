@@ -1248,6 +1248,92 @@ describe('multiple-entity-row', () => {
         });
     });
 
+    // See https://github.com/benct/lovelace-multiple-entity-row/pull/431 and #455 - a color on an
+    // entity with no icon to paint used to be a silent no-op; it now paints the value text.
+    describe('text color', () => {
+        const states = () => ({
+            'sensor.main': { entity_id: 'sensor.main', state: 'on', attributes: {} },
+            'sensor.a': { entity_id: 'sensor.a', state: 'Stopped', attributes: {} },
+        });
+        const subStyle = async (config, hass = buildHass(states())) => {
+            el.setConfig({ entity: 'sensor.main', ...config });
+            el.hass = hass;
+            await flushRender(el);
+            return el.shadowRoot.querySelector('.entity:not(.state)').getAttribute('style');
+        };
+
+        it("paints a text entity's own custom color on its value", async () => {
+            expect(await subStyle({ entities: [{ entity: 'sensor.a', color: 'red' }] })).toBe(
+                'color: var(--red-color);'
+            );
+        });
+
+        // The #455 config, verbatim: a map match paints the text, an unmatched state falls back
+        // to the entity's own color.
+        it('paints a matching state_color map entry, falling back to color', async () => {
+            const map = { Stopped: 'SteelBlue' };
+            expect(await subStyle({ entities: [{ entity: 'sensor.a', state_color: map }] })).toBe('color: SteelBlue;');
+            const other = { ...states(), 'sensor.a': { entity_id: 'sensor.a', state: 'Running', attributes: {} } };
+            expect(
+                await subStyle(
+                    { entities: [{ entity: 'sensor.a', state_color: map, color: 'grey' }] },
+                    buildHass(other)
+                )
+            ).toBe('color: var(--grey-color);');
+        });
+
+        it('leaves state, none and the unset default as icon-only', async () => {
+            for (const color of ['state', 'none', undefined]) {
+                expect(await subStyle({ entities: [{ entity: 'sensor.a', color }] })).toBe('');
+            }
+        });
+
+        // A row color is the main icon's, and sub-entity icons follow it (#441) - text entities
+        // must not, or every row with a custom color recolors all of its text on update.
+        it("does not inherit the row's color", async () => {
+            expect(await subStyle({ color: 'amber', entities: [{ entity: 'sensor.a' }] })).toBe('');
+        });
+
+        it('leaves icon and toggle entities to their own coloring', async () => {
+            expect(await subStyle({ entities: [{ entity: 'sensor.a', icon: true, color: 'red' }] })).toBe('');
+            expect(await subStyle({ entities: [{ entity: 'sensor.a', toggle: true, color: 'red' }] })).toBe('');
+        });
+
+        it('keeps the main state text uncolored - the row color belongs to its icon', async () => {
+            el.setConfig({ entity: 'sensor.main', color: 'red', state_color: { on: 'blue' } });
+            el.hass = buildHass(states());
+            await flushRender(el);
+            expect(el.shadowRoot.querySelector('.state.entity').getAttribute('style')).toBe('');
+        });
+
+        it('comes before styles, so an explicit styles color still wins', async () => {
+            const config = { entities: [{ entity: 'sensor.a', color: 'red', styles: { color: 'blue' } }] };
+            expect(await subStyle(config)).toBe('color: var(--red-color);color: blue;');
+        });
+
+        it('paints a default: value shown in place of a hidden entity', async () => {
+            const entity = { entity: 'sensor.a', hide_if: 'Stopped', default: '-', state_color: { Stopped: 'grey' } };
+            expect(await subStyle({ entities: [entity] })).toBe('color: var(--grey-color);');
+        });
+
+        it('paints a templated color once its result lands', async () => {
+            const subs = [];
+            const connection = {
+                subscribeMessage: vi.fn((callback) => {
+                    subs.push(callback);
+                    return Promise.resolve(() => Promise.resolve());
+                }),
+            };
+            const config = { entities: [{ entity: 'sensor.a', color: "{{ 'red' if is_state(entity, 'Stopped') }}" }] };
+            expect(await subStyle(config, { ...buildHass(states()), connection })).toBe('');
+            subs[0]({ result: 'red' });
+            await flushRender(el);
+            expect(el.shadowRoot.querySelector('.entity:not(.state)').getAttribute('style')).toBe(
+                'color: var(--red-color);'
+            );
+        });
+    });
+
     describe('row layout', () => {
         beforeEach(() => {
             el.setConfig({ entity: 'sensor.main', entities: ['sensor.a'] });

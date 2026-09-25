@@ -267,7 +267,7 @@ See **[docs/templating.md](docs/templating.md)** for the full documentation: sup
 
 ### Icon styling
 
-`color` follows Home Assistant's icon color option and accepts `state` (color by entity state), `none` (never color), a theme color name (`red`, `deep-purple`, `accent`), or any CSS color. It applies to the main row icon and to additional entities rendering an icon; an additional entity without its own `color` follows the row's. The default is `state`, matching the entities card:
+`color` follows Home Assistant's icon color option and accepts `state` (color by entity state), `none` (never color), a theme color name (`red`, `deep-purple`, `accent`), or any CSS color. It applies to the main row icon and to additional entities rendering an icon; an additional entity without its own `color` follows the row's. On an additional entity showing text, it colors the value instead - see [text colors](#text-colors). The default is `state`, matching the entities card:
 
 ```yaml
 - entity: light.kitchen
@@ -310,6 +310,22 @@ The boolean form of `state_color` is deprecated — `true` means `color: state`,
     - entity: binary_sensor.back_door
       icon: true
       icon_color: red
+```
+
+#### Text colors
+
+> **Beta pre-release.** Ships in 4.12.0, currently in beta. To try it, turn on **Show beta versions** for Multiple Entity Row in HACS.
+
+An additional entity showing its value as text (no `icon`, `state_icon` or `toggle`) has no icon to paint, so its own `color` and a matching `state_color` entry color the value text instead. Only an actual color applies: `state`, `none` and the row's inherited `color` leave text alone, and the main state keeps its default color, since the row's color belongs to its icon. An explicit `color` in `styles` still wins, and remains the way to color the main state or `secondary_info` text.
+
+```yaml
+entities:
+  - entity: sensor.dishwasher_machine_state
+    state_color:
+      stopped: steelblue
+      error: red
+  - entity: sensor.battery_level
+    color: "{{ 'red' if states(entity) | int(0) < 20 }}"
 ```
 
 ## Examples

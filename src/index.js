@@ -3,7 +3,7 @@ import { css, html, LitElement } from 'lit';
 import { LAST_CHANGED, LAST_UPDATED, TIMESTAMP_FORMATS } from './lib/constants';
 import { createGestureHandlers } from './lib/gesture_handler';
 import { defineElement } from './lib/define';
-import { badgeColorProps, mappedColor, resolveColor, rowColorConfig } from './color';
+import { badgeColorProps, mappedColor, resolveColor, rowColorConfig, textColor } from './color';
 import {
     checkEntity,
     entityName,
@@ -71,6 +71,13 @@ const blankName = (text) => (typeof text === 'string' && text.trim() === '' ? nu
 // a row-level `icon:` is the ROW's icon drawn by hui-generic-entity-row - feeding it through here
 // would make any row with an icon skip the placeholder for a perfectly ordinary text state.
 const rendersControl = (config) => config.toggle === true || !!config.icon || isObject(config.state_icon);
+
+// A text entity's color paints its value (#431); icons and toggles keep theirs. Placed ahead of
+// `styles` in the style attribute so an explicit `styles: {color}` still wins.
+const textColorCss = (config, state) => {
+    const color = rendersControl(config) ? undefined : textColor(config, state);
+    return color ? `color: ${color};` : '';
+};
 
 // Entities are flex items, so vertical alignment belongs on their container - `styles` only
 // reaches one entity's own div, where vertical-align does nothing (see #261). `center` is the
@@ -433,7 +440,7 @@ class MultipleEntityRow extends LitElement {
                 // Same header resolution as a visible entity (friendly-name fallback etc., see
                 // #302) - except when the entity is missing entirely, where only an explicit
                 // name can label it.
-                return html`<div class="entity" style="${entityStyles(config)}">
+                return html`<div class="entity" style="${textColorCss(config, stateObj?.state)}${entityStyles(config)}">
                     <span
                         >${blankName(stateObj ? entityName(this._hass, stateObj, config) : config.name) ??
                         this.headerPlaceholder()}</span
@@ -464,7 +471,7 @@ class MultipleEntityRow extends LitElement {
         const gesture = this.getGestureHandlers(`sub-${index}`, stateObj.entity_id, config);
         return html`<div
             class="entity"
-            style="${entityStyles(config)}"
+            style="${textColorCss(config, stateObj.state)}${entityStyles(config)}"
             @pointerdown="${gesture?.onDown}"
             @pointerup="${gesture?.onUp}"
             @pointercancel="${gesture?.onCancel}"
