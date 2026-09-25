@@ -90,6 +90,19 @@ export const resolveColor = (config: ColorConfig, inherited?: ColorConfig, state
 };
 
 /**
+ * The color for an entity that renders text rather than an icon (#431): a `state_color` map match,
+ * else its own custom `color`. `state`/`none` have no text meaning, and the row's inherited color
+ * is left out - it is an icon color, and on rows that set one for the main icon it would suddenly
+ * recolor every text entity.
+ */
+export const textColor = (config: ColorConfig, state?: string): string | undefined => {
+    const mapped = mappedColor(config, state);
+    if (mapped !== undefined) return mapped;
+    const { color } = config;
+    return color && color !== 'state' && color !== 'none' ? computeCssColor(color) : undefined;
+};
+
+/**
  * Properties to spread onto a state-badge for a resolved color.
  *
  * "state"/"none" are expressed as the legacy boolean `stateColor`, which HA 2026.8 maps back onto

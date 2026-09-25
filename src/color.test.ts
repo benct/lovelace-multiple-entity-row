@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { badgeColorProps, computeCssColor, mappedColor, resolveColor, rowColorConfig } from './color';
+import { badgeColorProps, computeCssColor, mappedColor, resolveColor, rowColorConfig, textColor } from './color';
 
 describe('computeCssColor', () => {
     it('maps theme color names to their CSS variable', () => {
@@ -118,6 +118,31 @@ describe('resolveColor', () => {
                 cssColor: 'var(--grey-color)',
             });
         });
+    });
+});
+
+// See https://github.com/benct/lovelace-multiple-entity-row/pull/431 - the color a text entity
+// paints on its value. Only colors with a meaning for text; `state` would need HA's per-domain
+// state colors, which state-badge computes internally.
+describe('textColor', () => {
+    it('computes an own custom color', () => {
+        expect(textColor({ color: 'red' })).toBe('var(--red-color)');
+        expect(textColor({ color: '#123456' })).toBe('#123456');
+    });
+
+    it('prefers a state_color map match, falling back to color', () => {
+        const map = { critical: 'red' };
+        expect(textColor({ state_color: map, color: 'grey' }, 'critical')).toBe('var(--red-color)');
+        expect(textColor({ state_color: map, color: 'grey' }, 'ok')).toBe('var(--grey-color)');
+    });
+
+    it('has no text color for state, none, unset, empty, the boolean state_color or icon_color', () => {
+        expect(textColor({ color: 'state' })).toBeUndefined();
+        expect(textColor({ color: 'none' })).toBeUndefined();
+        expect(textColor({})).toBeUndefined();
+        expect(textColor({ color: '' })).toBeUndefined();
+        expect(textColor({ state_color: true })).toBeUndefined();
+        expect(textColor({ icon_color: 'red' })).toBeUndefined();
     });
 });
 

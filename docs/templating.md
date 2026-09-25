@@ -155,7 +155,7 @@ all and re-evaluates when any of them change.
 
 ## Styles
 
-Any value inside `styles` can be a template, which is how the displayed text (rather than the icon) gets a state-dependent color. A pending declaration is left out until its result arrives; the others apply immediately.
+Any value inside `styles` can be a template, which is how the main state or `secondary_info` text gets a state-dependent color. An additional entity's text follows its own templated `color` (see [text colors](../README.md#text-colors)). A pending declaration is left out until its result arrives; the others apply immediately.
 
 ```yaml
 - type: custom:multiple-entity-row

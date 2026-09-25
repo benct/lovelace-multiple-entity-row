@@ -142,7 +142,8 @@ export const LABELS: Record<string, string> = {
     state_header: 'State header label',
     // state_color is still accepted in YAML as a deprecated alias, but the editor offers only the
     // color selector - the same swap HA made in its own row editors (see #416).
-    color: 'Icon color',
+    // Not 'Icon color': on a text entity it colors the value (#431).
+    color: 'Color',
     state_color: 'State color',
     column: 'Column layout',
     wrap: 'Wrap instead of overflowing',
