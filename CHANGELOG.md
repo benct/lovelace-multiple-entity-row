@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## 4.12.0
 
 **Added:**
 - Entity names resolve through Home Assistant's own naming on HA 2026.4+, matching the built-in rows as HA moves to names composed from registry context (entity, device, area, floor) - a rename of any of those now updates rows live. `name` also accepts the composed form as a list of parts (see README "Structured names"); plain strings and `name: false` are unchanged. Contributed by @bramkragten (#453)

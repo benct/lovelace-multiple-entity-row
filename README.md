@@ -314,8 +314,6 @@ The boolean form of `state_color` is deprecated — `true` means `color: state`,
 
 #### Text colors
 
-> **Beta pre-release.** Ships in 4.12.0, currently in beta. To try it, turn on **Show beta versions** for Multiple Entity Row in HACS.
-
 An additional entity showing its value as text (no `icon`, `state_icon` or `toggle`) has no icon to paint, so its own `color` and a matching `state_color` entry color the value text instead. Only an actual color applies: `state`, `none` and the row's inherited `color` leave text alone, and the main state keeps its default color, since the row's color belongs to its icon. An explicit `color` in `styles` still wins, and remains the way to color the main state or `secondary_info` text.
 
 ```yaml
@@ -560,8 +558,6 @@ After editing source and running `yarn build`, hard-refresh the browser to pick 
 [~~attribute-entity-row~~](https://github.com/benct/lovelace-attribute-entity-row)
 
 ## Structured names
-
-> **Beta pre-release.** Ships in 4.12.0, currently in beta. To try it, turn on **Show beta versions** for Multiple Entity Row in HACS.
 
 *Requires Home Assistant 2026.4 or later. On earlier versions a structured `name` falls back to the entity's friendly name.*
 
