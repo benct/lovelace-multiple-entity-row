@@ -74,6 +74,17 @@ describe('hideUnavailable', () => {
         const stateObj = { state: 'on', attributes: { brightness: 100 } };
         expect(hideUnavailable(stateObj, { hide_unavailable: true, attribute: 'brightness' })).toBe(false);
     });
+
+    // #452: integrations report an unset attribute as null, which HA displays as Unknown.
+    it('is true when the configured attribute is null', () => {
+        const stateObj = { state: 'off', attributes: { open_windows: null } };
+        expect(hideUnavailable(stateObj, { hide_unavailable: true, attribute: 'open_windows' })).toBe(true);
+    });
+
+    it.each([[[]], [''], [0], [false]])('is false for the present but empty-ish attribute %j', (value) => {
+        const stateObj = { state: 'off', attributes: { open_windows: value } };
+        expect(hideUnavailable(stateObj, { hide_unavailable: true, attribute: 'open_windows' })).toBe(false);
+    });
 });
 
 describe('hideIf', () => {

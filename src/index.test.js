@@ -898,6 +898,23 @@ describe('multiple-entity-row', () => {
         expect(row.config.secondary_info).toBeUndefined();
     });
 
+    // The #452 follow-up: a null attribute rendered "Open: Unknown" instead of hiding.
+    it('hides an object-form secondary_info whose attribute is null', async () => {
+        el.setConfig({
+            entity: 'binary_sensor.windows',
+            secondary_info: { attribute: 'open_windows', name: 'Open:', hide_unavailable: true },
+        });
+        el.hass = buildHass({
+            'binary_sensor.windows': {
+                entity_id: 'binary_sensor.windows',
+                state: 'off',
+                attributes: { open_windows: null },
+            },
+        });
+        await flushRender(el);
+        expect(el.shadowRoot.querySelector('hui-generic-entity-row').secondaryText).toBeFalsy();
+    });
+
     // Generic keywords are the one secondary_info HA renders natively - those must keep
     // passing through, with no secondaryText override.
     it('passes a generic secondary_info keyword through to the row config', async () => {

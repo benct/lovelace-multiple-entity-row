@@ -247,6 +247,8 @@ For example, only show the alarm exit-state sensor while the alarm is armed:
 
 `hide_if` and `hide_unavailable` at the top level hide the main entity's state value (the row itself stays visible); `default` is shown in its place when set.
 
+With an `attribute` set, `hide_unavailable` also hides when that attribute is missing or `null` (which HA shows as Unknown); an empty list or string still shows.
+
 ### Templating
 
 Display options accept Jinja **templates**, rendered by Home Assistant server-side and updated live whenever the entities they reference change. Any supported option whose value contains `{{ }}` or `{% %}` is treated as a template: `name`, `icon`, `icon_color`, `color`, `secondary_info` text, `hide_if`, a `template` option that replaces the displayed value entirely, any `styles` value, and any value inside `tap_action`/`hold_action`/`double_tap_action`. The `entity` variable holds the owning entity's id, and `vars` lets you name values reused across a row.
