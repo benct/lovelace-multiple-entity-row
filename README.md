@@ -63,6 +63,7 @@ A **visual editor** is available: when editing a `custom:multiple-entity-row` ro
 | column           | bool        | `false`                     | Show entities in a column instead of a row       |
 | wrap             | bool        | `false`                     | Wrap onto multiple lines instead of overflowing  |
 | align            | string      | `center`                    | Vertical alignment: `top`, `center` or `bottom`  |
+| reserve_header   | bool        | `true`                      | Keep header-less values level with headered ones |
 | default          | string      |                             | Display this value when the state is hidden      |
 | hide_unavailable | bool        | `false`                     | Hide the state value if unavailable              |
 | hide_if          | object/any  | _[Hiding](#hiding)_         | Hide the state value if criteria match           |
@@ -512,6 +513,9 @@ entities:
     styles:
       '--multiple-entity-row-header-color': red
 ```
+
+An entity without a header (`name: false`) keeps an empty header line when a sibling shows one,
+so their values sit level. Set `reserve_header: false` on the row to center those values instead.
 
 The gap between the main icon and the row name (HA core's default is `16px`) can be tightened or
 widened with `name_gap` — a CSS length or a number (px):

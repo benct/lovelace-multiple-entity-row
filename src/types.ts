@@ -98,6 +98,8 @@ export interface MultipleEntityRowConfig extends EntityOptions {
     wrap?: boolean;
     // Vertical alignment of the entity slots: "top" | "center" (default) | "bottom".
     align?: string;
+    // false: header-less values center instead of reserving a header line (see headerPlaceholder).
+    reserve_header?: boolean;
     // Spacing between the main icon and the row name. A CSS length string ('8px', '0.5em',
     // 'var(--x)') or a number (treated as px). See nameGapCss / the updated() injection in index.js.
     name_gap?: string | number;

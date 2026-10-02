@@ -18,6 +18,7 @@ import { fireEvent, getEntityIds, hasConfigOrEntitiesChanged, hasGenericSecondar
 import {
     hasTemplate,
     resolveActionConfig,
+    resolveActions,
     resolveTemplateFields,
     scopeVars,
     templateDisplay,
@@ -249,8 +250,11 @@ class MultipleEntityRow extends LitElement {
         if (typeof rowBase.time_format === 'string' && !TIMESTAMP_FORMATS.includes(rowBase.time_format)) {
             delete rowBase.time_format;
         }
+        // HA's row dispatches taps on the icon, name and secondary line itself, from this config
+        // as it stands at tap time - so resolving per render keeps it current, and unresolved it
+        // navigated to the raw Jinja (#460). Same owner and vars as collectTemplates' main scope.
         const rowConfig = {
-            ...rowBase,
+            ...resolveActions(rowBase, this._templateResults, this.config.entity, scopeVars(this.config)),
             ...(mainStateIcon ? { icon: mainStateIcon } : {}),
             ...rowColorConfig(resolveColor(config, undefined, this.stateObj.state)),
         };
@@ -509,6 +513,8 @@ class MultipleEntityRow extends LitElement {
     // #281). Reserve the header line with an nbsp - but only when some sibling actually renders
     // a header, so all-headerless rows keep their compact centered layout.
     headerPlaceholder() {
+        // Some rows read better with header-less values centered than level (see #459).
+        if (this.config.reserve_header === false) return null;
         // name:false and name:' ' both mean "no header"; an unset name falls back to the entity's
         // friendly name, which is one.
         const rendersHeader = (config) =>
