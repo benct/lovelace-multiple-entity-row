@@ -507,6 +507,36 @@ describe('multiple-entity-row', () => {
             expect(spans.some((span) => span.textContent === ' ')).toBe(false);
         });
 
+        // See https://github.com/benct/lovelace-multiple-entity-row/issues/459 - the opt-out for
+        // rows that want header-less values centered rather than level with headered siblings.
+        describe('reserve_header: false', () => {
+            it('reserves no line for name:false or the main state beside a headered sibling', async () => {
+                el.setConfig({
+                    entity: 'sensor.main',
+                    reserve_header: false,
+                    entities: [{ entity: 'sensor.a' }, { entity: 'sensor.b', name: false }],
+                });
+                el.hass = twoEntityHass();
+                await flushRender(el);
+                const spans = [...el.shadowRoot.querySelectorAll('.entity span')];
+                expect(spans.map((span) => span.textContent)).toEqual(['Alpha', '']);
+                expect(el.shadowRoot.querySelector('.state.entity span')).toBeNull();
+            });
+
+            it('still renders real headers', async () => {
+                el.setConfig({
+                    entity: 'sensor.main',
+                    reserve_header: false,
+                    state_header: 'Main',
+                    entities: [{ entity: 'sensor.a' }],
+                });
+                el.hass = twoEntityHass();
+                await flushRender(el);
+                const spans = [...el.shadowRoot.querySelectorAll('.entity span')];
+                expect(spans.map((span) => span.textContent)).toEqual(['Alpha', 'Main']);
+            });
+        });
+
         it('does not count a whitespace-only state_header as a header', async () => {
             el.setConfig({
                 entity: 'sensor.main',

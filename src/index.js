@@ -509,6 +509,8 @@ class MultipleEntityRow extends LitElement {
     // #281). Reserve the header line with an nbsp - but only when some sibling actually renders
     // a header, so all-headerless rows keep their compact centered layout.
     headerPlaceholder() {
+        // Some rows read better with header-less values centered than level (see #459).
+        if (this.config.reserve_header === false) return null;
         // name:false and name:' ' both mean "no header"; an unset name falls back to the entity's
         // friendly name, which is one.
         const rendersHeader = (config) =>
