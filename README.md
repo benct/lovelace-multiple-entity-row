@@ -516,6 +516,8 @@ entities:
       '--multiple-entity-row-header-color': red
 ```
 
+> **Beta pre-release.** `reserve_header` ships in 4.13.0, currently in beta. To try it, turn on **Show beta versions** for Multiple Entity Row in HACS.
+
 An entity without a header (`name: false`) keeps an empty header line when a sibling shows one,
 so their values sit level. Set `reserve_header: false` on the row to center those values instead.
 
