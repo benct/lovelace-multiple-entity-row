@@ -21,12 +21,14 @@ export const fireEvent = (node, type, detail) => {
 
 export const isUnavailable = (stateObj) => !stateObj || UNAVAILABLE_STATES.includes(stateObj.state);
 
+// A null attribute counts as missing: integrations report "not set" that way, and HA displays it
+// as Unknown (#452). An empty list or string is a real value and stays visible.
 export const hideUnavailable = (stateObj, config) =>
     config.hide_unavailable &&
     (isUnavailable(stateObj) ||
         (config.attribute &&
             ![LAST_CHANGED, LAST_UPDATED].includes(config.attribute) &&
-            stateObj.attributes[config.attribute] === undefined));
+            stateObj.attributes[config.attribute] == null));
 
 export const hideIf = (stateObj, config, hass) => {
     if (hideUnavailable(stateObj, config)) {

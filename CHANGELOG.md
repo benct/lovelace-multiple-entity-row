@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 
 **Fixed:**
 - Templates in the row's own `tap_action` / `hold_action` / `double_tap_action` (e.g. a templated `navigation_path`) were passed raw to Home Assistant when tapping the row's icon or name, so navigation went to the literal Jinja. Only the main state value and additional entities resolved them (#460)
+- `hide_unavailable` with an `attribute` now also hides when the attribute is `null`, the way integrations report "not set" - it showed as Unknown (or blank with a timestamp `format`) instead of hiding (#452)
 
 ## 4.12.0
 
