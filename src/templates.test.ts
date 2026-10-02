@@ -6,6 +6,7 @@ import {
     hasTemplate,
     isTruthyResult,
     resolveActionConfig,
+    resolveActions,
     resolveTemplateFields,
     scopeVars,
     TemplateResults,
@@ -311,6 +312,28 @@ describe('action config templating', () => {
     it('returns a config with no templates untouched', () => {
         const plain = { action: 'toggle' };
         expect(resolveActionConfig(plain, new Map(), 'sensor.a')).toEqual(plain);
+    });
+});
+
+// See https://github.com/benct/lovelace-multiple-entity-row/issues/460
+describe('resolveActions', () => {
+    it('resolves only the templated action keys', () => {
+        const config = {
+            entity: 'sensor.main',
+            name: '{{ n }}',
+            tap_action: { action: 'navigate', navigation_path: '/device/{{ id }}' },
+            hold_action: { action: 'more-info' },
+        };
+        const results: TemplateResults = new Map([['sensor.main|/device/{{ id }}', '/device/abc']]);
+        expect(resolveActions(config, results, 'sensor.main')).toEqual({
+            ...config,
+            tap_action: { action: 'navigate', navigation_path: '/device/abc' },
+        });
+    });
+
+    it('returns the same config when no action is templated', () => {
+        const config = { entity: 'sensor.main', tap_action: { action: 'toggle' } };
+        expect(resolveActions(config, new Map(), 'sensor.main')).toBe(config);
     });
 });
 

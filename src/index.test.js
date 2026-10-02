@@ -1058,6 +1058,35 @@ describe('multiple-entity-row', () => {
             expect(actions[1].config.tap_action.service_data.entity_id).toBe('button.nas');
         });
 
+        // See https://github.com/benct/lovelace-multiple-entity-row/issues/460 - taps on the
+        // row's icon, name and secondary line are dispatched by HA's row from the config we hand
+        // it, which carried the raw Jinja, so HA navigated to it literally.
+        it("hands HA's row resolved action configs", async () => {
+            const path = '/config/devices/device/{{ device_id(entity) }}';
+            el.setConfig({
+                entity: 'sensor.main',
+                tap_action: { action: 'navigate', navigation_path: path },
+                hold_action: { action: 'more-info', confirmation: { text: 'Open {{ x }}?' } },
+            });
+            el.hass = hassWith(states());
+            await flushRender(el);
+            const rowConfig = () => el.shadowRoot.querySelector('hui-generic-entity-row').config;
+            const sub = (template) => connection.subs.find((s) => s.message.template === template);
+            // Pending renders empty, as in our own dispatch - never the raw source.
+            expect(rowConfig().tap_action.navigation_path).toBe('');
+
+            sub(path).callback({ result: '/config/devices/device/abc123' });
+            sub('Open {{ x }}?').callback({ result: 'Open main?' });
+            await flushRender(el);
+            expect(rowConfig().tap_action).toEqual({
+                action: 'navigate',
+                navigation_path: '/config/devices/device/abc123',
+            });
+            expect(rowConfig().hold_action.confirmation.text).toBe('Open main?');
+            // resolved into a copy - the stored config keeps its templates for the next result
+            expect(el.config.tap_action.navigation_path).toBe(path);
+        });
+
         it('hides and unhides an entity as its hide_if template verdict changes', async () => {
             el.setConfig({ entity: 'sensor.main', entities: [{ entity: 'sensor.a', hide_if: '{{ hide }}' }] });
             el.hass = hassWith(states());

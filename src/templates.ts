@@ -140,6 +140,22 @@ export const resolveActionConfig = <T>(action: T, results: TemplateResults, owne
     return resolve(action) as T;
 };
 
+/** `config` with each templated action config resolved (identity when none is), for actions HA
+ * dispatches itself rather than through our cached gesture handlers (see #460). */
+export const resolveActions = <T extends LooseObject>(
+    config: T,
+    results: TemplateResults,
+    owner?: string,
+    vars?: LooseObject
+): T => {
+    const templated = ACTION_KEYS.filter((key) => configHasTemplates(config[key]));
+    if (!templated.length) return config;
+    return {
+        ...config,
+        ...Object.fromEntries(templated.map((key) => [key, resolveActionConfig(config[key], results, owner, vars)])),
+    };
+};
+
 /** Row-level `vars` merged with a scope's own, the scope winning. Sub-entities inherit the row's
  * variables and may shadow them. Must match what index.js hands resolveTemplateFields. */
 export const scopeVars = (config: LooseObject, entry?: LooseObject): LooseObject => ({

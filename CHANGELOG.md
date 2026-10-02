@@ -6,6 +6,9 @@ All notable changes to this project will be documented in this file.
 **Added:**
 - `reserve_header: false` - header-less values (`name: false`, a main state without `state_header`) center vertically instead of keeping an empty header line to stay level with headered siblings (#459)
 
+**Fixed:**
+- Templates in the row's own `tap_action` / `hold_action` / `double_tap_action` (e.g. a templated `navigation_path`) were passed raw to Home Assistant when tapping the row's icon or name, so navigation went to the literal Jinja. Only the main state value and additional entities resolved them (#460)
+
 ## 4.12.0
 
 **Added:**
