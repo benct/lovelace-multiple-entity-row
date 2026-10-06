@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## 4.13.0
 
 **Added:**
 - `reserve_header: false` - header-less values (`name: false`, a main state without `state_header`) center vertically instead of keeping an empty header line to stay level with headered siblings (#459)
