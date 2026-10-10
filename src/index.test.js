@@ -8,6 +8,10 @@ const flushRender = async (el) => {
     await el.updateComplete;
 };
 
+// Our gesture handlers only act on a primary-button press by the primary pointer.
+const PRIMARY = { button: 0, isPrimary: true };
+const pointer = (type, init = {}) => new PointerEvent(type, { bubbles: true, composed: true, ...PRIMARY, ...init });
+
 const buildHass = (states = {}) => ({
     states,
     entities: {},
@@ -805,8 +809,8 @@ describe('multiple-entity-row', () => {
 
         it("dispatches using only that entity's own action config, not the main row's", () => {
             const sub = el.getGestureHandlers('sub-0', 'sensor.a', el.config.entities[0]);
-            sub.onDown();
-            sub.onUp();
+            sub.onDown(PRIMARY);
+            sub.onUp(PRIMARY);
             expect(actions).toEqual([
                 {
                     config: { entity: 'sensor.a', tap_action: { action: 'more-info', entity: 'sensor.a' } },
@@ -825,9 +829,9 @@ describe('multiple-entity-row', () => {
             };
             el.setConfig({ entity: 'sensor.main', entities: [subConfig] });
             const sub = el.getGestureHandlers('sub-0', 'sensor.a', subConfig);
-            sub.onDown();
+            sub.onDown(PRIMARY);
             vi.advanceTimersByTime(500);
-            sub.onUp();
+            sub.onUp(PRIMARY);
             expect(actions).toEqual([
                 { config: { entity: 'sensor.a', hold_action: { action: 'more-info' } }, action: 'hold' },
             ]);
@@ -836,8 +840,8 @@ describe('multiple-entity-row', () => {
         it('defaults a tap with no tap_action to more-info', () => {
             el.setConfig({ entity: 'sensor.main', entities: [{ entity: 'sensor.a' }] });
             const sub = el.getGestureHandlers('sub-0', 'sensor.a', { entity: 'sensor.a' });
-            sub.onDown();
-            sub.onUp();
+            sub.onDown(PRIMARY);
+            sub.onUp(PRIMARY);
             expect(actions).toEqual([
                 { config: { entity: 'sensor.a', tap_action: { action: 'more-info' } }, action: 'tap' },
             ]);
@@ -847,8 +851,8 @@ describe('multiple-entity-row', () => {
             const subConfig = { entity: 'sensor.a', tap_action: { action: 'none' } };
             el.setConfig({ entity: 'sensor.main', entities: [subConfig] });
             const sub = el.getGestureHandlers('sub-0', 'sensor.a', subConfig);
-            sub.onDown();
-            sub.onUp();
+            sub.onDown(PRIMARY);
+            sub.onUp(PRIMARY);
             expect(actions).toEqual([]);
         });
 
@@ -863,12 +867,12 @@ describe('multiple-entity-row', () => {
             };
             el.setConfig({ entity: 'sensor.main', entities: [subConfig] });
             const sub = el.getGestureHandlers('sub-0', 'sensor.a', subConfig);
-            sub.onDown();
-            sub.onUp();
+            sub.onDown(PRIMARY);
+            sub.onUp(PRIMARY);
             expect(actions).toHaveLength(1);
-            sub.onDown();
+            sub.onDown(PRIMARY);
             vi.advanceTimersByTime(500);
-            sub.onUp();
+            sub.onUp(PRIMARY);
             expect(actions.map((a) => a.action)).toEqual(['tap', 'tap']);
         });
 
@@ -880,8 +884,8 @@ describe('multiple-entity-row', () => {
             el.setConfig({ entity: 'sensor.main', entities: [subConfig] });
             const sub = el.getGestureHandlers('sub-0', 'sensor.a', subConfig);
             expect(sub).not.toBeNull();
-            sub.onDown();
-            sub.onUp();
+            sub.onDown(PRIMARY);
+            sub.onUp(PRIMARY);
             expect(actions).toEqual([
                 { config: { entity: 'sensor.a', tap_action: { action: 'more-info' } }, action: 'tap' },
             ]);
@@ -897,9 +901,51 @@ describe('multiple-entity-row', () => {
             });
             await flushRender(el);
             const toggleWrapper = el.shadowRoot.querySelector('.entity:not(.state) ha-entity-toggle').parentElement;
-            toggleWrapper.dispatchEvent(new Event('pointerdown', { bubbles: true, composed: true }));
-            toggleWrapper.dispatchEvent(new Event('pointerup', { bubbles: true, composed: true }));
+            toggleWrapper.dispatchEvent(pointer('pointerdown'));
+            toggleWrapper.dispatchEvent(pointer('pointerup'));
             expect(actions).toEqual([]);
+            // Control: the same events on the entity's header do dispatch, so the assertion above
+            // isn't passing just because the events were ignored.
+            const header = el.shadowRoot.querySelector('.entity:not(.state) span');
+            header.dispatchEvent(pointer('pointerdown'));
+            header.dispatchEvent(pointer('pointerup'));
+            expect(actions).toHaveLength(1);
+        });
+
+        it('ignores a right-click on a sub-entity', async () => {
+            await flushRender(el);
+            const subDiv = el.shadowRoot.querySelector('.entity:not(.state)');
+            subDiv.dispatchEvent(pointer('pointerdown', { button: 2 }));
+            subDiv.dispatchEvent(pointer('pointerup', { button: 2 }));
+            expect(actions).toEqual([]);
+        });
+
+        it('does not tap an entity when a press elsewhere is released over it', async () => {
+            el.setConfig({ entity: 'sensor.main', entities: ['sensor.a', 'sensor.a'] });
+            el.hass = buildHass({
+                'sensor.main': { entity_id: 'sensor.main', state: 'on', attributes: {} },
+                'sensor.a': { entity_id: 'sensor.a', state: 'off', attributes: {} },
+            });
+            await flushRender(el);
+            const [first, second] = el.shadowRoot.querySelectorAll('.entity:not(.state)');
+            first.dispatchEvent(pointer('pointerdown'));
+            first.dispatchEvent(pointer('pointerleave', { bubbles: false }));
+            second.dispatchEvent(pointer('pointerup'));
+            first.dispatchEvent(pointer('pointerup'));
+            expect(actions).toEqual([]);
+        });
+
+        // HA's row handler takes Enter/Space keydown as a tap; HA before 2026.8 doesn't stop it at
+        // the slot, so it must stop here - but only those keys, or HA's shortcuts would break.
+        it('stops only Enter and Space keydown from bubbling past a sub-entity', async () => {
+            await flushRender(el);
+            const bubbled = [];
+            el.shadowRoot.addEventListener('keydown', (ev) => bubbled.push(ev.key));
+            const subDiv = el.shadowRoot.querySelector('.entity:not(.state)');
+            ['Enter', ' ', 'e'].forEach((key) =>
+                subDiv.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, composed: true }))
+            );
+            expect(bubbled).toEqual(['e']);
         });
 
         // hui-generic-entity-row binds its own mousedown/click/touchstart/touchend/touchcancel/
@@ -1114,15 +1160,15 @@ describe('multiple-entity-row', () => {
 
             // fire once while the result is still pending
             const gesture = el.getGestureHandlers('sub-0', 'sensor.a', el.config.entities[0]);
-            gesture.onDown();
-            gesture.onUp();
+            gesture.onDown(PRIMARY);
+            gesture.onUp(PRIMARY);
             expect(actions[0].config.tap_action.service_data.entity_id).toBe('');
 
             // the result lands; the SAME cached handler must now dispatch the resolved value
             connection.subs[0].callback({ result: 'button.nas' });
             await flushRender(el);
-            gesture.onDown();
-            gesture.onUp();
+            gesture.onDown(PRIMARY);
+            gesture.onUp(PRIMARY);
             expect(actions[1].config.tap_action.service_data.entity_id).toBe('button.nas');
         });
 

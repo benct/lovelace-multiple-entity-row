@@ -37,6 +37,13 @@ import './timer_remaining';
 // dispatch fires (see #338, #202, #188, #251).
 const stopBubble = (event) => event.stopPropagation();
 
+// The row's handler also takes Enter/Space keydown as a tap, so those keys on a focused sub-entity
+// toggle would also run the row's action. HA 2026.8+ stops keydown at its slot; older versions
+// don't. Other keys must keep bubbling to reach HA's global shortcuts.
+const stopActivationKeys = (event) => {
+    if (event.key === 'Enter' || event.key === ' ') event.stopPropagation();
+};
+
 const NBSP = '\u00a0';
 
 // `:host .info` (specificity 0,2,0) is needed to beat core's own `.info` rule (0,1,0): Lit
@@ -437,12 +444,14 @@ class MultipleEntityRow extends LitElement {
             @pointerdown="${gesture?.onDown}"
             @pointerup="${gesture?.onUp}"
             @pointercancel="${gesture?.onCancel}"
+            @pointerleave="${gesture?.onCancel}"
             @mousedown="${stopBubble}"
             @click="${stopBubble}"
             @touchstart="${stopBubble}"
             @touchend="${stopBubble}"
             @touchcancel="${stopBubble}"
             @contextmenu="${stopBubble}"
+            @keydown="${stopActivationKeys}"
         >
             ${this.renderMainHeader()}
             <div>${this.renderValue(this.stateObj, config)}</div>
@@ -491,12 +500,14 @@ class MultipleEntityRow extends LitElement {
             @pointerdown="${gesture?.onDown}"
             @pointerup="${gesture?.onUp}"
             @pointercancel="${gesture?.onCancel}"
+            @pointerleave="${gesture?.onCancel}"
             @mousedown="${stopBubble}"
             @click="${stopBubble}"
             @touchstart="${stopBubble}"
             @touchend="${stopBubble}"
             @touchcancel="${stopBubble}"
             @contextmenu="${stopBubble}"
+            @keydown="${stopActivationKeys}"
         >
             <span
                 >${blankName(entityName(this._hass, stateObj, config)) ??
