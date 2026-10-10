@@ -13,9 +13,11 @@ import {
     TemplateSubscriptions,
     varsPrefix,
 } from './templates';
+import { HIDE_VERDICT } from './util';
 
 const NAME_TEMPLATE = "{{ states('sensor.a') }} name";
 const HIDE_TEMPLATE = "{{ is_state('binary_sensor.away', 'on') }}";
+const verdict = (config: object): unknown => (config as Record<symbol, unknown>)[HIDE_VERDICT];
 
 // Microtask/timer drain for the manager's promise-chained unsubscribes.
 const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
@@ -367,7 +369,9 @@ describe('resolveTemplateFields', () => {
 
     it('collapses a pending hide_if template to visible', () => {
         const resolved = resolveTemplateFields({ entity: 'sensor.a', hide_if: HIDE_TEMPLATE }, empty, 'sensor.a');
-        expect(resolved.hide_if).toBe(false);
+        expect(verdict(resolved)).toBe(false);
+        // The verdict has its own key: a literal boolean in hide_if is a value to match.
+        expect(resolved.hide_if).toBe(HIDE_TEMPLATE);
     });
 
     it('substitutes pushed results, stringifying non-string types', () => {
@@ -389,7 +393,7 @@ describe('resolveTemplateFields', () => {
         expect(resolved.name).toBe('Wind');
         expect(resolved.template).toBe('42');
         expect(resolved.icon).toBe('mdi:fan');
-        expect(resolved.hide_if).toBe(true);
+        expect(verdict(resolved)).toBe(true);
     });
 
     it('resolves templated styles per declaration, dropping a pending one', () => {

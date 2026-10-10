@@ -5,7 +5,7 @@
 // change, so templated fields need no getEntityIds bookkeeping - updates arrive even for
 // entities the row doesn't otherwise watch.
 
-import { isObject } from './util';
+import { HIDE_VERDICT, isObject } from './util';
 import { HASS, LooseObject } from './types';
 
 interface TemplateRequest {
@@ -206,9 +206,9 @@ export const resolveTemplateFields = <T extends LooseObject>(
     vars?: LooseObject
 ): T => {
     let resolved = config;
-    const patch = (key: string, value: unknown): void => {
+    const patch = (key: string | symbol, value: unknown): void => {
         if (resolved === config) resolved = { ...config };
-        (resolved as LooseObject)[key] = value;
+        (resolved as Record<string | symbol, unknown>)[key] = value;
     };
     // Same prefix collectTemplates subscribed with, or the key misses (see varsPrefix).
     const prefix = varsPrefix(vars);
@@ -240,9 +240,8 @@ export const resolveTemplateFields = <T extends LooseObject>(
     }
     const hideTemplate = hideIfTemplate(config);
     if (hideTemplate) {
-        // Collapse to the boolean verdict hideIf understands. Pending renders visible, matching
-        // hide_if.entity's missing-reference behavior.
-        patch('hide_if', isTruthyResult(get(hideTemplate)));
+        // Pending renders visible, matching hide_if.entity's missing-reference behavior.
+        patch(HIDE_VERDICT, isTruthyResult(get(hideTemplate)));
     }
     if (isObject(config.styles) && configHasTemplates(config.styles)) {
         // Per-declaration: a pending one resolves to '' and entityStyles drops it, so the

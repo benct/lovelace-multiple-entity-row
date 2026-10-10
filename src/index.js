@@ -58,8 +58,16 @@ const MAIN_ICON_RULE = `:host(.main-icon-painted) state-badge{${iconColorCss(
 // so blank names collapse to null and go through the same headerPlaceholder path. #418 got this
 // wrong by rendering them as an nbsp: that kept blank-named entities level with each other, but
 // made an all-blank row reserve a header line nothing needed, dropping its values below the row
-// name (see #421). Whether a line is reserved is headerPlaceholder's decision alone.
-const blankName = (text) => (typeof text === 'string' && text.trim() === '' ? null : text);
+// name (see #421). Whether a line is reserved is headerPlaceholder's decision alone. A raw
+// `false` reaches here on the missing-entity paths, where lit would print it as "false".
+const blankName = (text) => (text === false || (typeof text === 'string' && text.trim() === '') ? null : text);
+
+// `default: 0` is a value to show, not an unset option.
+const hasDefault = (config) => config.default != null && config.default !== '';
+
+// Same rule as HA's own hasAction: `{action: none}` is what the editor's "Nothing" choice saves,
+// and counting it as configured would delay every tap by the double-tap window.
+const hasAction = (action) => !!action && action.action !== 'none';
 
 // The reserved header line exists so a blank-named entity's value shares a baseline with its
 // headered siblings' values (#281). A control has no baseline, so reserving one above it buys
@@ -231,6 +239,10 @@ class MultipleEntityRow extends LitElement {
         // beating the injected variables - so the map would never show (crowbarz, beta.2).
         const rowBase = { ...config };
         delete rowBase.color;
+        // A pending or empty icon template resolves to `true` (a sub-entity's "show the entity
+        // icon"), but HA's row passes config.icon straight to ha-icon, which calls .split on it
+        // and throws. Unset, HA shows the entity's own icon, which is what `true` means here.
+        if (rowBase.icon === true) delete rowBase.icon;
         // The boolean form stays: pre-2026.8 rows read ONLY state_color for their badge, and on
         // 2026.8+ state-badge prefers `color` anyway, so precedence is preserved on both sides.
         if (typeof rowBase.state_color !== 'boolean') delete rowBase.state_color;
@@ -410,7 +422,7 @@ class MultipleEntityRow extends LitElement {
         // behavior - previously they were silently ignored on the main entity (see #227). The row
         // itself (name, icon, sub-entities) stays visible.
         if (hideIf(this.stateObj, config, this._hass)) {
-            if (this.config.default) {
+            if (hasDefault(this.config)) {
                 return html`<div class="state entity" style="${entityStyles(config)}">
                     ${this.renderMainHeader()}
                     <div>${this.config.default}</div>
@@ -440,7 +452,7 @@ class MultipleEntityRow extends LitElement {
     renderEntity(stateObj, config, index) {
         config = this._resolved(config);
         if (!stateObj || hideIf(stateObj, config, this._hass)) {
-            if (config.default) {
+            if (hasDefault(config)) {
                 // Same header resolution as a visible entity (friendly-name fallback etc., see
                 // #302) - except when the entity is missing entirely, where only an explicit
                 // name can label it.
@@ -672,8 +684,8 @@ class MultipleEntityRow extends LitElement {
             this._actionHandlers.set(
                 key,
                 createGestureHandlers((hold, dblClick) => this.dispatchAction(entity, config, hold, dblClick), {
-                    hasHold: !!config.hold_action,
-                    hasDoubleTap: !!config.double_tap_action,
+                    hasHold: hasAction(config.hold_action),
+                    hasDoubleTap: hasAction(config.double_tap_action),
                 })
             );
         }

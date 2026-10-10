@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
     getEntityIds,
+    HIDE_VERDICT,
     hasConfigOrEntitiesChanged,
     hasGenericSecondaryInfo,
     hideIf,
@@ -105,11 +106,19 @@ describe('hideIf', () => {
         expect(hideIf({ state: 'idle' }, { hide_if: ['off', 'idle'] })).toBe(true);
     });
 
-    // A templated hide_if reaches hideIf already collapsed to its boolean verdict (see
-    // resolveTemplateFields in templates.ts).
-    it('treats a boolean hide_if as a pre-resolved template verdict', () => {
-        expect(hideIf({ state: 'on' }, { hide_if: true })).toBe(true);
-        expect(hideIf({ state: 'on' }, { hide_if: false })).toBe(false);
+    // 4.10.0-4.13.0 read a literal boolean as a template verdict, so `hide_if: true` always hid.
+    it('matches a boolean hide_if against a boolean attribute value', () => {
+        const charging = (value) => ({ state: 'on', attributes: { charging: value } });
+        expect(hideIf(charging(false), { attribute: 'charging', hide_if: true })).toBe(false);
+        expect(hideIf(charging(true), { attribute: 'charging', hide_if: true })).toBe(true);
+        expect(hideIf(charging(false), { attribute: 'charging', hide_if: false })).toBe(true);
+    });
+
+    it('follows a resolved template verdict instead of the hide_if criteria', () => {
+        const config = (verdict) => ({ hide_if: '{{ x }}', [HIDE_VERDICT]: verdict });
+        expect(hideIf({ state: 'on' }, config(true))).toBe(true);
+        expect(hideIf({ state: 'on' }, config(false))).toBe(false);
+        expect(hideIf({ state: 'unavailable' }, { ...config(false), hide_unavailable: true })).toBe(true);
     });
 
     // See https://github.com/benct/lovelace-multiple-entity-row/issues/227 -
@@ -124,6 +133,14 @@ describe('hideIf', () => {
         expect(hideIf({ state: '5' }, { hide_if: { below: 10 } })).toBe(true);
         expect(hideIf({ state: '15' }, { hide_if: { above: 10 } })).toBe(true);
         expect(hideIf({ state: '10' }, { hide_if: { below: 10, above: 10 } })).toBe(false);
+    });
+
+    it('treats 0 and false as real criteria', () => {
+        expect(hideIf({ state: '-5' }, { hide_if: { below: 0 } })).toBe(true);
+        expect(hideIf({ state: '5' }, { hide_if: { above: 0 } })).toBe(true);
+        expect(hideIf({ state: '0' }, { hide_if: { value: 0 } })).toBe(true);
+        const stateObj = { state: 'on', attributes: { charging: false } };
+        expect(hideIf(stateObj, { attribute: 'charging', hide_if: { value: false } })).toBe(true);
     });
 
     // See https://github.com/benct/lovelace-multiple-entity-row/pull/280 - hide_if.entity

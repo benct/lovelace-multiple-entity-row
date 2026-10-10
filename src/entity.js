@@ -361,8 +361,14 @@ export const entityStateDisplay = (hass, stateObj, config) => {
         // unit_of_measurement and derives the unit from HA's own attribute metadata (see #408).
         // When the user configured unit:, format the value ourselves like pre-4.6.0 did.
         if (config.unit !== undefined) {
+            // isNaN('') is false (Number('') is 0), so an empty value has to be caught first or
+            // it renders as "0".
             const displayValue =
-                value === undefined || value === null ? '' : isNaN(value) ? value : formatNumber(value, hass.locale);
+                value == null || String(value).trim() === ''
+                    ? ''
+                    : isNaN(value)
+                    ? value
+                    : formatNumber(value, hass.locale);
             return `${displayValue}${unit ? ` ${unit}` : ''}`;
         }
         return breakablePercent(hass.formatEntityAttributeValue(modifiedStateObj, config.attribute));

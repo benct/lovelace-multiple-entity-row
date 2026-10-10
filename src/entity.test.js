@@ -331,6 +331,11 @@ describe('entityStateDisplay', () => {
             expect(entityStateDisplay(hass, stateObj, { attribute: 'current_temperature', unit: 'K' })).toBe('22.5 K');
         });
 
+        it('renders an empty attribute as empty, not 0', () => {
+            const emptyObj = { state: 'on', attributes: { label: '' } };
+            expect(entityStateDisplay(hass, emptyObj, { attribute: 'label', unit: 'K' }).trim()).toBe('K');
+        });
+
         it('still delegates to the attribute formatter without a unit override', () => {
             expect(entityStateDisplay(hass, stateObj, { attribute: 'current_temperature' })).toBe(
                 'official-attr:current_temperature'
@@ -370,6 +375,12 @@ describe('entityStateDisplay', () => {
                 entities: { 'sensor.analytics': { display_precision: 2 } },
             };
             expect(entityStateDisplay(precisionHass, stateObj, { unit: 'installs' })).toBe('4.00 installs');
+        });
+
+        it('honors a display_precision of 0', () => {
+            const precisionHass = { ...translatedHass, entities: { 'sensor.analytics': { display_precision: 0 } } };
+            const decimalStateObj = { ...stateObj, state: '21.56' };
+            expect(entityStateDisplay(precisionHass, decimalStateObj, { unit: 'installs' })).toBe('22 installs');
         });
 
         it('preserves source decimals when no display_precision is set', () => {

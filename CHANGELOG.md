@@ -1,6 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+**Fixed:**
+- `hide_if: true` / `hide_if: false` match a boolean attribute again. Since 4.10.0 a literal boolean was read as a template result, so `true` always hid and `false` never did
+- A row `icon` template that is pending or renders empty shows the entity's own icon; it left the icon blank and logged an error on every update
+- `0` and `false` count as values: `hide_if` with `below: 0`, `above: 0` or `value: 0`, `default: 0`, and a `display_precision` of 0 under a `unit` override (which showed the state's own decimals)
+- `hold_action` / `double_tap_action` of `action: none` count as unset, as in Home Assistant's own rows: a tap no longer waits out the double-tap window, and a long press is a tap
+- A missing entity with `name: false` showed "false" as its header
+- An empty attribute with a `unit` override showed `0`
+
 ## 4.13.0
 
 **Added:**

@@ -30,18 +30,20 @@ export const hideUnavailable = (stateObj, config) =>
             ![LAST_CHANGED, LAST_UPDATED].includes(config.attribute) &&
             stateObj.attributes[config.attribute] == null));
 
+// Where resolveTemplateFields (templates.ts) leaves a hide_if template's verdict. Not hide_if
+// itself: a literal boolean there is a value to match (`hide_if: false` on a boolean attribute),
+// and 4.10.0-4.13.0 broke that by reading it as a verdict. A symbol can't collide with config.
+export const HIDE_VERDICT = Symbol('hide_if verdict');
+
 export const hideIf = (stateObj, config, hass) => {
     if (hideUnavailable(stateObj, config)) {
         return true;
     }
+    if (config[HIDE_VERDICT] !== undefined) {
+        return config[HIDE_VERDICT];
+    }
     if (config.hide_if === undefined) {
         return false;
-    }
-    // A templated hide_if arrives here already collapsed to its boolean verdict (see
-    // resolveTemplateFields in templates.ts). Plain booleans were never meaningful here before
-    // (they can't equal a state string), so this branch is backward-safe.
-    if (typeof config.hide_if === 'boolean') {
-        return config.hide_if;
     }
 
     let value;
@@ -58,13 +60,14 @@ export const hideIf = (stateObj, config, hass) => {
     let hideValues = [];
 
     if (isObject(config.hide_if)) {
-        if (config.hide_if.below && value < config.hide_if.below) {
+        // 0 and false are real criteria, so test for presence rather than truthiness.
+        if (config.hide_if.below != null && value < config.hide_if.below) {
             return true;
         }
-        if (config.hide_if.above && value > config.hide_if.above) {
+        if (config.hide_if.above != null && value > config.hide_if.above) {
             return true;
         }
-        if (config.hide_if.value) {
+        if (config.hide_if.value !== undefined) {
             hideValues = hideValues.concat(config.hide_if.value);
         }
     } else {
