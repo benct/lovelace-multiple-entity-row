@@ -382,6 +382,21 @@ describe('multiple-entity-row', () => {
             expect(el.shadowRoot.innerHTML).toContain('n/a');
         });
 
+        // lit prints a raw `false` as text, so name:false must collapse to no header here too.
+        it('renders no "false" header for a missing entity with name: false', async () => {
+            el.setConfig({
+                entity: 'sensor.main',
+                entities: [
+                    { entity: 'sensor.gone', name: false },
+                    { entity: 'sensor.gone2', name: false, default: '-' },
+                ],
+            });
+            el.hass = hassWithoutB();
+            await flushRender(el);
+            const headers = [...el.shadowRoot.querySelectorAll('.entity:not(.state) span')];
+            expect(headers.map((span) => span.textContent.trim())).toEqual(['', '']);
+        });
+
         // An entity that exists but is merely unavailable is a normal state, not a missing id.
         it('does not mark an entity that exists but is unavailable', async () => {
             el.setConfig({ entity: 'sensor.main', entities: [{ entity: 'sensor.a' }] });
@@ -724,6 +739,22 @@ describe('multiple-entity-row', () => {
             await flushRender(el);
             expect(el.shadowRoot.querySelector('.state.entity').textContent).toContain('n/a');
         });
+
+        it('renders a default of 0 for a hidden main state and a hidden sub-entity', async () => {
+            el.setConfig({
+                entity: 'sensor.main',
+                hide_if: 'off',
+                default: 0,
+                entities: [{ entity: 'sensor.a', name: false, hide_unavailable: true, default: 0 }],
+            });
+            el.hass = buildHass({
+                'sensor.main': { entity_id: 'sensor.main', state: 'off', attributes: {} },
+                'sensor.a': { entity_id: 'sensor.a', state: 'unavailable', attributes: {} },
+            });
+            await flushRender(el);
+            expect(el.shadowRoot.querySelector('.state.entity').textContent.trim()).toBe('0');
+            expect(el.shadowRoot.querySelector('.entity:not(.state) div').textContent.trim()).toBe('0');
+        });
     });
 
     it('shouldUpdate returns false when neither config nor watched entities changed', () => {
@@ -819,6 +850,26 @@ describe('multiple-entity-row', () => {
             sub.onDown();
             sub.onUp();
             expect(actions).toEqual([]);
+        });
+
+        // `{action: none}` is unconfigured, as in HA's hasAction: no waiting out the double-tap
+        // window, and a long press is a plain tap.
+        it('treats hold and double-tap actions of none as unconfigured', () => {
+            const subConfig = {
+                entity: 'sensor.a',
+                tap_action: { action: 'more-info' },
+                hold_action: { action: 'none' },
+                double_tap_action: { action: 'none' },
+            };
+            el.setConfig({ entity: 'sensor.main', entities: [subConfig] });
+            const sub = el.getGestureHandlers('sub-0', 'sensor.a', subConfig);
+            sub.onDown();
+            sub.onUp();
+            expect(actions).toHaveLength(1);
+            sub.onDown();
+            vi.advanceTimersByTime(500);
+            sub.onUp();
+            expect(actions.map((a) => a.action)).toEqual(['tap', 'tap']);
         });
 
         // See https://github.com/benct/lovelace-multiple-entity-row/issues/415 - a toggle entity
@@ -1102,6 +1153,24 @@ describe('multiple-entity-row', () => {
             expect(rowConfig().hold_action.confirmation.text).toBe('Open main?');
             // resolved into a copy - the stored config keeps its templates for the next result
             expect(el.config.tap_action.navigation_path).toBe(path);
+        });
+
+        // HA's row hands config.icon to ha-icon, which calls .split on it: the `true` a pending or
+        // empty icon template resolves to must not reach it.
+        it('leaves a pending or empty row icon template unset in the row config', async () => {
+            el.setConfig({ entity: 'sensor.main', icon: '{{ i }}' });
+            el.hass = hassWith(states());
+            await flushRender(el);
+            const rowConfig = () => el.shadowRoot.querySelector('hui-generic-entity-row').config;
+            expect(rowConfig()).not.toHaveProperty('icon');
+
+            connection.subs[0].callback({ result: '' });
+            await flushRender(el);
+            expect(rowConfig()).not.toHaveProperty('icon');
+
+            connection.subs[0].callback({ result: 'mdi:fan' });
+            await flushRender(el);
+            expect(rowConfig().icon).toBe('mdi:fan');
         });
 
         it('hides and unhides an entity as its hide_if template verdict changes', async () => {

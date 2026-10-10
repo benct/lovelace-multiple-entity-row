@@ -66,6 +66,12 @@ describe('formatNumber', () => {
         expect(formatNumber('1.50', { number_format: NumberFormat.comma_decimal })).toBe('1.50');
     });
 
+    // display_precision 0 arrives as explicit zeros, which must beat the string's own decimals.
+    it('honors explicit zero fraction digits for a string value', () => {
+        const options = { minimumFractionDigits: 0, maximumFractionDigits: 0 };
+        expect(formatNumber('21.56', { number_format: NumberFormat.comma_decimal }, options)).toBe('22');
+    });
+
     it('passes through non-numeric strings unchanged when number_format is none', () => {
         expect(formatNumber('unknown', { number_format: NumberFormat.none })).toBe('unknown');
     });
