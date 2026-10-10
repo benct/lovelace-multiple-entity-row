@@ -8,6 +8,11 @@
 export const HOLD_TIME_MS = 500;
 export const DOUBLE_TAP_WINDOW_MS = 250;
 
+// HA's own handler ends a gesture on `click`, which only the primary button fires. Without this
+// filter a right-click ran the tap action (on Windows, contextmenu comes after pointerup), and so
+// did a middle-click or a second finger.
+const isPrimaryPress = (ev) => ev.button === 0 && ev.isPrimary;
+
 // dispatch(hold, dblClick) is called once per resolved gesture. hasHold/hasDoubleTap should be
 // true only when the corresponding action is actually configured - like HA's native rows, a
 // long-press without a hold_action resolves as a plain tap, and without a double_tap_action a
@@ -17,8 +22,14 @@ export const createGestureHandlers = (dispatch, { hasHold, hasDoubleTap }) => {
     let holdTimer;
     let held = false;
     let pendingTapTimer;
+    // A release only counts after a press on this same entity, like HA's handler checking the
+    // release target: a drag from elsewhere, released here, is not a tap. onCancel also runs on
+    // pointerleave, so a press that drags off can't be completed by a later stray release.
+    let down = false;
 
-    const onDown = () => {
+    const onDown = (ev) => {
+        if (!isPrimaryPress(ev)) return;
+        down = true;
         held = false;
         if (hasHold) {
             holdTimer = setTimeout(() => {
@@ -28,10 +39,13 @@ export const createGestureHandlers = (dispatch, { hasHold, hasDoubleTap }) => {
     };
 
     const onCancel = () => {
+        down = false;
         clearTimeout(holdTimer);
     };
 
-    const onUp = () => {
+    const onUp = (ev) => {
+        if (!down || !isPrimaryPress(ev)) return;
+        down = false;
         clearTimeout(holdTimer);
         if (held) {
             held = false;

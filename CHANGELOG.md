@@ -10,6 +10,8 @@ All notable changes to this project will be documented in this file.
 - `hold_action` / `double_tap_action` of `action: none` count as unset, as in Home Assistant's own rows: a tap no longer waits out the double-tap window, and a long press is a tap
 - A missing entity with `name: false` showed "false" as its header
 - An empty attribute with a `unit` override showed `0`
+- A right-click or middle-click on an entity ran its tap action (on Windows), and so did a press that started elsewhere and was released over an entity. A press dragged off an entity now cancels, as a touch scroll does
+- On Home Assistant before 2026.8, Enter or Space on an additional entity's toggle also ran the row's tap action
 
 ## 4.13.0
 
