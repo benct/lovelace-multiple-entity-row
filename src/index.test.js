@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { render } from 'lit';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import './index';
@@ -219,6 +220,20 @@ describe('multiple-entity-row', () => {
             await flushRender(el);
             expect(el.shadowRoot.innerHTML).toContain('hui-timestamp-display');
             expect(el.shadowRoot.innerHTML).not.toContain('ha-relative-time');
+        });
+
+        // A timestamp sensor is commonly `unknown` at startup; the raw value is lowercase and
+        // untranslated.
+        it('shows the localized state when a timestamp-formatted state is not a time', async () => {
+            el.setConfig({ entity: 'sensor.main', entities: [{ entity: 'sensor.a', format: 'relative' }] });
+            const hass = buildHass({
+                'sensor.main': { entity_id: 'sensor.main', state: 'on', attributes: {} },
+                'sensor.a': { entity_id: 'sensor.a', state: 'unknown', attributes: {} },
+            });
+            hass.formatEntityState = vi.fn((stateObj) => (stateObj.state === 'unknown' ? 'Unknown' : stateObj.state));
+            el.hass = hass;
+            await flushRender(el);
+            expect(el.shadowRoot.querySelector('.entity:not(.state) div').textContent.trim()).toBe('Unknown');
         });
     });
 
@@ -1010,6 +1025,72 @@ describe('multiple-entity-row', () => {
         });
         await flushRender(el);
         expect(el.shadowRoot.querySelector('hui-generic-entity-row').secondaryText).toBeFalsy();
+    });
+
+    describe('secondary_info entity', () => {
+        const states = () => ({
+            'sensor.main': { entity_id: 'sensor.main', state: '21', attributes: { battery: 80 } },
+            'sensor.a': { entity_id: 'sensor.a', state: '7', attributes: {} },
+        });
+        // secondaryText is HA's to render; render it here to inspect it.
+        const secondary = async () => {
+            await flushRender(el);
+            const text = el.shadowRoot.querySelector('hui-generic-entity-row').secondaryText;
+            if (!text) return null;
+            const container = document.createElement('div');
+            render(text, container);
+            return container;
+        };
+
+        // It fell back to the main entity's state, showing plausible wrong data ("Battery 21").
+        it('marks a missing secondary entity instead of showing the main state', async () => {
+            el.setConfig({ entity: 'sensor.main', secondary_info: { entity: 'sensor.gone', name: 'Battery' } });
+            el.hass = buildHass(states());
+            const line = await secondary();
+            expect(line.querySelector('.missing')).not.toBeNull();
+            expect(line.textContent).toContain('Battery');
+            expect(line.textContent).not.toContain('21');
+        });
+
+        it('hides a missing secondary entity with hide_unavailable', async () => {
+            el.setConfig({ entity: 'sensor.main', secondary_info: { entity: 'sensor.gone', hide_unavailable: true } });
+            el.hass = buildHass(states());
+            expect(await secondary()).toBeNull();
+        });
+
+        // hideIf needs a state to read, so a missing entity must be caught before it.
+        it('marks a missing secondary entity that has hide_if instead of crashing', async () => {
+            el.setConfig({ entity: 'sensor.main', secondary_info: { entity: 'sensor.gone', hide_if: 'off' } });
+            el.hass = buildHass(states());
+            expect((await secondary()).querySelector('.missing')).not.toBeNull();
+        });
+
+        it('uses the main entity when no secondary entity is configured', async () => {
+            el.setConfig({ entity: 'sensor.main', secondary_info: { attribute: 'battery', name: 'Bat' } });
+            el.hass = buildHass(states());
+            const line = await secondary();
+            expect(line.textContent).toContain('80');
+            expect(line.querySelector('.missing')).toBeNull();
+        });
+
+        // Hosts that reuse the element call setConfig on it again; the derived states must follow
+        // without waiting for a state change.
+        it('follows a config change on a live element', async () => {
+            el.setConfig({ entity: 'sensor.main', secondary_info: 'hello', entities: ['sensor.main'] });
+            el.hass = buildHass(states());
+            await flushRender(el);
+            el.setConfig({
+                entity: 'sensor.main',
+                secondary_info: { entity: 'sensor.a', name: 'A' },
+                entities: ['sensor.a'],
+            });
+            const line = await secondary();
+            expect(line.textContent).toContain('7');
+            const values = [...el.shadowRoot.querySelectorAll('.entity:not(.state) div')].map((d) =>
+                d.textContent.trim()
+            );
+            expect(values).toEqual(['7']);
+        });
     });
 
     // Generic keywords are the one secondary_info HA renders natively - those must keep
