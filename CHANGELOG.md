@@ -16,6 +16,9 @@ All notable changes to this project will be documented in this file.
 - A `secondary_info` whose `entity` doesn't exist showed the main entity's state under its name. It now shows the missing-entity marker, as additional entities do, or hides with `hide_unavailable`
 - A timestamp `format` (`relative`, `datetime`, ...) on a state that isn't a time, such as `unknown` at startup, showed the raw value instead of Home Assistant's localized state
 - A row whose config changed on a live element (cards that reuse rows) kept showing the old entities until one of them changed state
+- Visual editor: the Custom CSS box deleted a line as soon as its value was cleared, and stripped comments and quotes, while you typed
+- Visual editor: "Copy main as template" left out `color`, the hold and double-tap actions, `hide_if` and `default`
+- Visual editor: a Custom format choice or a half-typed state-icon row stayed at its tab position when entities were deleted or moved, attaching to another entity
 
 ## 4.13.0
 

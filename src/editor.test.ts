@@ -4,6 +4,11 @@ import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import './editor';
 import type { MultipleEntityRowEditor } from './editor';
 import type { MultipleEntityRowConfig } from './types';
+import { ACTIONS_SCHEMA, ADDITIONAL_TAB_SCHEMA } from './editor_schemas';
+
+// Every field name an ha-form schema writes, grid wrappers included.
+const schemaNames = (schema: readonly any[]): string[] =>
+    schema.flatMap((item) => (item.schema ? schemaNames(item.schema) : [item.name]));
 
 const buildHass = () => ({
     states: {},
@@ -146,6 +151,40 @@ describe('multiple-entity-row-editor', () => {
             expect(configs[0].entities).toEqual([{ entity: 'sensor.main', name: 'Main', icon_color: 'red' }]);
         });
 
+        // The allowlist predated the color API and per-entity actions, so the copy silently
+        // dropped fields the entity form itself edits.
+        it('copies main with every field the additional-entity form edits', () => {
+            const fields = [
+                ...schemaNames(ADDITIONAL_TAB_SCHEMA),
+                ...schemaNames(ACTIONS_SCHEMA),
+                'state_icon',
+                'styles',
+            ];
+            const main = Object.fromEntries(fields.map((name) => [name, `${name}-value`]));
+            setConfig({ ...main, entity: 'sensor.main' });
+            (el as any)._copyMainAsTemplate();
+            (el as any)._pasteEntity();
+            expect(configs[0].entities![0]).toEqual({ ...main, entity: 'sensor.main' });
+        });
+
+        it('copies main with its YAML-only per-entity fields, but no row-only ones', () => {
+            setConfig({
+                entity: 'sensor.main',
+                hide_if: 'off',
+                default: '-',
+                state_color: { on: 'red' },
+                secondary_info: 'hello',
+                name_gap: 8,
+                reserve_header: false,
+                wrap: true,
+            });
+            (el as any)._copyMainAsTemplate();
+            (el as any)._pasteEntity();
+            expect(configs[0].entities).toEqual([
+                { entity: 'sensor.main', hide_if: 'off', default: '-', state_color: { on: 'red' } },
+            ]);
+        });
+
         it('cut removes the source entity and fills the clipboard', () => {
             setConfig({ entity: 'sensor.main', entities: ['sensor.a', 'sensor.b'] });
             (el as any)._cutAdditional(0);
@@ -258,6 +297,71 @@ describe('multiple-entity-row-editor', () => {
         });
     });
 
+    // Editor-only state (custom-format mode, state-icon drafts) is stored per tab position, so
+    // it has to move with its entity when entities are deleted or reordered.
+    describe('per-entity editor state', () => {
+        const roundTrip = () => setConfig(configs[configs.length - 1]);
+        const pickCustom = (index: number, entity: string) =>
+            (el as any)._additionalValueChanged({ detail: { value: { entity, format: '__custom__' } } }, index);
+
+        it('keeps custom format mode on its entity when an earlier one is deleted', () => {
+            setConfig({
+                entity: 'sensor.main',
+                entities: [
+                    { entity: 'sensor.a', format: 'kilo' },
+                    { entity: 'sensor.b', format: 'kilo' },
+                ],
+            });
+            pickCustom(1, 'sensor.b');
+            roundTrip();
+            (el as any)._deleteAdditional(0);
+            roundTrip();
+            expect((el as any)._isCustomFormat('sub-0', 'kilo')).toBe(true);
+            expect((el as any)._isCustomFormat('sub-1', 'kilo')).toBe(false);
+        });
+
+        it('drops custom format mode with a deleted entity', () => {
+            setConfig({
+                entity: 'sensor.main',
+                entities: [
+                    { entity: 'sensor.a', format: 'kilo' },
+                    { entity: 'sensor.b', format: 'kilo' },
+                ],
+            });
+            pickCustom(0, 'sensor.a');
+            roundTrip();
+            (el as any)._deleteAdditional(0);
+            roundTrip();
+            expect((el as any)._isCustomFormat('sub-0', 'kilo')).toBe(false);
+        });
+
+        it('moves custom format mode with a moved entity', () => {
+            setConfig({
+                entity: 'sensor.main',
+                entities: [
+                    { entity: 'sensor.a', format: 'kilo' },
+                    { entity: 'sensor.b', format: 'kilo' },
+                ],
+            });
+            pickCustom(0, 'sensor.a');
+            roundTrip();
+            (el as any)._moveAdditional(0, 1);
+            roundTrip();
+            expect((el as any)._isCustomFormat('sub-0', 'kilo')).toBe(false);
+            expect((el as any)._isCustomFormat('sub-1', 'kilo')).toBe(true);
+        });
+
+        it('moves an in-progress state-icon draft with a moved entity', () => {
+            setConfig({ entity: 'sensor.main', entities: ['sensor.a', 'sensor.b'] });
+            (el as any)._setStateIconRows(0, [['', '']]);
+            roundTrip();
+            (el as any)._moveAdditional(0, 1);
+            roundTrip();
+            expect((el as any)._stateIconRowsAdditional.get(0)).toBeUndefined();
+            expect((el as any)._stateIconRowsAdditional.get(1)).toEqual([['', '']]);
+        });
+    });
+
     describe('custom CSS block', () => {
         it('parses key: value lines into the styles object', () => {
             setConfig({ entity: 'sensor.main' });
@@ -275,6 +379,55 @@ describe('multiple-entity-row-editor', () => {
             setConfig({ entity: 'sensor.main', entities: ['sensor.a'] });
             (el as any)._additionalStylesChanged({ detail: { value: 'color: red' } }, 0);
             expect(configs[0].entities).toEqual([{ entity: 'sensor.a', styles: { color: 'red' } }]);
+        });
+
+        // ha-code-editor replaces its whole document whenever the bound value differs from it,
+        // so the value bound back after HA hands the config round must be the user's own text.
+        describe('typing', () => {
+            const codeEditor = async () => {
+                await el.updateComplete;
+                return el.shadowRoot!.querySelector('ha-code-editor') as HTMLElement & { value: string };
+            };
+            const type = async (text: string) => {
+                (await codeEditor()).dispatchEvent(new CustomEvent('value-changed', { detail: { value: text } }));
+                setConfig(configs[configs.length - 1]);
+                return (await codeEditor()).value;
+            };
+
+            it('keeps a line whose value was just deleted', async () => {
+                setConfig({ entity: 'sensor.main', styles: { color: 'red' } });
+                expect((await codeEditor()).value).toBe('color: red');
+                expect(await type('color: ')).toBe('color: ');
+                expect('styles' in configs[configs.length - 1]).toBe(false);
+            });
+
+            it('keeps comments and quotes', async () => {
+                setConfig({ entity: 'sensor.main' });
+                expect(await type('# note\nwidth: "80px"')).toBe('# note\nwidth: "80px"');
+                expect(configs[configs.length - 1].styles).toEqual({ width: '80px' });
+            });
+
+            it('shows the config again once it changes elsewhere', async () => {
+                setConfig({ entity: 'sensor.main' });
+                await type('# note\nwidth: 80px');
+                setConfig({ entity: 'sensor.main', styles: { width: '10px' } });
+                expect((await codeEditor()).value).toBe('width: 10px');
+            });
+
+            it('moves a draft with its entity', async () => {
+                setConfig({
+                    entity: 'sensor.main',
+                    entities: ['sensor.a', { entity: 'sensor.b', styles: { color: 'blue' } }],
+                });
+                (el as any)._selectedTab = 1;
+                await type('# a\ncolor: red');
+                (el as any)._moveAdditional(0, 1);
+                setConfig(configs[configs.length - 1]);
+                expect((el as any)._selectedTab).toBe(2);
+                expect((await codeEditor()).value).toBe('# a\ncolor: red');
+                (el as any)._selectedTab = 1;
+                expect((await codeEditor()).value).toBe('color: blue');
+            });
         });
     });
 });
