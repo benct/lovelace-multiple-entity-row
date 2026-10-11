@@ -185,6 +185,7 @@ class MultipleEntityRow extends LitElement {
             format: config.format ?? (typeof config.time_format === 'string' ? config.time_format : undefined),
         };
         this._templates.setConfig(this.config);
+        this._syncStates();
     }
 
     shouldUpdate(changedProps) {
@@ -194,20 +195,28 @@ class MultipleEntityRow extends LitElement {
     set hass(hass) {
         this._hass = hass;
         this._templates.setHass(hass);
+        this._syncStates();
+    }
 
-        if (hass && this.config) {
-            this.stateObj = hass.states[this.config.entity];
+    // Derived from config and hass together, so both setters refresh it. Run only from the hass
+    // setter, a host that reuses the element across setConfig kept rendering the old entity list
+    // (or crashed on a secondary_info switched to object form) until an old entity changed.
+    _syncStates() {
+        const hass = this._hass;
+        if (!hass || !this.config) return;
+        this.stateObj = hass.states[this.config.entity];
 
-            if (isObject(this.config.secondary_info)) {
-                this.info = hass.states[this.config.secondary_info.entity] ?? this.stateObj;
-            }
+        // Only an omitted entity means the main one. A configured but missing entity stays
+        // undefined, so the line can be marked as missing, as additional entities are (#364),
+        // instead of showing the main entity's state under the secondary entity's name.
+        const info = this.config.secondary_info;
+        this.info = isObject(info) ? (info.entity ? hass.states[info.entity] : this.stateObj) : undefined;
 
-            this.entities =
-                this.config.entities?.map((config) => {
-                    const conf = typeof config === 'string' ? { entity: config } : config;
-                    return { ...conf, stateObj: conf.entity ? hass.states[conf.entity] : this.stateObj };
-                }) ?? [];
-        }
+        this.entities =
+            this.config.entities?.map((config) => {
+                const conf = typeof config === 'string' ? { entity: config } : config;
+                return { ...conf, stateObj: conf.entity ? hass.states[conf.entity] : this.stateObj };
+            }) ?? [];
     }
 
     static get styles() {
@@ -411,6 +420,25 @@ class MultipleEntityRow extends LitElement {
             );
         }
         const config = this._resolved(secondaryInfo);
+        if (!this.info) {
+            // Checked before hideIf, which needs a state to read - as additional entities do,
+            // where hide_unavailable is what hides a missing entity. The line renders inside HA's
+            // row, out of reach of our stylesheet, so the marker's color is inline.
+            if (config.hide_unavailable) return null;
+            return html`<span style="${entityStyles(config)}"
+                >${typeof config.name === 'string' ? blankName(config.name) : null}
+                <ha-icon
+                    class="missing"
+                    icon="mdi:alert-circle-outline"
+                    title="${this._hass.localize(
+                        'ui.panel.lovelace.warning.entity_not_found',
+                        'entity',
+                        config.entity
+                    )}"
+                    style="--mdc-icon-size: 1.2em; color: var(--error-color, #db4437)"
+                ></ha-icon
+            ></span>`;
+        }
         if (hideIf(this.info, config, this._hass)) {
             return null;
         }
@@ -582,7 +610,9 @@ class MultipleEntityRow extends LitElement {
                 : stateObj.state;
             const timestamp = new Date(value);
             if (!(timestamp instanceof Date) || isNaN(timestamp.getTime())) {
-                return value;
+                // A state that isn't a time yet (unknown at startup, unavailable) shows as HA
+                // would show it without a format, not as the raw lowercase value.
+                return config.attribute ? value : this._hass.formatEntityState(stateObj);
             }
             return html`<hui-timestamp-display
                 .hass=${this._hass}

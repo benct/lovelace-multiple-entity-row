@@ -142,7 +142,7 @@ an object containing configuration options listed below, or any of the default s
 | attribute        | string      |                             | A valid attribute key for the entity                     |
 | name             | string/bool | `friendly_name`             | Override entity friendly name (or `false` to hide)       |
 | unit             | string/bool | `unit_of_measurement`       | Override entity unit of measurement (or `false` to hide) |
-| hide_unavailable | bool        | `false`                     | Hide secondary info if its entity is unavailable         |
+| hide_unavailable | bool        | `false`                     | Hide if its entity is unavailable or does not exist      |
 | hide_if          | object/any  | _[Hiding](#hiding)_         | Hide secondary info if its value matches given criteria  |
 | format           | string      | _[Formatting](#formatting)_ | Format secondary info value                              |
 | styles           | object      |                             | Add custom CSS styles to the secondary info text         |

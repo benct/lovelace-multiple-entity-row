@@ -12,6 +12,9 @@ All notable changes to this project will be documented in this file.
 - An empty attribute with a `unit` override showed `0`
 - A right-click or middle-click on an entity ran its tap action (on Windows), and so did a press that started elsewhere and was released over an entity. A press dragged off an entity now cancels, as a touch scroll does
 - On Home Assistant before 2026.8, Enter or Space on an additional entity's toggle also ran the row's tap action
+- A `secondary_info` whose `entity` doesn't exist showed the main entity's state under its name. It now shows the missing-entity marker, as additional entities do, or hides with `hide_unavailable`
+- A timestamp `format` (`relative`, `datetime`, ...) on a state that isn't a time, such as `unknown` at startup, showed the raw value instead of Home Assistant's localized state
+- A row whose config changed on a live element (cards that reuse rows) kept showing the old entities until one of them changed state
 
 ## 4.13.0
 
