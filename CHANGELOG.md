@@ -19,6 +19,8 @@ All notable changes to this project will be documented in this file.
 - Visual editor: the Custom CSS box deleted a line as soon as its value was cleared, and stripped comments and quotes, while you typed
 - Visual editor: "Copy main as template" left out `color`, the hold and double-tap actions, `hide_if` and `default`
 - Visual editor: a Custom format choice or a half-typed state-icon row stayed at its tab position when entities were deleted or moved, attaching to another entity
+- A combined format with `invert` (e.g. `invert, precision1`) showed `-0.0` for a zero value
+- A single numeric format with stray spaces (`format: " kilo "`) was ignored; it now applies like the trimmed one, as it already did inside a combined format
 
 ## 4.13.0
 
