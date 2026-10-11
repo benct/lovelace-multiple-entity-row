@@ -143,7 +143,7 @@ These are the same checks `build.yml` runs in CI.
 
 ```bash
 yarn lint     # eslint over src/**/*.{js,ts} + tsc --noEmit — zero errors
-yarn test     # vitest run — all suites green (186+ tests currently)
+yarn test     # vitest run — all suites green
 yarn build    # umbrella: lint, test, then webpack bundle
 ```
 
