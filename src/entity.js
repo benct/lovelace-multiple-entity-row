@@ -26,20 +26,6 @@ export const computeEntity = (entityId) => entityId.substr(entityId.indexOf('.')
 const decimalDigits = (value) =>
     typeof value === 'string' && value.includes('.') ? value.split('.')[1].length : undefined;
 
-// Shared implementation for the kilo/mega/milli formats: divides by the given factor, and applies
-// either the default 2-decimal cap (bare `kilo`/`mega`/`milli`, digits === undefined) or an
-// explicit user-requested precision (`kilo3`, `mega1`, `milli0`, ...).
-const scaledFormat = (value, divisor, digits, locale) => {
-    if (digits === undefined) {
-        return formatNumber(value / divisor, locale, { maximumFractionDigits: 2 });
-    }
-    const precision = parseInt(digits, 10);
-    return formatNumber(value / divisor, locale, {
-        minimumFractionDigits: precision,
-        maximumFractionDigits: precision,
-    });
-};
-
 // precision<N>/kilo<N>/mega<N>/milli<N> parse a trailing digit off the format string. `kilo`,
 // `mega` and `milli` alone are valid (their own documented 2-decimal default); `precision` alone
 // is not, since it has no bare-word default. Anything else with one of these prefixes - e.g.
@@ -116,12 +102,14 @@ const formatPipeline = (segments, rawValue, unit, locale) => {
                 defaultCap(0);
                 break;
             case 'percent':
+                // For fraction-valued sensors (see #323).
                 value = value * 100;
                 unit = '%';
                 defaultCap(2);
                 break;
             case 'invert':
-                value = -value;
+                // Not -value: inverting 0 gives -0, which Intl formats as "-0".
+                value = 0 - value;
                 break;
             case 'position':
                 value = 100 - value;
@@ -251,11 +239,12 @@ export const entityStateDisplay = (hass, stateObj, config) => {
             ? config.unit
             : config.unit || stateObj.attributes.unit_of_measurement;
 
-    // Comma-separated numeric formats compose as a pipeline (see #385). Only kicks in when
-    // every segment is a known numeric transform - otherwise the whole string falls through to
-    // the single-format handling below, same as any other unrecognized format.
+    // Numeric formats run as a pipeline, a single one as a one-segment pipeline, so each transform
+    // exists once (comma-separated composition, see #385). Only when every segment is a known
+    // numeric transform - otherwise the whole string falls through to the handling below, same
+    // as any other unrecognized format.
     const segments = splitFormat(config.format);
-    if (segments.length > 1 && segments.every((segment) => PIPELINE_SEGMENT.test(segment))) {
+    if (segments.length > 0 && segments.every((segment) => PIPELINE_SEGMENT.test(segment))) {
         const pipelineValue = value === undefined || value === null ? 0 : value;
         if (!isNaN(parseFloat(pipelineValue)) && isFinite(pipelineValue)) {
             return formatPipeline(segments, pipelineValue, unit, hass.locale);
@@ -277,13 +266,6 @@ export const entityStateDisplay = (hass, stateObj, config) => {
         }
         if (isNaN(parseFloat(value)) || !isFinite(value)) {
             // do nothing if not a number
-        } else if (config.format === 'brightness') {
-            value = Math.round((value / 255) * 100);
-            unit = '%';
-        } else if (config.format === 'percent') {
-            // value × 100 → x % - for fraction-valued sensors (see #323)
-            value = formatNumber(value * 100, hass.locale, { maximumFractionDigits: 2 });
-            unit = '%';
         } else if (config.format === 'duration') {
             // secondsToDuration returns null for a zero duration; fall back to '0'
             // so the template literal below doesn't render the literal string "null".
@@ -295,39 +277,6 @@ export const entityStateDisplay = (hass, stateObj, config) => {
         } else if (config.format === 'duration-h') {
             value = secondsToDuration(value * 3600) ?? '0';
             unit = undefined;
-        } else if (matchDigitSuffixFormat(config.format)) {
-            const [, type, digits] = matchDigitSuffixFormat(config.format);
-            if (type === 'precision') {
-                const precision = parseInt(digits, 10);
-                value = formatNumber(parseFloat(value), hass.locale, {
-                    minimumFractionDigits: precision,
-                    maximumFractionDigits: precision,
-                });
-            } else {
-                value = scaledFormat(value, { kilo: 1000, mega: 1000000, milli: 1 / 1000 }[type], digits, hass.locale);
-            }
-        } else if (config.format === 'invert') {
-            const precision = decimalDigits(value);
-            value = formatNumber(
-                value - value * 2,
-                hass.locale,
-                precision !== undefined
-                    ? { minimumFractionDigits: precision, maximumFractionDigits: precision }
-                    : undefined
-            );
-        } else if (config.format === 'position') {
-            const precision = decimalDigits(value);
-            value = formatNumber(
-                100 - value,
-                hass.locale,
-                precision !== undefined
-                    ? { minimumFractionDigits: precision, maximumFractionDigits: precision }
-                    : undefined
-            );
-        } else if (config.format === 'celsius_to_fahrenheit') {
-            value = formatNumber(value * 1.8 + 32, hass.locale, { maximumFractionDigits: 0 });
-        } else if (config.format === 'fahrenheit_to_celsius') {
-            value = formatNumber(((value - 32) * 5) / 9, hass.locale, { maximumFractionDigits: 1 });
         }
         return `${value}${unit ? ` ${unit}` : ''}`;
     }

@@ -242,6 +242,13 @@ describe('entityStateDisplay', () => {
     // See https://github.com/benct/lovelace-multiple-entity-row/issues/385 - numeric formats
     // compose comma-separated, threading the raw number and formatting once at the end.
     describe('format pipelines', () => {
+        // -value turns 0 into -0, which Intl formats with its sign.
+        it('inverts 0 to 0, not -0', () => {
+            const stateObj = { state: '0', attributes: {} };
+            expect(entityStateDisplay(hass, stateObj, { format: 'invert, precision1' })).toBe('0.0');
+            expect(entityStateDisplay(hass, stateObj, { format: 'invert' })).toBe('0');
+        });
+
         it('combines invert with an explicit precision', () => {
             const stateObj = { state: '18.123456', attributes: {} };
             expect(entityStateDisplay(hass, stateObj, { format: 'invert, precision3' })).toBe('-18.123');
