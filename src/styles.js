@@ -30,12 +30,13 @@ export const style = (css) => css`
         justify-content: space-between;
         align-items: center;
     }
-    /* HA's name box is what pushes the entities to the right: it grows at flex: 1 1 30%. Hiding
+    /* HA's name box is what pushes the entities to the far end: it grows at flex: 1 1 30%. Hiding
        it removes that push too, leaving them against the icon, so take over the job here - the
-       point of hiding the name is more room, not a different alignment (see #341, #365). */
+       point of hiding the name is more room, not a different alignment (see #341, #365).
+       Inline-axis properties here and below, so right-to-left languages mirror the layout. */
     .entities-row.no-name,
     .entities-column.no-name {
-        margin-left: auto;
+        margin-inline-start: auto;
     }
     /* The 'styles' option reaches one entity's div, which is a flex item - so vertical-align
        there does nothing and alignment has to be set on the container instead (see #261). */
@@ -55,20 +56,22 @@ export const style = (css) => css`
        that looks clickable. The ::after extension puts the gap inside the entity's hit area
        without affecting layout. position:relative on every entity keeps hit-testing fair: a
        positioned later sibling beats its neighbor's ::after wherever a user's zero/negative
-       margin makes them overlap, so no entity steals its neighbor's clicks. */
+       margin makes them overlap, so no entity steals its neighbor's clicks. A user's physical
+       margin-right still replaces the gap in left-to-right: both map to the same side, and the
+       inline style wins the cascade. */
     .entities-row .entity {
-        margin-right: 16px;
+        margin-inline-end: 16px;
         position: relative;
     }
     .entities-row .entity:last-of-type {
-        margin-right: 0;
+        margin-inline-end: 0;
     }
     .entities-row .entity:not(:last-of-type)::after {
         content: '';
         position: absolute;
         top: 0;
         bottom: 0;
-        right: -16px;
+        inset-inline-end: -16px;
         width: 16px;
     }
     /* HA's ha-entity-toggle host is display:flex with no horizontal alignment, so in a slot
