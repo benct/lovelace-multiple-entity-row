@@ -108,6 +108,13 @@ const parseStylesText = (text: string): Record<string, string> => {
     return result;
 };
 
+/** True when the parsed text still describes `styles`, so showing it changes nothing. */
+const sameStyles = (parsed: Record<string, string>, styles: unknown): boolean => {
+    const current = isObject(styles) ? (styles as Record<string, unknown>) : {};
+    const keys = Object.keys(current).filter((key) => current[key] != null);
+    return keys.length === Object.keys(parsed).length && keys.every((key) => String(current[key]) === parsed[key]);
+};
+
 /** `unit: false` (hide the unit) and `name: false` (hide the name) are booleans in YAML, but
  * ha-form's text selectors can only produce strings - so they round-trip through the literal
  * string 'false'. Side benefit: typing "false" into either field sets the boolean from the
@@ -125,24 +132,23 @@ const falseFromForm = <T extends Record<string, any>>(config: T): T =>
 // there would surface garbage in HA's card picker.
 const CLIPBOARD_KEY = 'multipleEntityRowClipboard';
 
-// Subset of top-level config keys that semantically represent the "main entity slot" - used when
-// copying Main into the clipboard so the pasted entry behaves naturally as an additional entity
-// (no row-wide options like image / show_state / state_header / column).
-const MAIN_COPYABLE_FIELDS: (keyof MultipleEntityRowConfig)[] = [
-    'entity',
-    'name',
-    'attribute',
-    'unit',
-    'icon',
-    'icon_color',
+// Every field name an ha-form schema writes, grid wrappers included.
+const schemaFieldNames = (schema: readonly any[]): string[] =>
+    schema.flatMap((item) => (item.schema ? schemaFieldNames(item.schema) : [item.name]));
+
+// Top-level keys that describe the "main entity slot", copied by "Copy main as template" so the
+// pasted entry behaves as an additional entity. Derived from the additional-entity form, since a
+// hand-kept list fell behind it (color, hold/double-tap actions), plus the per-entity options
+// that are YAML-only. Row-wide options (image, column, secondary_info, ...) stay behind.
+const MAIN_COPYABLE_FIELDS = [
+    ...schemaFieldNames(ADDITIONAL_TAB_SCHEMA),
+    ...schemaFieldNames(ACTIONS_SCHEMA),
     'state_icon',
-    'state_color',
-    'toggle',
-    'hide_unavailable',
-    'format',
-    'tap_action',
     'styles',
-];
+    'state_color',
+    'hide_if',
+    'default',
+] as (keyof MultipleEntityRowConfig)[];
 
 type StateIconRows = [string, string][];
 
@@ -159,6 +165,12 @@ export class MultipleEntityRowEditor extends LitElement {
     // Per-position stable keys for the entities tab list - lit needs these to swap tab contents
     // wholesale on reorder instead of mutating sibling tab contents in place.
     private _keys: Map<number, string> = new Map();
+
+    // The custom CSS text as the user typed it, per scope ('main', 'sub-N'). ha-code-editor
+    // replaces its whole document whenever its bound value differs from it, and the config only
+    // round-trips as re-serialized text: an emptied value, a comment or quotes don't survive, so
+    // binding that would wipe them mid-edit. Not reactive - the config change re-renders.
+    private _stylesDrafts: Map<string, string> = new Map();
 
     static get properties() {
         return {
@@ -572,20 +584,27 @@ export class MultipleEntityRowEditor extends LitElement {
                 <div class="section-label">State-based icons</div>
                 ${this._renderStateIconRows('main')}
                 <div class="section-label">Custom CSS</div>
-                ${this._renderStylesBlock(this._config?.styles, (ev) => this._mainStylesChanged(ev))}
+                ${this._renderStylesBlock('main', this._config?.styles, (ev) => this._mainStylesChanged(ev))}
             </div>
         `;
     }
 
-    private _renderStylesBlock(value: unknown, handler: (ev: CustomEvent) => void): TemplateResult {
+    private _renderStylesBlock(scope: string, value: unknown, handler: (ev: CustomEvent) => void): TemplateResult {
+        // The draft while it still means the config; once the config changes elsewhere (the
+        // YAML editor, undo), the config's own text.
+        const draft = this._stylesDrafts.get(scope);
+        const text = draft !== undefined && sameStyles(parseStylesText(draft), value) ? draft : stringifyStyles(value);
         return html`
             <ha-code-editor
                 mode="yaml"
                 autocomplete-entities
                 autocomplete-icons
                 .hass=${this.hass}
-                .value=${stringifyStyles(value)}
-                @value-changed=${handler}
+                .value=${text}
+                @value-changed=${(ev: CustomEvent) => {
+                    this._stylesDrafts.set(scope, (ev.detail as { value: string }).value);
+                    handler(ev);
+                }}
             ></ha-code-editor>
         `;
     }
@@ -760,7 +779,7 @@ export class MultipleEntityRowEditor extends LitElement {
                 <div class="section-label">State-based icons</div>
                 ${this._renderStateIconRows(additionalIndex)}
                 <div class="section-label">Custom CSS</div>
-                ${this._renderStylesBlock(entityConfig.styles, (ev: CustomEvent) =>
+                ${this._renderStylesBlock(`sub-${additionalIndex}`, entityConfig.styles, (ev: CustomEvent) =>
                     this._additionalStylesChanged(ev, additionalIndex)
                 )}
             </div>
@@ -837,6 +856,7 @@ export class MultipleEntityRowEditor extends LitElement {
             this._selectedTab = entities.length;
         }
         this._keys.clear();
+        this._remapAdditionalState((i) => (i === additionalIndex ? undefined : i > additionalIndex ? i - 1 : i));
         this._updateConfig({ entities: entities.length ? entities : undefined });
     };
 
@@ -848,6 +868,7 @@ export class MultipleEntityRowEditor extends LitElement {
         [entities[additionalIndex], entities[target]] = [entities[target], entities[additionalIndex]];
         this._selectedTab = target + 1; // tab index = additional index + 1
         this._keys.clear();
+        this._remapAdditionalState((i) => (i === additionalIndex ? target : i === target ? additionalIndex : i));
         this._updateConfig({ entities });
     };
 
@@ -994,6 +1015,40 @@ export class MultipleEntityRowEditor extends LitElement {
     };
 
     // ── Helpers ─────────────────────────────────────────────────────────
+
+    /** Re-key editor-only per-entity state after a delete or reorder. `map` gives an entity's
+     * new index, or undefined once it's gone. The state is keyed by tab position, so without
+     * this it stays put and attaches to whichever entity lands there. Adding or pasting appends,
+     * which moves nothing. */
+    private _remapAdditionalState(map: (index: number) => number | undefined): void {
+        // Scope strings: 'sub-N' moves with its entity; 'main' and 'secondary' stay.
+        const remapScope = (scope: string): string | undefined => {
+            const match = /^sub-(\d+)$/.exec(scope);
+            if (!match) return scope;
+            const to = map(Number(match[1]));
+            return to === undefined ? undefined : `sub-${to}`;
+        };
+        const scopes = new Set<string>();
+        for (const scope of this._customFormatScopes) {
+            const to = remapScope(scope);
+            if (to !== undefined) scopes.add(to);
+        }
+        this._customFormatScopes = scopes;
+
+        const drafts = new Map<string, string>();
+        this._stylesDrafts.forEach((text, scope) => {
+            const to = remapScope(scope);
+            if (to !== undefined) drafts.set(to, text);
+        });
+        this._stylesDrafts = drafts;
+
+        const rows = new Map<number, StateIconRows>();
+        this._stateIconRowsAdditional.forEach((value, index) => {
+            const to = map(index);
+            if (to !== undefined) rows.set(to, value);
+        });
+        this._stateIconRowsAdditional = rows;
+    }
 
     private _updateConfig(patch: Partial<MultipleEntityRowConfig>): void {
         if (!this._config) return;
