@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## 4.13.1
 
 **Fixed:**
 - Right-to-left languages (Hebrew, Arabic, Persian): the gaps between entities landed on the wrong side, so the last two entities touched, and `name: false` pushed the entities against the icon instead of the far edge
