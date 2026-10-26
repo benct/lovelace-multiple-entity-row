@@ -871,24 +871,37 @@ describe('multiple-entity-row', () => {
             expect(actions).toEqual([]);
         });
 
-        // `{action: none}` is unconfigured, as in HA's hasAction: no waiting out the double-tap
-        // window, and a long press is a plain tap.
-        it('treats hold and double-tap actions of none as unconfigured', () => {
+        // A double_tap_action of none is unconfigured, as in HA's hasAction: no waiting out the
+        // double-tap window.
+        it('treats a double-tap action of none as unconfigured', () => {
             const subConfig = {
                 entity: 'sensor.a',
                 tap_action: { action: 'more-info' },
-                hold_action: { action: 'none' },
                 double_tap_action: { action: 'none' },
             };
             el.setConfig({ entity: 'sensor.main', entities: [subConfig] });
             const sub = el.getGestureHandlers('sub-0', 'sensor.a', subConfig);
             sub.onDown(PRIMARY);
             sub.onUp(PRIMARY);
-            expect(actions).toHaveLength(1);
+            expect(actions.map((a) => a.action)).toEqual(['tap']);
+        });
+
+        // #471: a hold_action of none is how users stop a long press from toggling.
+        it('runs nothing on a long press when hold_action is none', () => {
+            const subConfig = {
+                entity: 'sensor.a',
+                tap_action: { action: 'toggle' },
+                hold_action: { action: 'none' },
+            };
+            el.setConfig({ entity: 'sensor.main', entities: [subConfig] });
+            const sub = el.getGestureHandlers('sub-0', 'sensor.a', subConfig);
             sub.onDown(PRIMARY);
             vi.advanceTimersByTime(500);
             sub.onUp(PRIMARY);
-            expect(actions.map((a) => a.action)).toEqual(['tap', 'tap']);
+            expect(actions).toEqual([]);
+            sub.onDown(PRIMARY);
+            sub.onUp(PRIMARY);
+            expect(actions.map((a) => a.action)).toEqual(['tap']);
         });
 
         // See https://github.com/benct/lovelace-multiple-entity-row/issues/415 - a toggle entity

@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+**Fixed:**
+- `hold_action: none` makes a long press on an entity do nothing again. 4.13.1 ran the tap action instead, so a long press toggled a switch (#471)
+
 ## 4.13.1
 
 **Fixed:**

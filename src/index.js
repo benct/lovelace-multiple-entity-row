@@ -725,7 +725,9 @@ class MultipleEntityRow extends LitElement {
             this._actionHandlers.set(
                 key,
                 createGestureHandlers((hold, dblClick) => this.dispatchAction(entity, config, hold, dblClick), {
-                    hasHold: hasAction(config.hold_action),
+                    // Unlike HA's rows, a hold_action of none still claims the long press: it is
+                    // the only way to stop a long press from running a toggle tap (#471).
+                    hasHold: !!config.hold_action,
                     hasDoubleTap: hasAction(config.double_tap_action),
                 })
             );

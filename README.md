@@ -165,6 +165,8 @@ for more detailed descriptions and examples.
 | confirmation    | bool/object | `false`      | Enable confirmation dialog                                                                 |
 | haptic          | string      | `none`       | Haptic feedback (`success`, `warning`, `failure`, `light`, `medium`, `heavy`, `selection`) |
 
+On the main state and on additional entities, `hold_action: { action: none }` makes a long press do nothing. Without a `hold_action`, a long press runs the tap action. The row's icon and name follow Home Assistant's own rule: there, a long press with `none` also runs the tap action.
+
 ### Formatting
 
 The `format` option supports the following values:
