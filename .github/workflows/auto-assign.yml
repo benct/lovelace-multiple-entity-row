@@ -1,0 +1,22 @@
+name: Auto-assign issues
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+
+jobs:
+  assign:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      # grep fails the run when jpettitt is not in the returned assignees,
+      # so a broken assignment shows red in Actions instead of passing.
+      - run: |
+          gh api --method POST "repos/$GITHUB_REPOSITORY/issues/$NUMBER/assignees" \
+            -f 'assignees[]=jpettitt' --jq '.assignees[].login' | grep -qx jpettitt
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUMBER: ${{ github.event.issue.number }}
